@@ -1,7 +1,7 @@
 MODULE_NAME := LoadBalancer
 SOURCES := main.c
-OBJ := listener.o 
+OBJ := $(wildcard $(BUILD_DIR)/*.o)
 
-$(BUILD_DIR)/$(MODULE_NAME): $(SOURCES) $(BUILD_DIR)/$(OBJ) 	
+$(BUILD_DIR)/$(MODULE_NAME): $(SOURCES) $(OBJ)
 	$(CC) -o $@ $^ $(INCLUDE) 
 
