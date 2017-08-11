@@ -8,18 +8,20 @@
 #include <string.h>
 
 #include "listener.h"
+#include "secretary.h"
 
 void* start_server(void*);
-int create_server();
+void create_server();
 
 void init_client_listener()
 {
 	void *res;
 	int socket;
-	socket = create_server();
+
+	create_server();
 
 	pthread_t server_thread_id;
-	pthread_create(&server_thread_id, NULL, &start_server, &socket);
+	pthread_create(&server_thread_id, NULL, &start_server, &(listener.socket));
 
 	// TODO i think i'll not make this here (global structure wink wink)
 	//wait for the thread to join
@@ -40,16 +42,13 @@ void* start_server(void* arg)
 			setsockopt(*socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 			exit(1);
 		} else {
-			// TODO spawn a new secretary thread to take care of the client
-			//For debugging purposes only
-			write(client_socket, "Hello there mister!\n", sizeof("Hello there mister!\n"));
-			write(client_socket, "By there mister!\n", sizeof("By there mister!\n"));
-			close(client_socket);
+			pthread_t secretary_thread_id;
+			pthread_create(&secretary_thread_id, NULL, &assign_secretary, &client_socket);
 		}
 	}
 }
 
-int create_server() 
+void create_server() 
 {
 	int server_socket, port;
 	struct sockaddr_in server;
@@ -65,8 +64,7 @@ int create_server()
 	// init address structure
 	bzero((char*)&server, sizeof(server));
 
-	// TODO change this to be more generic
-	port = 6969;
+	port = INCOMING_PORT;
 
 	server.sin_family = AF_INET;
 	server.sin_addr.s_addr = INADDR_ANY;
@@ -84,6 +82,7 @@ int create_server()
 		exit(1);
 	}
 
-	// return the socket
-	return server_socket;
+	// save listener info
+	listener.socket = server_socket;
+	listener.server = server;
 }
