@@ -1,5 +1,5 @@
-MODULE_NAME := secretary
-SOURCES := secretary.c
+MODULE_NAME := utils
+SOURCES := log.c
 
 ifdef SOURCES
 $(BUILD_DIR)/$(MODULE_NAME).o: $(SOURCE_DIR)/$(SOURCES) $(INCLUDE_DIR)/$(SOURCES:.c=.h)	

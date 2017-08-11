@@ -5,13 +5,20 @@
 #include <netinet/in.h>
 
 #include <ctype.h>
+
 #include <string.h>
 
-#include "listener.h"
+#include <pthread.h>
+
+#include "log.h"
 #include "secretary.h"
+
+#include "listener.h"
 
 void* start_server(void*);
 void create_server();
+
+listener_t *listener;
 
 void init_client_listener()
 {
@@ -21,7 +28,7 @@ void init_client_listener()
 	create_server();
 
 	pthread_t server_thread_id;
-	pthread_create(&server_thread_id, NULL, &start_server, &(listener.socket));
+	pthread_create(&server_thread_id, NULL, &start_server, &(listener->socket));
 
 	// TODO i think i'll not make this here (global structure wink wink)
 	//wait for the thread to join
@@ -33,6 +40,8 @@ void* start_server(void* arg)
 	int iSetOption = 1;
 	int client_socket, client_len, *socket = (int*)arg;
 	struct sockaddr_in client;
+	secretary_t secretary;
+	pthread_t secretary_thread_id;
 
 	while(1) {
 		client_socket = accept(*socket, (struct sockaddr*)&client, &client_len);
@@ -42,8 +51,14 @@ void* start_server(void* arg)
 			setsockopt(*socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 			exit(1);
 		} else {
-			pthread_t secretary_thread_id;
+			LOG("Client connected");
+
 			pthread_create(&secretary_thread_id, NULL, &assign_secretary, &client_socket);
+
+			secretary.thread_id = secretary_thread_id;
+			secretary.client_socket = client_socket;
+			secretary.client = client;
+			listener->secretaries[listener->no_of_secretaries++] = secretary;
 		}
 	}
 }
@@ -62,7 +77,7 @@ void create_server()
 	}
 
 	// init address structure
-	bzero((char*)&server, sizeof(server));
+	memset(&server, 0, sizeof(server));
 
 	port = INCOMING_PORT;
 
@@ -83,6 +98,8 @@ void create_server()
 	}
 
 	// save listener info
-	listener.socket = server_socket;
-	listener.server = server;
+	listener = malloc(sizeof(listener_t));
+	listener->socket = server_socket;
+	listener->server = server;
+	listener->no_of_secretaries = 0;
 }

@@ -1,14 +1,30 @@
 #include <stdlib.h>
+#include <stdio.h>
+
+#include <unistd.h>
 #include <signal.h>
+#include <pthread.h>
+
 #include <netdb.h>
 
+#include "log.h"
 #include "listener.h"
+#include "secretary.h"
+
+extern listener_t *listener;
 
 void sigint_handler()
 {
 	int iSetOption = 1;
-	//this is for reusing the port imeddiatly after ctr+c
-	setsockopt(listener.socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
+	// this is for reusing the port imeddiatly after ctr+c
+	setsockopt(listener->socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
+
+	for(int i = 0; i < listener->no_of_secretaries; i++) {
+		close(listener->secretaries[i].client_socket);
+		pthread_cancel(listener->secretaries[i].thread_id);
+	}
+
+	close(listener->socket);
 }
 
 void signal_handler(int signum)
@@ -26,6 +42,9 @@ void signal_handler(int signum)
 int main()
 {
 	signal(SIGINT, signal_handler);
+	if(init_log() != 0) {
+		printf("WARNING: the log file could not be opened!\n");
+	}
 	init_client_listener();
 
 	return 0;

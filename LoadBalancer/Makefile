@@ -5,10 +5,13 @@ export PWD := $(shell pwd)
 export SOURCE_DIR := ./src
 export INCLUDE_DIR := ./include
 
+export LIBRARIES := -pthread
+
 LISTENER_INCLUDE_DIR := $(PWD)/listener/include
 SECRETARY_INCLUDE_DIR := $(PWD)/secretary/include
 WORKERLISTENER_INCLUDE_DIR := $(PWD)/workerListener/include
-export INCLUDE := -I$(LISTENER_INCLUDE_DIR) -I$(SECRETARY_INCLUDE_DIR) -I$(WORKERLISTENER_INCLUDE_DIR)
+UTILS_INCLUDE_DIR := $(PWD)/utils/include
+export INCLUDE := -I$(LISTENER_INCLUDE_DIR) -I$(SECRETARY_INCLUDE_DIR) -I$(WORKERLISTENER_INCLUDE_DIR) -I$(UTILS_INCLUDE_DIR)
 
 
 DIRS := $(filter-out Build/., $(wildcard */.))
