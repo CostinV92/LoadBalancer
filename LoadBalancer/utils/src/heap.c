@@ -142,8 +142,3 @@ heap_node_t* get_min_child(heap_node_t *node)
 	else 
 		return first_child;
 }
-
-
-
-
-
