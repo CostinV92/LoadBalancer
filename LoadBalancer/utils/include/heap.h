@@ -13,5 +13,6 @@ heap_node_t* heap[MAX_NODES];
 
 void heap_push(heap_node_t*);
 heap_node_t* heap_pop();
+void heap_update_node_key(heap_node_t*, int);
 
 #endif

@@ -18,8 +18,8 @@ static void heap_lock();
 static void heap_unlock();
 static heap_node_t* get_parent(heap_node_t*);
 static heap_node_t* get_min_child(heap_node_t*);
-static void balance_heap_last();
-static void balance_heap_root();
+static void balance_heap_up_from(heap_node_t*);
+static void balance_heap_down_from(heap_node_t*);
 
 void heap_lock()
 {
@@ -39,7 +39,7 @@ void heap_push(heap_node_t* node)
 	heap_lock();
 	node->heap_index = current_index;
 	heap[current_index++] = node;
-	balance_heap_last();
+	balance_heap_up_from(LAST_ELEM);
 	heap_unlock();
 }
 
@@ -56,18 +56,31 @@ heap_node_t* heap_pop()
 	HEAP_ROOT = LAST_ELEM;
 	current_index--;
 	heap[current_index] = 0;
-	balance_heap_root();
+	balance_heap_down_from(HEAP_ROOT);
 	heap_unlock();
 
 	return node;
 }
 
-void balance_heap_last()
+void heap_update_node_key(heap_node_t* node, int new_key)
 {
-	heap_node_t *node, *parent_node;
-	node = LAST_ELEM;
+	heap_lock();
+	int old_key = node->heap_key;
+	node->heap_key = new_key;
 
-	parent_node = get_parent(node);
+	if(new_key < old_key)
+		balance_heap_up_from(node);
+	else if (new_key > old_key)
+		balance_heap_down_from(node);
+	heap_unlock();
+}
+
+void balance_heap_up_from(heap_node_t* node)
+{
+	if(!node)
+		return;
+
+	heap_node_t* parent_node = get_parent(node);
 	if(!parent_node)
 		return;
 	
@@ -85,15 +98,12 @@ void balance_heap_last()
 	}
 }
 
-void balance_heap_root()
+void balance_heap_down_from(heap_node_t* node)
 {
-	heap_node_t *node, *min_child;
-	node = HEAP_ROOT;
-
 	if(!node)
 		return;
 
-	min_child = get_min_child(node);
+	heap_node_t* min_child = get_min_child(node);
 	if(!min_child)
 		return;
 
