@@ -22,7 +22,6 @@ listener_t *listener;
 
 void init_client_listener()
 {
-	void *res;
 	int socket;
 
 	create_server();
@@ -30,9 +29,7 @@ void init_client_listener()
 	pthread_t server_thread_id;
 	pthread_create(&server_thread_id, NULL, &start_server, &(listener->socket));
 
-	// TODO i think i'll not make this here (global structure wink wink)
-	//wait for the thread to join
-	pthread_join(server_thread_id, res);
+	listener->thread_id = server_thread_id;
 }
 
 void* start_server(void* arg) 

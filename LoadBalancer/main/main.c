@@ -24,6 +24,7 @@ void sigint_handler()
 		close(listener->secretaries[i].client_socket);
 	}
 
+	pthread_cancel(listener->thread_id);
 	close(listener->socket);
 }
 
@@ -41,11 +42,15 @@ void signal_handler(int signum)
 
 int main()
 {
+	void *res;
 	signal(SIGINT, signal_handler);
 	if(init_log() != 0) {
 		printf("WARNING: the log file could not be opened!\n");
 	}
 	init_client_listener();
+
+	// the thread should never join as the server must run constantly
+	pthread_join(listener->thread_id, res);
 
 	return 0;
 }

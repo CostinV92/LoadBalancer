@@ -10,6 +10,8 @@ typedef struct LISTENER {
 	int socket;
 	struct sockaddr_in server;
 
+	pthread_t thread_id;
+
 	int no_of_secretaries;
 	secretary_t secretaries[MAX_NO_OF_SECRETARIES];
 } listener_t;
