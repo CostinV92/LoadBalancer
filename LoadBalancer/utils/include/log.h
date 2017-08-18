@@ -4,6 +4,7 @@
 #define LOG_PATH "/tmp/LoadBalancer.log"
 
 int init_log();
-void LOG(char*);
+void LOG(char*, ...);
+char* format_ip_addr(unsigned long);
 
 #endif

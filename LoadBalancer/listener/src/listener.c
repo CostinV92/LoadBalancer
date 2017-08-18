@@ -38,7 +38,7 @@ void init_client_listener()
 void* start_server(void* arg) 
 {
 	int iSetOption = 1;
-	int client_socket, client_len, *socket = (int*)arg;
+	int client_socket, client_len = sizeof(struct sockaddr_in), *socket = (int*)arg;
 	struct sockaddr_in client;
 	secretary_t secretary;
 	pthread_t secretary_thread_id;
@@ -51,7 +51,7 @@ void* start_server(void* arg)
 			setsockopt(*socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 			exit(1);
 		} else {
-			LOG("Client connected");
+			LOG("Listener: client connected, ip: %s", format_ip_addr(((struct sockaddr_in*)&client)->sin_addr.s_addr));
 
 			pthread_create(&secretary_thread_id, NULL, &assign_secretary, &client_socket);
 
