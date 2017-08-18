@@ -1,4 +1,4 @@
-OBJ :=
+OBJ := workerListener.o
 
 ifdef OBJ
 

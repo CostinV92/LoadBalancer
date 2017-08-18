@@ -15,14 +15,15 @@
 
 #include "listener.h"
 
-void* start_server(void*);
-void create_server();
+static void* start_server(void*);
+static void create_server();
 
 listener_t *listener;
 
 void init_client_listener()
 {
 	int socket;
+	listener = malloc(sizeof(listener_t));
 
 	create_server();
 
@@ -36,25 +37,25 @@ void* start_server(void* arg)
 {
 	int iSetOption = 1;
 	int client_socket, client_len = sizeof(struct sockaddr_in), *socket = (int*)arg;
-	struct sockaddr_in client;
+	struct sockaddr_in client_addr;
 	secretary_t secretary;
 	pthread_t secretary_thread_id;
 
 	while(1) {
-		client_socket = accept(*socket, (struct sockaddr*)&client, &client_len);
+		client_socket = accept(*socket, (struct sockaddr*)&client_addr, &client_len);
 		if(client_socket < 0) {
 			perror("ERROR on accepting connection");
 			//this is for reusing the port imeddiatly after error
 			setsockopt(*socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 			exit(1);
 		} else {
-			LOG("Listener: client connected, ip: %s", format_ip_addr(((struct sockaddr_in*)&client)->sin_addr.s_addr));
+			LOG("Listener: client connected, ip: %s", format_ip_addr(((struct sockaddr_in*)&client_addr)->sin_addr.s_addr));
 
 			pthread_create(&secretary_thread_id, NULL, &assign_secretary, &client_socket);
 
 			secretary.thread_id = secretary_thread_id;
 			secretary.client_socket = client_socket;
-			secretary.client = client;
+			secretary.client_addr = client_addr;
 			listener->secretaries[listener->no_of_secretaries++] = secretary;
 		}
 	}
@@ -76,7 +77,7 @@ void create_server()
 	// init address structure
 	memset(&server, 0, sizeof(server));
 
-	port = INCOMING_PORT;
+	port = CLIENT_PORT;
 
 	server.sin_family = AF_INET;
 	server.sin_addr.s_addr = INADDR_ANY;
@@ -95,7 +96,6 @@ void create_server()
 	}
 
 	// save listener info
-	listener = malloc(sizeof(listener_t));
 	listener->socket = server_socket;
 	listener->server = server;
 	listener->no_of_secretaries = 0;

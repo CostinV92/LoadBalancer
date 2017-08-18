@@ -9,9 +9,11 @@
 
 #include "log.h"
 #include "listener.h"
+#include "workerListener.h"
 #include "secretary.h"
 
 extern listener_t *listener;
+extern worker_listener_t *worker_listener;
 
 void sigint_handler()
 {
@@ -25,7 +27,9 @@ void sigint_handler()
 	}
 
 	pthread_cancel(listener->thread_id);
+	pthread_cancel(worker_listener->thread_id);
 	close(listener->socket);
+	close(worker_listener->socket);
 }
 
 void signal_handler(int signum)
@@ -48,6 +52,7 @@ int main()
 		printf("WARNING: the log file could not be opened!\n");
 	}
 	init_client_listener();
+	init_worker_listener();
 
 	// the thread should never join as the server must run constantly
 	pthread_join(listener->thread_id, res);
