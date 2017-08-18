@@ -20,8 +20,8 @@ void sigint_handler()
 	setsockopt(listener->socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
 	for(int i = 0; i < listener->no_of_secretaries; i++) {
-		close(listener->secretaries[i].client_socket);
 		pthread_cancel(listener->secretaries[i].thread_id);
+		close(listener->secretaries[i].client_socket);
 	}
 
 	close(listener->socket);
