@@ -1,4 +1,4 @@
-OBJ := listener.o
+OBJ := clientListener.o
 
 ifdef OBJ
 

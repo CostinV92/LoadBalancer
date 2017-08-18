@@ -8,27 +8,27 @@
 #include <netdb.h>
 
 #include "log.h"
-#include "listener.h"
+#include "clientListener.h"
 #include "workerListener.h"
 #include "secretary.h"
 
-extern listener_t *listener;
+extern client_listener_t *client_listener;
 extern worker_listener_t *worker_listener;
 
 void sigint_handler()
 {
 	int iSetOption = 1;
 	// this is for reusing the port imeddiatly after ctr+c
-	setsockopt(listener->socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
+	setsockopt(client_listener->socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
-	for(int i = 0; i < listener->no_of_secretaries; i++) {
-		pthread_cancel(listener->secretaries[i].thread_id);
-		close(listener->secretaries[i].client_socket);
+	for(int i = 0; i < client_listener->no_of_secretaries; i++) {
+		pthread_cancel(client_listener->secretaries[i].thread_id);
+		close(client_listener->secretaries[i].client_socket);
 	}
 
-	pthread_cancel(listener->thread_id);
+	pthread_cancel(client_listener->thread_id);
 	pthread_cancel(worker_listener->thread_id);
-	close(listener->socket);
+	close(client_listener->socket);
 	close(worker_listener->socket);
 }
 
@@ -55,7 +55,7 @@ int main()
 	init_worker_listener();
 
 	// the thread should never join as the server must run constantly
-	pthread_join(listener->thread_id, res);
+	pthread_join(client_listener->thread_id, res);
 
 	return 0;
 }

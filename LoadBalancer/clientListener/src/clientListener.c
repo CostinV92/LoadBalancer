@@ -13,24 +13,24 @@
 #include "log.h"
 #include "secretary.h"
 
-#include "listener.h"
+#include "clientListener.h"
 
 static void* start_server(void*);
 static void create_server();
 
-listener_t *listener;
+client_listener_t *client_listener;
 
 void init_client_listener()
 {
 	int socket;
-	listener = malloc(sizeof(listener_t));
+	client_listener = malloc(sizeof(client_listener_t));
 
 	create_server();
 
 	pthread_t server_thread_id;
-	pthread_create(&server_thread_id, NULL, &start_server, &(listener->socket));
+	pthread_create(&server_thread_id, NULL, &start_server, &(client_listener->socket));
 
-	listener->thread_id = server_thread_id;
+	client_listener->thread_id = server_thread_id;
 }
 
 void* start_server(void* arg) 
@@ -49,14 +49,14 @@ void* start_server(void* arg)
 			setsockopt(*socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 			exit(1);
 		} else {
-			LOG("Listener: client connected, ip: %s", format_ip_addr(((struct sockaddr_in*)&client_addr)->sin_addr.s_addr));
+			LOG("Client listener: client connected, ip: %s", format_ip_addr(((struct sockaddr_in*)&client_addr)->sin_addr.s_addr));
 
 			pthread_create(&secretary_thread_id, NULL, &assign_secretary, &client_socket);
 
 			secretary.thread_id = secretary_thread_id;
 			secretary.client_socket = client_socket;
 			secretary.client_addr = client_addr;
-			listener->secretaries[listener->no_of_secretaries++] = secretary;
+			client_listener->secretaries[client_listener->no_of_secretaries++] = secretary;
 		}
 	}
 }
@@ -96,7 +96,7 @@ void create_server()
 	}
 
 	// save listener info
-	listener->socket = server_socket;
-	listener->server = server;
-	listener->no_of_secretaries = 0;
+	client_listener->socket = server_socket;
+	client_listener->server = server;
+	client_listener->no_of_secretaries = 0;
 }

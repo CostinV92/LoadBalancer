@@ -7,7 +7,7 @@ export INCLUDE_DIR := ./include
 
 export LIBRARIES := -pthread
 
-LISTENER_INCLUDE_DIR := $(PWD)/listener/include
+LISTENER_INCLUDE_DIR := $(PWD)/clientListener/include
 SECRETARY_INCLUDE_DIR := $(PWD)/secretary/include
 WORKERLISTENER_INCLUDE_DIR := $(PWD)/workerListener/include
 UTILS_INCLUDE_DIR := $(PWD)/utils/include
