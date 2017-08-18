@@ -16,9 +16,15 @@ void* assign_secretary(void* arg)
 	write(client_socket, "Hello! I'm youre designated secretary!\n", sizeof("Hello! I'm youre designated secretary!\n"));
 
 	while(1) {
+		int bytes_read;
 		memset(&buffer, 0, 256);
-		read(client_socket, buffer, 256);
-		printf("%s", buffer);
+		bytes_read = read(client_socket, buffer, 256);
+		if(bytes_read)
+			printf("%s", buffer);
+		else
+			break;
 	}
+
+	// here the connection would be closed by the client
 	// end of testing purposes only
 }
