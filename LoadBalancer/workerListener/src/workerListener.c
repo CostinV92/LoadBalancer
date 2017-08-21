@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <unistd.h>
 
+#include <sys/socket.h>
 #include <netdb.h>
 #include <netinet/in.h>
 
@@ -10,13 +12,15 @@
 
 #include <pthread.h>
 
-#include "log.h"
+#include "utils.h"
 
 #include "workerListener.h"
 
 static void create_server();
 static void* start_server(void*);
-//static void* add_worker_to_heap(void*);
+static void* register_worker(void*);
+static bool get_worker_hostname(worker_t*);
+static void listen_to_worker(worker_t*);
 
 worker_listener_t *worker_listener;
 
@@ -47,8 +51,15 @@ void* start_server(void* arg)
 			setsockopt(*socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 			exit(1);
 		} else {
+			pthread_t worker_thread_id;
 			LOG("Worker listener: worker connected, ip: %s", format_ip_addr(((struct sockaddr_in*)&worker_addr)->sin_addr.s_addr));
-			//TODO add worker to heap
+
+			worker_t worker;
+			memset(&worker, 0, sizeof(worker_t));
+
+			worker.worker_socket = worker_socket;
+			worker.worker_addr = worker_addr;
+			pthread_create(&worker_thread_id, NULL, &register_worker, &worker);
 		}
 	}
 }
@@ -90,4 +101,38 @@ void create_server()
 	// save listener info
 	worker_listener->socket = server_socket;
 	worker_listener->server = server_addr;
+}
+
+void* register_worker(void* arg)
+{
+	char service[20] = {0};
+	worker_t *worker = malloc(sizeof(worker_t));
+	memset(worker, 0, sizeof(worker_t));
+	memcpy((void*)worker, arg, sizeof(worker_t));
+
+	if(getnameinfo((struct sockaddr *)&(worker->worker_addr), sizeof(worker->worker_addr), worker->hostname, sizeof(worker->hostname), service, sizeof(service), 0) == 0) {
+		heap_push((heap_node_t*)worker);
+		LOG("Worker listener: worker added to database, hostname: %s, ip: %s", worker->hostname, format_ip_addr(((struct sockaddr_in*)&(worker->worker_addr))->sin_addr.s_addr));
+	} else {
+		LOG("Worker listener: failed to add worker to database (no hostname), ip: %s", format_ip_addr(((struct sockaddr_in*)&(worker->worker_addr))->sin_addr.s_addr));
+	}
+
+	listen_to_worker(worker);
+}
+
+void listen_to_worker(worker_t *worker)
+{
+	for(;;) {
+		int byte_read;
+		char buffer[256] = {0};
+		byte_read = read(worker->worker_socket, buffer, sizeof(buffer));
+		if(byte_read) {
+			// TODO message received --- use a queue or something
+			printf("%s\n", buffer);
+		} else {
+			// TODO connection clossed find a way to delete from heap
+			LOG("Worker listener: worker closed connection, hostname: %s, ip: %s", worker->hostname, format_ip_addr(((struct sockaddr_in*)&(worker->worker_addr))->sin_addr.s_addr));
+			break;
+		}
+	}
 }

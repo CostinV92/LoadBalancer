@@ -6,7 +6,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
-#include "log.h"
+#include "utils.h"
 
 static FILE *log_file;
 static char ip_string[20];

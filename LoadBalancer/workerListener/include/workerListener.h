@@ -5,6 +5,17 @@
 
 #define WORKER_PORT			7892
 
+typedef enum  MESSAGE_TYPE {
+	WORKER_LISTENER_HOSTNAME_REQ,
+	WORKER_LISTENER_HOSTNAME_RES
+} message_type_t;
+
+typedef struct MESSAGE {
+	message_type_t 			message_type;
+	int 					message_size;
+	char					buffer[];
+} message_t;
+
 typedef struct WORKER_LISTENER {
 	int 					socket;
 	struct sockaddr_in 		server;

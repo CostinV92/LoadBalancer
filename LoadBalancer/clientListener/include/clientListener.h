@@ -12,6 +12,7 @@ typedef struct CLIENT_LISTENER {
 
 	pthread_t 				thread_id;
 
+	// debug purposes only
 	int 					no_of_secretaries;
 	secretary_t 			secretaries[MAX_NO_OF_SECRETARIES];
 } client_listener_t;

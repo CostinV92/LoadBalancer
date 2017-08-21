@@ -16,6 +16,7 @@ export INCLUDE := -I$(LISTENER_INCLUDE_DIR) -I$(SECRETARY_INCLUDE_DIR) -I$(WORKE
 
 DIRS := $(filter-out Build/., $(wildcard */.))
 DIRS := $(filter-out main/., $(DIRS))
+DIRS := $(filter-out tests/., $(DIRS))
 
 all: BUILD_DIR $(DIRS) main/.
 	

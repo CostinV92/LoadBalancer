@@ -7,7 +7,7 @@
 
 #include <netdb.h>
 
-#include "log.h"
+#include "utils.h"
 #include "clientListener.h"
 #include "workerListener.h"
 #include "secretary.h"
@@ -20,6 +20,7 @@ void sigint_handler()
 	int iSetOption = 1;
 	// this is for reusing the port imeddiatly after ctr+c
 	setsockopt(client_listener->socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
+	setsockopt(worker_listener->socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
 	for(int i = 0; i < client_listener->no_of_secretaries; i++) {
 		pthread_cancel(client_listener->secretaries[i].thread_id);
