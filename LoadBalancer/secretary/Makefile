@@ -7,7 +7,7 @@ OBJ := $(addprefix $(BUILD_DIR)/, $(OBJ))
 all: $(OBJ)
 
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c $(INCLUDE_DIR)/%.h
-	$(CC) -std=c99 -c -o $@ $< $(INCLUDE) $(LIBRARIES)
+	$(CC) -std=gnu99 -c -o $@ $< $(INCLUDE) $(LIBRARIES)
 
 endif
 .PHONY: all

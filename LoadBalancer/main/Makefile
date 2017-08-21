@@ -3,5 +3,5 @@ SOURCES := main.c
 OBJ := $(wildcard $(BUILD_DIR)/*.o)
 
 $(BUILD_DIR)/$(MODULE_NAME): $(SOURCES) $(OBJ)
-	$(CC) -std=c99 -o $@ $^ $(INCLUDE) $(LIBRARIES)
+	$(CC) -std=gnu99 -o $@ $^ $(INCLUDE) $(LIBRARIES)
 

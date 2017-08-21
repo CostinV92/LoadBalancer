@@ -29,8 +29,8 @@ typedef struct WORKER {
 	heap_node_t 			heap_node;
 
 	// network info
-	int 					worker_socket;
-	struct sockaddr_in 		worker_addr;
+	int 					socket;
+	struct sockaddr_in 		addr;
 
 	// worker info
 	char 					hostname[256];
