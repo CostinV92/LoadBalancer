@@ -9,22 +9,18 @@
 
 void* assign_secretary(void* arg)
 {
-	char buffer[256];
 	int client_socket = *((int*)arg);
 
-	// testing purposes only
-	write(client_socket, "Hello! I'm youre designated secretary!\n", sizeof("Hello! I'm youre designated secretary!\n"));
-
-	while(1) {
-		int bytes_read;
-		memset(&buffer, 0, 256);
-		bytes_read = read(client_socket, buffer, 256);
-		if(bytes_read)
-			printf("%s", buffer);
-		else
+	for(;;) {
+		int byte_read;
+		char buffer[256] = {0};
+		byte_read = read(client_socket, buffer, sizeof(buffer));
+		if(byte_read) {
+			// TODO message received --- use a queue or something
+			printf("%s\n", buffer);
+		} else {
+			// TODO connection clossed
 			break;
+		}
 	}
-
-	// here the connection would be closed by the client
-	// end of testing purposes only
 }

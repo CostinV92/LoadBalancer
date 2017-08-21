@@ -10,7 +10,7 @@
 
 #include <pthread.h>
 
-#include "log.h"
+#include "utils.h"
 #include "secretary.h"
 
 #include "clientListener.h"

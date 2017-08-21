@@ -57,8 +57,8 @@ void* start_server(void* arg)
 			worker_t worker;
 			memset(&worker, 0, sizeof(worker_t));
 
-			worker.worker_socket = worker_socket;
-			worker.worker_addr = worker_addr;
+			worker.socket = worker_socket;
+			worker.addr = worker_addr;
 			pthread_create(&worker_thread_id, NULL, &register_worker, &worker);
 		}
 	}
@@ -110,11 +110,11 @@ void* register_worker(void* arg)
 	memset(worker, 0, sizeof(worker_t));
 	memcpy((void*)worker, arg, sizeof(worker_t));
 
-	if(getnameinfo((struct sockaddr *)&(worker->worker_addr), sizeof(worker->worker_addr), worker->hostname, sizeof(worker->hostname), service, sizeof(service), 0) == 0) {
+	if(getnameinfo((struct sockaddr *)&(worker->addr), sizeof(worker->addr), worker->hostname, sizeof(worker->hostname), service, sizeof(service), 0) == 0) {
 		heap_push((heap_node_t*)worker);
-		LOG("Worker listener: worker added to database, hostname: %s, ip: %s", worker->hostname, format_ip_addr(((struct sockaddr_in*)&(worker->worker_addr))->sin_addr.s_addr));
+		LOG("Worker listener: worker added to database, hostname: %s, ip: %s", worker->hostname, format_ip_addr(((struct sockaddr_in*)&(worker->addr))->sin_addr.s_addr));
 	} else {
-		LOG("Worker listener: failed to add worker to database (no hostname), ip: %s", format_ip_addr(((struct sockaddr_in*)&(worker->worker_addr))->sin_addr.s_addr));
+		LOG("Worker listener: failed to add worker to database (no hostname), ip: %s", format_ip_addr(((struct sockaddr_in*)&(worker->addr))->sin_addr.s_addr));
 	}
 
 	listen_to_worker(worker);
@@ -125,13 +125,13 @@ void listen_to_worker(worker_t *worker)
 	for(;;) {
 		int byte_read;
 		char buffer[256] = {0};
-		byte_read = read(worker->worker_socket, buffer, sizeof(buffer));
+		byte_read = read(worker->socket, buffer, sizeof(buffer));
 		if(byte_read) {
 			// TODO message received --- use a queue or something
 			printf("%s\n", buffer);
 		} else {
 			// TODO connection clossed find a way to delete from heap
-			LOG("Worker listener: worker closed connection, hostname: %s, ip: %s", worker->hostname, format_ip_addr(((struct sockaddr_in*)&(worker->worker_addr))->sin_addr.s_addr));
+			LOG("Worker listener: worker closed connection, hostname: %s, ip: %s", worker->hostname, format_ip_addr(((struct sockaddr_in*)&(worker->addr))->sin_addr.s_addr));
 			break;
 		}
 	}

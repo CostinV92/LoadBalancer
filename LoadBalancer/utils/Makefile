@@ -1,4 +1,4 @@
-OBJ := log.o heap.o
+OBJ := utils.o heap.o
 
 ifdef OBJ
 
