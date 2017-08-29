@@ -8,6 +8,8 @@
 
 #include "utils.h"
 
+extern void process_build_req(void*);
+
 static FILE *log_file;
 static char ip_string[20];
 
@@ -59,4 +61,16 @@ void LOG(char* format, ...)
 
 	fflush(log_file);
     fsync(fileno(log_file));
+}
+
+void process_message(message_t* message)
+{
+	switch(message->type) {
+		case SECRETARY_BUILD_REQ:
+			process_build_req((void*)(message->buffer));
+			break;
+
+		default:
+			break;
+	}
 }

@@ -50,12 +50,14 @@ void* start_server(void* arg)
 			exit(1);
 		} else {
 			LOG("Client listener: client connected, ip: %s", format_ip_addr(((struct sockaddr_in*)&client_addr)->sin_addr.s_addr));
+			client_t client;
+			client.socket = client_socket;
+			client.addr = client_addr;
 
-			pthread_create(&secretary_thread_id, NULL, &assign_secretary, &client_socket);
+			pthread_create(&secretary_thread_id, NULL, &assign_secretary, &client);
 
 			secretary.thread_id = secretary_thread_id;
-			secretary.client_socket = client_socket;
-			secretary.client_addr = client_addr;
+			secretary.client = client;
 			client_listener->secretaries[client_listener->no_of_secretaries++] = secretary;
 		}
 	}

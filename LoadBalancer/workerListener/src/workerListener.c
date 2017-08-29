@@ -116,23 +116,4 @@ void* register_worker(void* arg)
 	} else {
 		LOG("Worker listener: failed to add worker to database (no hostname), ip: %s", format_ip_addr(((struct sockaddr_in*)&(worker->addr))->sin_addr.s_addr));
 	}
-
-	listen_to_worker(worker);
-}
-
-void listen_to_worker(worker_t *worker)
-{
-	for(;;) {
-		int byte_read;
-		char buffer[256] = {0};
-		byte_read = read(worker->socket, buffer, sizeof(buffer));
-		if(byte_read) {
-			// TODO message received --- use a queue or something
-			printf("%s\n", buffer);
-		} else {
-			// TODO connection clossed find a way to delete from heap
-			LOG("Worker listener: worker closed connection, hostname: %s, ip: %s", worker->hostname, format_ip_addr(((struct sockaddr_in*)&(worker->addr))->sin_addr.s_addr));
-			break;
-		}
-	}
 }
