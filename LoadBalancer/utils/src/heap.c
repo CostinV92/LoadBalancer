@@ -1,6 +1,8 @@
 #include "heap.h"
+#include "utils.h"
 
 #include <stdio.h>
+#include <pthread.h>
 
 int current_index = 1;
 
@@ -14,6 +16,8 @@ int current_index = 1;
 #define SECOND_CHILD(x)			(heap[((x->heap_index) << 1) + 1])
 #define MIN_CHILD(x)			(FIRST_CHILD(x)->heap_key < SECOND_CHILD(x)->heap_key ? FIRST_CHILD(x) : SECOND_CHILD(x))
 
+static pthread_mutex_t heap_mutex;
+
 static void heap_lock();
 static void heap_unlock();
 static heap_node_t* get_parent(heap_node_t*);
@@ -23,12 +27,19 @@ static void balance_heap_down_from(heap_node_t*);
 
 void heap_lock()
 {
-	// TODO take the mutex
+	static bool mutex_init = false;
+
+	if(!mutex_init) {
+		pthread_mutex_init(&heap_mutex, NULL);
+		mutex_init = true;
+	}
+
+	pthread_mutex_lock(&heap_mutex);
 }
 
 void heap_unlock()
 {
-	// TODO release the mutex
+	pthread_mutex_unlock(&heap_mutex);
 }
 
 void heap_push(heap_node_t* node)
