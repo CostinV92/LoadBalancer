@@ -2,7 +2,6 @@
 #define __WORKER_LISTENER_H__
 
 #include "heap.h"
-#include "secretary.h"
 
 #define WORKER_PORT			7892
 
@@ -25,7 +24,7 @@ typedef struct WORKER {
 	// worker info
 	char 					hostname[256];
 	int 					no_current_builds;
-	bool 					fast_builder;
+	bool 					fast_worker;
 } worker_t;
 
 void init_worker_listener();

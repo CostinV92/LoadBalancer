@@ -10,6 +10,8 @@
 #include "utils.h"
 #include "workerListener.h"
 
+extern heap_t *worker_heap, *fast_worker_heap;
+
 void* assign_secretary(void* arg)
 {
 	client_t client = *((client_t*)arg);
@@ -38,10 +40,11 @@ void* assign_secretary(void* arg)
 
 void process_build_req(client_t* client, build_req_msg_t* message)
 {
-	// get a worker
-	//TODO test if fast build is wanted and pop the specific heap
+	// get a worker from the specific heap
+	heap_t *heap = message->fast ? fast_worker_heap : worker_heap;
+
 	worker_t *worker;
-	worker = (worker_t*)heap_pop();
+	worker = (worker_t*)heap_pop(heap);
 
 	if(worker) {
 		if(worker->no_current_builds >= 2) {
@@ -51,13 +54,9 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 
 		// TODO tell the client to listen for output, send to worker the platform and the port for sending the output
 
-		//Here the worker would have begin the build so add it again to the heap (specific heap)
+		//Here the worker would have begin the build so add it again to the heap
 		LOG("Secretary: Worker assigned; worker: %s  client: %s", worker->hostname, client->hostname);
-		if(worker->fast_builder) {
-			// add to fast builders' heap
-		} else {
-			heap_push((heap_node_t*)worker);
-		}
+		heap_push(heap, (heap_node_t*)worker);
 
 	} else {
 		LOG("WARNING Secretary: Don't have any worker registered!");

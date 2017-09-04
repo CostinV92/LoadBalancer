@@ -23,6 +23,7 @@ static bool get_worker_hostname(worker_t*);
 static void listen_to_worker(worker_t*);
 
 worker_listener_t *worker_listener;
+heap_t *worker_heap, *fast_worker_heap;
 
 void init_worker_listener()
 {
@@ -35,6 +36,9 @@ void init_worker_listener()
 	pthread_create(&server_thread_id, NULL, &start_server, &(worker_listener->socket));
 
 	worker_listener->thread_id = server_thread_id;
+
+	worker_heap = heap_init();
+	fast_worker_heap = heap_init();
 }
 
 void* start_server(void* arg) 
@@ -111,8 +115,7 @@ void* register_worker(void* arg)
 	memcpy((void*)worker, arg, sizeof(worker_t));
 
 	if(getnameinfo((struct sockaddr *)&(worker->addr), sizeof(worker->addr), worker->hostname, sizeof(worker->hostname), service, sizeof(service), 0) == 0) {
-		//TODO test if fast worker and add to the specific heap
-		heap_push((heap_node_t*)worker);
+		heap_push(worker->fast_worker ? fast_worker_heap : worker_heap, worker);
 		LOG("Worker listener: worker added to database, hostname: %s, ip: %s", worker->hostname, format_ip_addr(((struct sockaddr_in*)&(worker->addr))->sin_addr.s_addr));
 	} else {
 		LOG("ERROR Worker listener: failed to add worker to database (no hostname), ip: %s", format_ip_addr(((struct sockaddr_in*)&(worker->addr))->sin_addr.s_addr));
