@@ -11,6 +11,8 @@ typedef struct BUILD_REQ_MSG {
 typedef struct CLIENT {
 	int 					socket;
 	struct sockaddr_in		addr;
+
+	char 					hostname[256];
 } client_t;
 
 typedef struct SECRETARY {

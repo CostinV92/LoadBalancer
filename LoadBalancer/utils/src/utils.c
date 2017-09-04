@@ -7,8 +7,9 @@
 #include <unistd.h>
 
 #include "utils.h"
+#include "secretary.h"
 
-extern void process_build_req(void*);
+extern void process_build_req(client_t*, void*);
 
 static FILE *log_file;
 static char ip_string[20];
@@ -63,14 +64,16 @@ void LOG(char* format, ...)
     fsync(fileno(log_file));
 }
 
-void process_message(message_t* message)
+void process_message(client_t* client, message_t* message)
 {
 	switch(message->type) {
 		case SECRETARY_BUILD_REQ:
-			process_build_req((void*)(message->buffer));
+			LOG("Procces message: Got SECRETARY_BUILD_REQ message from hostname: %s, ip: %s", client->hostname, format_ip_addr(((struct sockaddr_in*)&(client->addr))->sin_addr.s_addr));
+			process_build_req(client, (void*)(message->buffer));
 			break;
 
 		default:
+			LOG("WARNING Procces message: Unknown message from hostname: %s, ip: %s", client->hostname, format_ip_addr(((struct sockaddr_in*)&(client->addr))->sin_addr.s_addr));
 			break;
 	}
 }

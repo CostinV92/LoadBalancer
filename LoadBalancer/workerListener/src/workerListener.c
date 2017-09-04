@@ -111,9 +111,11 @@ void* register_worker(void* arg)
 	memcpy((void*)worker, arg, sizeof(worker_t));
 
 	if(getnameinfo((struct sockaddr *)&(worker->addr), sizeof(worker->addr), worker->hostname, sizeof(worker->hostname), service, sizeof(service), 0) == 0) {
+		//TODO test if fast worker and add to the specific heap
 		heap_push((heap_node_t*)worker);
 		LOG("Worker listener: worker added to database, hostname: %s, ip: %s", worker->hostname, format_ip_addr(((struct sockaddr_in*)&(worker->addr))->sin_addr.s_addr));
 	} else {
-		LOG("Worker listener: failed to add worker to database (no hostname), ip: %s", format_ip_addr(((struct sockaddr_in*)&(worker->addr))->sin_addr.s_addr));
+		LOG("ERROR Worker listener: failed to add worker to database (no hostname), ip: %s", format_ip_addr(((struct sockaddr_in*)&(worker->addr))->sin_addr.s_addr));
+		free(worker);
 	}
 }

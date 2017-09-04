@@ -25,6 +25,7 @@ typedef struct WORKER {
 	// worker info
 	char 					hostname[256];
 	int 					no_current_builds;
+	bool 					fast_builder;
 } worker_t;
 
 void init_worker_listener();

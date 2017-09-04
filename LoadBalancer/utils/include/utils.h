@@ -18,7 +18,6 @@ typedef enum  MESSAGE_TYPE {
 
 typedef struct MESSAGE {
 	message_type_t 			type;
-	int 					size;
 	char					buffer[];
 } message_t;
 
@@ -26,6 +25,6 @@ typedef struct MESSAGE {
 int init_log();
 void LOG(char*, ...);
 char* format_ip_addr(unsigned long);
-void process_message(message_t* message);
+void process_message();
 
 #endif
