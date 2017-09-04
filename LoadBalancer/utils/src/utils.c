@@ -3,7 +3,11 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
+
+#include <netdb.h>
+#include <netinet/in.h>
 #include <arpa/inet.h>
+
 #include <unistd.h>
 
 #include "utils.h"
@@ -25,8 +29,9 @@ int init_log()
 	return 0;
 }
 
-char* format_ip_addr(unsigned long ip)
+char* format_ip_addr(struct sockaddr_in* addr)
 {
+	unsigned long ip = addr->sin_addr.s_addr;
 	unsigned short b1, b2, b3, b4;
 	ip = ntohl(ip);
 	b1 = ip >> 24 & 0xff;
@@ -68,12 +73,12 @@ void process_message(client_t* client, message_t* message)
 {
 	switch(message->type) {
 		case SECRETARY_BUILD_REQ:
-			LOG("Procces message: Got SECRETARY_BUILD_REQ message from hostname: %s, ip: %s", client->hostname, format_ip_addr(((struct sockaddr_in*)&(client->addr))->sin_addr.s_addr));
+			LOG("Procces message: Got SECRETARY_BUILD_REQ message from hostname: %s, ip: %s", client->hostname, format_ip_addr(&(client->addr)));
 			process_build_req(client, (void*)(message->buffer));
 			break;
 
 		default:
-			LOG("WARNING Procces message: Unknown message from hostname: %s, ip: %s", client->hostname, format_ip_addr(((struct sockaddr_in*)&(client->addr))->sin_addr.s_addr));
+			LOG("WARNING Procces message: Unknown message from hostname: %s, ip: %s", client->hostname, format_ip_addr(&(client->addr)));
 			break;
 	}
 }

@@ -49,7 +49,7 @@ void* start_server(void* arg)
 			setsockopt(*socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 			exit(1);
 		} else {
-			LOG("Client listener: client connected, ip: %s", format_ip_addr(((struct sockaddr_in*)&client_addr)->sin_addr.s_addr));
+			LOG("Client listener: client connected, ip: %s", format_ip_addr(&client_addr));
 			client_t client;
 			client.socket = client_socket;
 			client.addr = client_addr;

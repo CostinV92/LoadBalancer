@@ -18,9 +18,9 @@ void* assign_secretary(void* arg)
 	char service[20] = {0};
 
 	if(getnameinfo((struct sockaddr *)&(client.addr), sizeof(client.addr), client.hostname, sizeof(client.hostname), service, sizeof(service), 0) == 0) {
-		LOG("Secretary: Client introduced himself, hostname: %s, ip: %s", client.hostname, format_ip_addr(((struct sockaddr_in*)&(client.addr))->sin_addr.s_addr));
+		LOG("Secretary: Client introduced himself, hostname: %s, ip: %s", client.hostname, format_ip_addr(&(client.addr)));
 	} else {
-		LOG("WARNING Secretary: Client didn't introduced himself, ip: %s", format_ip_addr(((struct sockaddr_in*)&(client.addr))->sin_addr.s_addr));
+		LOG("WARNING Secretary: Client didn't introduced himself, ip: %s", format_ip_addr(&(client.addr)));
 	}
 
 	for(;;) {
@@ -32,7 +32,7 @@ void* assign_secretary(void* arg)
 			printf("%s", buffer);
 			process_message(&client, (message_t*)buffer);
 		} else {
-			LOG("Secretary: Client closed connection, hostname: %s, ip: %s", client.hostname, format_ip_addr(((struct sockaddr_in*)&(client.addr))->sin_addr.s_addr));
+			LOG("Secretary: Client closed connection, hostname: %s, ip: %s", client.hostname, format_ip_addr(&(client.addr)));
 			break;
 		}
 	}

@@ -3,6 +3,8 @@
 
 #define LOG_PATH "/tmp/LoadBalancer.log"
 
+#include <netinet/in.h>
+
 typedef enum BOOL {
 	false,
 	true
@@ -24,7 +26,7 @@ typedef struct MESSAGE {
 
 int init_log();
 void LOG(char*, ...);
-char* format_ip_addr(unsigned long);
+char* format_ip_addr(struct sockaddr_in*);
 void process_message();
 
 #endif

@@ -56,7 +56,7 @@ void* start_server(void* arg)
 			exit(1);
 		} else {
 			pthread_t worker_thread_id;
-			LOG("Worker listener: worker connected, ip: %s", format_ip_addr(((struct sockaddr_in*)&worker_addr)->sin_addr.s_addr));
+			LOG("Worker listener: worker connected, ip: %s", format_ip_addr(&worker_addr));
 
 			worker_t worker;
 			memset(&worker, 0, sizeof(worker_t));
@@ -115,10 +115,10 @@ void* register_worker(void* arg)
 	memcpy((void*)worker, arg, sizeof(worker_t));
 
 	if(getnameinfo((struct sockaddr *)&(worker->addr), sizeof(worker->addr), worker->hostname, sizeof(worker->hostname), service, sizeof(service), 0) == 0) {
-		heap_push(worker->fast_worker ? fast_worker_heap : worker_heap, worker);
-		LOG("Worker listener: worker added to database, hostname: %s, ip: %s", worker->hostname, format_ip_addr(((struct sockaddr_in*)&(worker->addr))->sin_addr.s_addr));
+		heap_push(worker->fast_worker ? fast_worker_heap : worker_heap, (heap_node_t*)worker);
+		LOG("Worker listener: worker added to database, hostname: %s, ip: %s", worker->hostname, format_ip_addr(&(worker->addr)));
 	} else {
-		LOG("ERROR Worker listener: failed to add worker to database (no hostname), ip: %s", format_ip_addr(((struct sockaddr_in*)&(worker->addr))->sin_addr.s_addr));
+		LOG("ERROR Worker listener: failed to add worker to database (no hostname), ip: %s", format_ip_addr(&(worker->addr)));
 		free(worker);
 	}
 }
