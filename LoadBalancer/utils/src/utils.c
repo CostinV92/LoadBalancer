@@ -1,8 +1,8 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include <string.h>
 #include <stdarg.h>
-#include <stdlib.h>
 
 #include <netdb.h>
 #include <netinet/in.h>
@@ -85,13 +85,16 @@ void process_message(client_t* client, message_t* message)
 	}
 }
 
-void send_message(int socket, message_type_t type, int size, char* buffer)
+int send_message(int socket, message_type_t type, int size, char* buffer)
 {
+	int bytes_written = 0;
 	message_t* msg = malloc(sizeof(message_t) + size);
 	msg->type = type;
 	msg->size = sizeof(message_t) + size;
 	memcpy(msg->buffer, buffer, size);
 
-	write(socket, msg, msg->size);
+	bytes_written = write(socket, msg, msg->size);
 	free(msg);
+
+	return bytes_written;
 }

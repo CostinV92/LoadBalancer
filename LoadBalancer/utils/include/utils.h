@@ -31,6 +31,6 @@ int init_log();
 void LOG(char*, ...);
 char* format_ip_addr(struct sockaddr_in*);
 void process_message();
-void send_message();
+int send_message();
 
 #endif
