@@ -5,8 +5,14 @@
 
 typedef struct BUILD_REQ_MSG {
 	platform_t 		platform;
+	int 			listen_port;
 	bool			fast;
 } build_req_msg_t;
+
+typedef struct BUILD_RES_MSG {
+	bool 			status;
+	int 			reason;
+}	build_res_msg_t;
 
 typedef struct CLIENT {
 	int 					socket;

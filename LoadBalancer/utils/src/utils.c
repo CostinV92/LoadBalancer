@@ -71,7 +71,9 @@ void LOG(char* format, ...)
 
 void process_message(client_t* client, message_t* message)
 {
-	switch(message->type) {
+	message_type_t msg_type = message->type;
+
+	switch(msg_type) {
 		case SECRETARY_BUILD_REQ:
 			LOG("Procces message: Got SECRETARY_BUILD_REQ message from hostname: %s, ip: %s", client->hostname, format_ip_addr(&(client->addr)));
 			process_build_req(client, (void*)(message->buffer));
@@ -81,4 +83,10 @@ void process_message(client_t* client, message_t* message)
 			LOG("WARNING Procces message: Unknown message from hostname: %s, ip: %s", client->hostname, format_ip_addr(&(client->addr)));
 			break;
 	}
+}
+
+void send_message(client_t* client, message_t* message)
+{
+	LOG("Send message: Send message type: %d size: %d to hostname: %s, ip: %s", message->type, message->size, client->hostname, format_ip_addr(&(client->addr)));
+	write(client->socket, message, message->size);
 }

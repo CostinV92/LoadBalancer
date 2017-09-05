@@ -15,11 +15,13 @@ typedef enum PLATFORM {
 } platform_t;
 
 typedef enum  MESSAGE_TYPE {
-	SECRETARY_BUILD_REQ
+	SECRETARY_BUILD_REQ,
+	SECRETARY_BUILD_RES
 } message_type_t;
 
 typedef struct MESSAGE {
 	message_type_t 			type;
+	int 					size;
 	char					buffer[];
 } message_t;
 
@@ -28,5 +30,6 @@ int init_log();
 void LOG(char*, ...);
 char* format_ip_addr(struct sockaddr_in*);
 void process_message();
+void send_message();
 
 #endif
