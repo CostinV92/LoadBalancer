@@ -2,7 +2,7 @@
 #include <time.h>
 #include <string.h>
 #include <stdarg.h>
-#include <stdio.h>
+#include <stdlib.h>
 
 #include <netdb.h>
 #include <netinet/in.h>
@@ -85,8 +85,13 @@ void process_message(client_t* client, message_t* message)
 	}
 }
 
-void send_message(client_t* client, message_t* message)
+void send_message(int socket, message_type_t type, int size, char* buffer)
 {
-	LOG("Send message: Send message type: %d size: %d to hostname: %s, ip: %s", message->type, message->size, client->hostname, format_ip_addr(&(client->addr)));
-	write(client->socket, message, message->size);
+	message_t* msg = malloc(sizeof(message_t) + size);
+	msg->type = type;
+	msg->size = sizeof(message_t) + size;
+	memcpy(msg->buffer, buffer, size);
+
+	write(socket, msg, msg->size);
+	free(msg);
 }

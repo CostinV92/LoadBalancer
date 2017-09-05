@@ -13,6 +13,7 @@
 extern heap_t *worker_heap, *fast_worker_heap;
 
 static void send_build_res(client_t*, bool, int);
+static void send_build_order(worker_t*, client_t*, build_req_msg_t*);
 
 void* assign_secretary(void* arg)
 {
@@ -66,11 +67,15 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 
 	send_build_res(client, status, reason);
 	if(status) {
-		// TODO send client info to the worker
+		//send build and client info to the worker
+		send_build_order(worker, client, message);
 
-		//Here the worker would have begin the build so add it again to the heap
-		LOG("Secretary: Worker assigned; worker: %s  client: %s", worker->hostname, client->hostname);
+		//Here the worker would have begin the build so update the worker info and re add it to the heap
+		worker->no_current_builds++;
+		worker->heap_node.heap_key = worker->no_current_builds;
 		heap_push(heap, (heap_node_t*)worker);
+
+		LOG("Secretary: Worker assigned; worker: %s  client: %s", worker->hostname, client->hostname);
 	}
 }
 
@@ -81,11 +86,19 @@ static void send_build_res(client_t* client, bool status, int reason)
 	res_msg.status = status;
 	res_msg.reason = reason;
 
-	message_t* msg = malloc(sizeof(message_t) + sizeof(build_res_msg_t));
-	msg->type = SECRETARY_BUILD_RES;
-	msg->size = sizeof(message_t) + sizeof(build_res_msg_t);
-	memcpy(msg->buffer, (void*)&res_msg, sizeof(build_res_msg_t));
+	send_message(client->socket, SECRETARY_BUILD_RES, sizeof(build_res_msg_t), (char*)&res_msg);
 
-	send_message(client, (char*)msg);
-	free(msg);
+	LOG("Send message: Send message SECRETARY_BUILD_RES to client hostname: %s, ip: %s", client->hostname, format_ip_addr(&(client->addr)));
+}
+
+static void send_build_order(worker_t* worker, client_t* client, build_req_msg_t* build_message)
+{
+	build_order_msg_t build_order;
+
+	build_order.client = *client;
+	build_order.request = *build_message;
+
+	send_message(worker->socket, WORKER_BUILD_ORDER, sizeof(build_order_msg_t), (char*)&build_order);
+
+	LOG("Send message: Send message WORKER_BUILD_ORDER to worker hostname: %s, ip: %s", worker->hostname, format_ip_addr(&(worker->addr)));
 }
