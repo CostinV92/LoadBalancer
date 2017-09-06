@@ -17,7 +17,8 @@ typedef enum PLATFORM {
 typedef enum  MESSAGE_TYPE {
 	SECRETARY_BUILD_REQ,
 	SECRETARY_BUILD_RES,
-	WORKER_BUILD_ORDER
+	WORKER_BUILD_ORDER,
+	WORKER_BUILD_DONE
 } message_type_t;
 
 typedef struct MESSAGE {

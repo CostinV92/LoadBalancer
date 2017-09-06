@@ -31,6 +31,11 @@ typedef struct BUILD_ORDER_MSG {
 	build_req_msg_t		request;
 } build_order_msg_t;
 
+typedef struct BUILD_ORDER_DONE_MSG {
+	build_order_msg_t 		build_order;
+	int						status;
+} build_order_done_msg_t;
+
 void* assign_secretary(void*);
 
 #endif

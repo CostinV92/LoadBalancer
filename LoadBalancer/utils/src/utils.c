@@ -14,6 +14,7 @@
 #include "secretary.h"
 
 extern void process_build_req(client_t*, void*);
+extern void process_build_done(client_t*, void*);
 
 static FILE *log_file;
 static char ip_string[20];
@@ -69,18 +70,23 @@ void LOG(char* format, ...)
     fsync(fileno(log_file));
 }
 
-void process_message(client_t* client, message_t* message)
+void process_message(void* peer, message_t* message, char* hostname, char* ip_addr)
 {
 	message_type_t msg_type = message->type;
 
 	switch(msg_type) {
 		case SECRETARY_BUILD_REQ:
-			LOG("Procces message: Got SECRETARY_BUILD_REQ message from hostname: %s, ip: %s", client->hostname, format_ip_addr(&(client->addr)));
-			process_build_req(client, (void*)(message->buffer));
+			LOG("Procces message: Got SECRETARY_BUILD_REQ message from hostname: %s, ip: %s", hostname, ip_addr);
+			process_build_req(peer, (void*)(message->buffer));
+			break;
+
+		case WORKER_BUILD_DONE:
+			LOG("Procces message: Got WORKER_BUILD_DONE message from hostname: %s, ip: %s", hostname, ip_addr);
+			process_build_done(peer, (void*)(message->buffer));
 			break;
 
 		default:
-			LOG("WARNING Procces message: Unknown message from hostname: %s, ip: %s", client->hostname, format_ip_addr(&(client->addr)));
+			LOG("WARNING Procces message: Unknown message from hostname: %s, ip: %s", hostname, ip_addr);
 			break;
 	}
 }
