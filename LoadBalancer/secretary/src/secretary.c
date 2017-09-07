@@ -66,7 +66,7 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 		status = true;
 		reason = 0;
 
-		worker = (worker_t*)heap_pop(heap);
+		worker = INFO(heap_pop(heap), worker_t);
 
 		if(worker) {
 			if(worker->no_current_builds >= 2) {
@@ -86,7 +86,7 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 				//Here the worker would have begin the build so update the worker info and re add it to the heap
 				worker->no_current_builds++;
 				worker->heap_node.heap_key = worker->no_current_builds;
-				heap_push(heap, (heap_node_t*)worker);
+				heap_push(heap, &(worker->heap_node));
 
 				// spawn a thread to listen to the worker for when the build is done
 				pthread_t thread_id;
@@ -107,7 +107,7 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 			}
 		} else {
 			// the build couldn't be started so add the worker back to the heap
-			heap_push(heap, (heap_node_t*)worker);
+			heap_push(heap, &(worker->heap_node));
 		}
 	} while (another_one);
 }
@@ -145,7 +145,7 @@ void process_build_done(worker_t* worker, build_order_done_msg_t* message)
 
 	worker->no_current_builds--;
 	//update the heap key
-	heap_update_node_key(fast_build ? fast_worker_heap : worker_heap, (heap_node_t*)worker, worker->no_current_builds);
+	heap_update_node_key(fast_build ? fast_worker_heap : worker_heap, &(worker->heap_node), worker->no_current_builds);
 }
 
 static bool send_build_res(client_t* client, bool status, int reason)

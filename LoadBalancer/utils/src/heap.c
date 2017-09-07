@@ -41,12 +41,12 @@ heap_t* heap_init()
 	return new_heap;
 }
 
-void heap_lock(heap_t* heap)
+static void heap_lock(heap_t* heap)
 {
 	pthread_mutex_lock(&(heap->mutex));
 }
 
-void heap_unlock(heap_t* heap)
+static void heap_unlock(heap_t* heap)
 {
 	pthread_mutex_unlock(&(heap->mutex));
 }
@@ -95,7 +95,7 @@ void heap_update_node_key(heap_t* heap, heap_node_t* node, int new_key)
 	heap_unlock(heap);
 }
 
-void balance_heap_up_from(heap_t* heap, heap_node_t* node)
+static void balance_heap_up_from(heap_t* heap, heap_node_t* node)
 {
 	if(!node)
 		return;
@@ -118,7 +118,7 @@ void balance_heap_up_from(heap_t* heap, heap_node_t* node)
 	}
 }
 
-void balance_heap_down_from(heap_t* heap, heap_node_t* node)
+static void balance_heap_down_from(heap_t* heap, heap_node_t* node)
 {
 	if(!node)
 		return;
@@ -140,7 +140,7 @@ void balance_heap_down_from(heap_t* heap, heap_node_t* node)
 	}
 }
 
-heap_node_t* get_parent(heap_t* heap, heap_node_t *node)
+static heap_node_t* get_parent(heap_t* heap, heap_node_t *node)
 {
 	if(HAS_PARENT(node))
 		return PARENT(heap, node);
@@ -148,7 +148,7 @@ heap_node_t* get_parent(heap_t* heap, heap_node_t *node)
 		return 0;
 }
 
-heap_node_t* get_min_child(heap_t* heap, heap_node_t *node)
+static heap_node_t* get_min_child(heap_t* heap, heap_node_t *node)
 {
 	heap_node_t *first_child, *min_child;
 	
