@@ -20,11 +20,12 @@ void register_worker()
 
 void connect_to_server()
 {
-    int server_socket, port;
+    int server_socket, port, iSetOption = 1;
     struct sockaddr_in server_addr;
 
     // create the socket
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
     if(server_socket < 0) {
         LOG("ERROR opening LoadBalancer socket");

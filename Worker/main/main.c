@@ -9,10 +9,6 @@
 
 void sigint_handler()
 {
-    int iSetOption = 1;
-    // this is for reusing the port imeddiatly after ctr+c
-    setsockopt(loadBalancer->socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
-
     close(loadBalancer->socket);
 
     LOG("WARNING Worker going down");

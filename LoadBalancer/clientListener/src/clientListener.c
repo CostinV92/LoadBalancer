@@ -65,11 +65,12 @@ void* start_server(void* arg)
 
 void create_server() 
 {
-	int server_socket, port;
+	int server_socket, port, iSetOption = 1;
 	struct sockaddr_in server;
 
 	// create the socket
 	server_socket = socket(AF_INET, SOCK_STREAM, 0);
+	setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
 	if(server_socket < 0) {
 		perror("ERROR opening client listener socket");

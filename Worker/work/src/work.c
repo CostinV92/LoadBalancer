@@ -94,11 +94,12 @@ void send_build_done(build_order_msg_t *req, int status)
 
 int connect_to_client(client_t *client, int client_port)
 {
-    int client_socket, port = client_port;
+    int client_socket, port = client_port, iSetOption = 1;
     struct sockaddr_in client_addr = client->addr;
 
     // create the socket
     client_socket = socket(AF_INET, SOCK_STREAM, 0);
+    setsockopt(client_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
     if(client_socket < 0) {
         LOG("ERROR opening client output socket");

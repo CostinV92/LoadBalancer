@@ -43,11 +43,13 @@ void listen_for_output()
 
 void create_server() 
 {
-    int server_socket, port;
+    int server_socket, port, iSetOption = 1;
     struct sockaddr_in server;
 
     // create the socket
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
+
+    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
     if(server_socket < 0) {
         LOG("ERROR opening output listener socket");
@@ -66,7 +68,7 @@ void create_server()
 
     // bind the socket with the address
     if(bind(server_socket, (struct sockaddr*)&server, sizeof(struct sockaddr_in)) < 0 ) {
-        LOG("ERROR on biding output listener socket");
+        LOG("ERROR on binding output listener socket");
         exit(1);
     }
 
@@ -107,11 +109,13 @@ void* start_server(void* arg)
 
 void connect_to_lb()
 {
-    int lb_socket, port;
+    int lb_socket, port, iSetOption = 1;
     struct sockaddr_in lb_addr;
 
     // create the socket
     lb_socket = socket(AF_INET, SOCK_STREAM, 0);
+
+    setsockopt(lb_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
     if(lb_socket < 0) {
         LOG("ERROR opening LoadBalancer socket");
@@ -128,6 +132,7 @@ void connect_to_lb()
     // TODO: take the real lb addr
     lb_addr.sin_addr.s_addr = INADDR_ANY;
     lb_addr.sin_port = htons(port);
+
 
     if (connect(lb_socket, (struct sockaddr *)&lb_addr, sizeof(struct sockaddr_in)) < 0) {
         LOG("ERROR connecting to LoadBalancer");
@@ -152,17 +157,12 @@ void send_request()
 
     int byte_read;
     char buffer[256] = {0};
-    while (byte_read = read(loadBalancer.socket, buffer, sizeof(buffer)))
-        printf("%s", buffer);
+    byte_read = read(loadBalancer.socket, buffer, sizeof(buffer));
+    printf("%s\n", buffer);
 }
 
 void sigint_handler()
 {
-    int iSetOption = 1;
-    // this is for reusing the port imeddiatly after ctr+c
-    setsockopt(loadBalancer.socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
-    setsockopt(output_listener.socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
-
     close(loadBalancer.socket);
     close(output_listener.socket);
 
