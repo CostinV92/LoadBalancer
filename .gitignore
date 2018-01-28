@@ -1,2 +1,3 @@
 LoadBalancer/Build/*
 LoadBalancer/tests/*
+Worker/Build/*
