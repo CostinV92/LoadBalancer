@@ -12,6 +12,8 @@ typedef struct LOAD_BALANCER {
     struct sockaddr_in      server;
 } load_balancer_server_t;
 
+load_balancer_server_t *loadBalancer;
+
 void register_worker();
 
 #endif

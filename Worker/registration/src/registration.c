@@ -11,8 +11,6 @@
 
 static void connect_to_server();
 
-load_balancer_server_t *loadBalancer;
-
 void register_worker()
 {
     // connect to the load balancer and anounce yourself

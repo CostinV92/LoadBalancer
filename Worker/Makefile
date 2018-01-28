@@ -8,8 +8,9 @@ export INCLUDE_DIR := ./include
 export LIBRARIES := -pthread
 
 REGISTRATION_INCLUDE_DIR := $(PWD)/registration/include
+WORK_INCLUDE_DIR := $(PWD)/work/include
 UTILS_INCLUDE_DIR := $(PWD)/utils/include
-export INCLUDE := -I$(REGISTRATION_INCLUDE_DIR) -I$(UTILS_INCLUDE_DIR)
+export INCLUDE := -I$(REGISTRATION_INCLUDE_DIR) -I$(UTILS_INCLUDE_DIR) -I$(WORK_INCLUDE_DIR)
 
 
 DIRS := $(filter-out Build/., $(wildcard */.))

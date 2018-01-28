@@ -4,9 +4,8 @@
 #include <signal.h>
 
 #include "registration.h"
+#include "work.h"
 #include "utils.h"
-
-extern load_balancer_server_t *loadBalancer;
 
 void sigint_handler()
 {
@@ -15,6 +14,8 @@ void sigint_handler()
     setsockopt(loadBalancer->socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
     close(loadBalancer->socket);
+
+    LOG("WARNING Worker going down");
 
     exit(SIGINT);
 }
@@ -27,7 +28,7 @@ int main()
     }
 
     register_worker();
-    //wait_for_work();
+    wait_for_work();
 
     return 0;
 }
