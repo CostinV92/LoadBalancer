@@ -38,7 +38,7 @@ void* assign_secretary(void* arg)
 		char buffer[256] = {0};
 		byte_read = read(client->socket, buffer, sizeof(buffer));
 		if(byte_read) {
-			// DEBUG
+			// TODO: DEBUG
 			printf("%s", buffer);
 			process_message(client, (message_t*)buffer,
 				client->hostname, format_ip_addr(&(client->addr)));
@@ -46,6 +46,7 @@ void* assign_secretary(void* arg)
 			LOG("Secretary: Client closed connection, hostname: %s, ip: %s",
 				client->hostname, format_ip_addr(&(client->addr)));
 
+			close(client->socket);
 			free(client);
 			break;
 		}
@@ -86,7 +87,7 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 			reason = 1;
 		}
 
-		if(send_build_res(client, status, reason && status)) {
+		if(send_build_res(client, status, reason) && status) {
 			//send build and client info to the worker
 			if(send_build_order(worker, client, message)) {
 				//Here the worker would have begin the build so update the worker info and re add it to the heap

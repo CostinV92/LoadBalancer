@@ -27,7 +27,7 @@ void connect_to_server()
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
 
     if(server_socket < 0) {
-        perror("ERROR opening LoadBalancer socket");
+        LOG("ERROR opening LoadBalancer socket");
         exit(1);    
     }
 
@@ -42,7 +42,7 @@ void connect_to_server()
     server_addr.sin_port = htons(port);
 
     if (connect(server_socket, (struct sockaddr *)&server_addr, sizeof(struct sockaddr_in)) < 0) {
-        perror("ERROR connecting to LoadBalancer");
+        LOG("ERROR connecting to LoadBalancer");
         exit(1);
     }
 

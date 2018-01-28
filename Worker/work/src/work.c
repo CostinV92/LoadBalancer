@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <stdio.h>
 
 #include <pthread.h>
 
@@ -16,11 +17,12 @@ static int connect_to_client(client_t *client, int client_port);
 void wait_for_work()
 {
     int bytes_read;
-    char buffer[256] = {0};
+    char buffer[2 * 256] = {0};
     for(;;) {
         // wait for messages
         bytes_read = read(loadBalancer->socket, buffer, sizeof(buffer));
         if(bytes_read) {
+            LOG("Read %d bytes from LoadBalancer (needed %d)", bytes_read, sizeof(build_order_msg_t));
             process_message((message_t*)buffer);
         } else {
             LOG("Lost connection to LoadBalancer");
@@ -71,9 +73,10 @@ void* start_build(void* arg)
     } else {
         // in child
         dup2(request->listen_port, 1);
-        close(request->listen_port);
+        /*close(request->listen_port);*/
         // TODO: here put the "build" script
-        execlp("/bin/echo", "AAHAHAHAHAHAHAHAHAHA",  (char*)NULL);
+        printf("aAAAAAAAA\n");
+        //execlp("/bin/echo", "AAHAHAHAHAHAHAHAHAHA",  (char*)NULL);
     }
 }
 
