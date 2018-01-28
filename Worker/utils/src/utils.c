@@ -11,10 +11,9 @@
 #include <unistd.h>
 
 #include "utils.h"
+#include "messages.h"
+#include "work.h"
 
-/*extern void process_build_req(client_t*, void*);
-extern void process_build_done(client_t*, void*);
-*/
 static FILE *log_file;
 static char ip_string[20];
 
@@ -69,28 +68,23 @@ void LOG(char* format, ...)
     fsync(fileno(log_file));
 }
 
-/*void process_message(void* peer, message_t* message, char* hostname, char* ip_addr)
+void process_message(message_t* message)
 {
 	message_type_t msg_type = message->type;
 
 	switch(msg_type) {
-		case SECRETARY_BUILD_REQ:
-			LOG("Procces message: Got SECRETARY_BUILD_REQ message from hostname: %s, ip: %s", hostname, ip_addr);
-			process_build_req(peer, (void*)(message->buffer));
-			break;
-
-		case WORKER_BUILD_DONE:
-			LOG("Procces message: Got WORKER_BUILD_DONE message from hostname: %s, ip: %s", hostname, ip_addr);
-			process_build_done(peer, (void*)(message->buffer));
+		case WORKER_BUILD_ORDER:
+			LOG("Procces message: Got WORKER_BUILD_ORDER message");
+			process_build_order((void*)(message->buffer));
 			break;
 
 		default:
-			LOG("WARNING Procces message: Unknown message from hostname: %s, ip: %s", hostname, ip_addr);
+			LOG("WARNING Procces message: Unknown message");
 			break;
 	}
 }
 
-int send_message(int socket, message_type_t type, int size, char* buffer)
+/*int send_message(int socket, message_type_t type, int size, char* buffer)
 {
 	int bytes_written = 0;
 	message_t* msg = malloc(sizeof(message_t) + size);

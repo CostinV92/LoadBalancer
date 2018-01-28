@@ -3,9 +3,9 @@
 #include <unistd.h>
 #include <signal.h>
 
+#include "utils.h"
 #include "registration.h"
 #include "work.h"
-#include "utils.h"
 
 void sigint_handler()
 {
