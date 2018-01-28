@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 
 #include "secretary.h"
+#include "messages.h"
 #include "utils.h"
 #include "workerListener.h"
 

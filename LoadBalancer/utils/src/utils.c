@@ -12,6 +12,7 @@
 
 #include "utils.h"
 #include "secretary.h"
+#include "messages.h"
 
 extern void process_build_req(client_t*, void*);
 extern void process_build_done(client_t*, void*);
