@@ -13,6 +13,7 @@
 
 static void* start_build(void* arg);
 static int connect_to_client(client_t *client, int client_port);
+static void send_build_done(build_order_msg_t *req, int status);
 
 void wait_for_work()
 {
@@ -26,6 +27,7 @@ void wait_for_work()
             process_message((message_t*)buffer);
         } else {
             LOG("Lost connection to LoadBalancer");
+            close(loadBalancer->socket);
             break;
         }
     }
@@ -42,13 +44,13 @@ void process_build_order(build_order_msg_t* message)
 
 void* start_build(void* arg)
 {
-    int pid;
+    int pid, output_socket;
     build_order_msg_t *message = (build_order_msg_t*)arg;
     client_t *client = &(message->client);
     build_req_msg_t *request = &(message->request);
 
     // first connect to the client
-    if(connect_to_client(client, request->listen_port) != 0) {
+    if((output_socket = connect_to_client(client, request->listen_port)) < 0) {
         // error on connecting to client for sending output
         // TODO: send work done to LoadBalanacer with error
 
@@ -61,23 +63,33 @@ void* start_build(void* arg)
     if ((pid = fork()) < 0) {
         // error on forking
         LOG("ERROR forking failed");
-        // TODO: send work done with error
+        send_build_done(message, -1);
     } else if (pid) {
         // in parent
         int status;
         wait(&status);
         LOG("Build for client %s it's over with status: %d", format_ip_addr(&(client->addr)), status);
 
-        close(request->listen_port);
-        // TODO: send work done to LoadBalancer with status
+        close(output_socket);
+        send_build_done(message, status);
     } else {
         // in child
-        dup2(request->listen_port, 1);
-        /*close(request->listen_port);*/
+        /*dup2(output_socket, 1);*/
+        close(request->listen_port);
+
         // TODO: here put the "build" script
-        printf("aAAAAAAAA\n");
-        //execlp("/bin/echo", "AAHAHAHAHAHAHAHAHAHA",  (char*)NULL);
+        printf("AAAA");
+        execlp("/bin/echo", "AAHAHAHAHAHAHAHAHAHA",  (char*)NULL);
     }
+}
+
+void send_build_done(build_order_msg_t *req, int status)
+{
+    build_order_done_msg_t res;
+    res.build_order = *req;
+    res.status = status;
+
+    send_message(loadBalancer->socket, WORKER_BUILD_DONE, sizeof(build_order_done_msg_t), (char*)&req);
 }
 
 int connect_to_client(client_t *client, int client_port)
@@ -100,5 +112,5 @@ int connect_to_client(client_t *client, int client_port)
         return -1;
     }
 
-    return 0;
+    return client_socket;
 }

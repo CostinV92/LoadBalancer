@@ -84,7 +84,7 @@ void process_message(message_t* message)
 	}
 }
 
-/*int send_message(int socket, message_type_t type, int size, char* buffer)
+int send_message(int socket, message_type_t type, int size, char* buffer)
 {
 	int bytes_written = 0;
 	message_t* msg = malloc(sizeof(message_t) + size);
@@ -96,4 +96,4 @@ void process_message(message_t* message)
 	free(msg);
 
 	return bytes_written;
-}*/
+}

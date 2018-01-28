@@ -124,7 +124,7 @@ static void* listen_work_done(void* arg)
 {
 	worker_t* worker = (worker_t*)arg;
 	int bytes_read;
-	char buffer[256] = {0};
+	char buffer[2 * 256] = {0};
 
 	// wait for done message from the worker
 	bytes_read = read(worker->socket, buffer, sizeof(buffer));
