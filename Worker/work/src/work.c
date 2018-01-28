@@ -11,7 +11,7 @@
 #include "work.h"
 
 static void* start_build(void* arg);
-static int connect_to_client(int port);
+static int connect_to_client(client_t *client, int client_port);
 
 void wait_for_work()
 {
@@ -46,7 +46,7 @@ void* start_build(void* arg)
     build_req_msg_t *request = &(message->request);
 
     // first connect to the client
-    if(connect_to_client(request->listen_port) != 0) {
+    if(connect_to_client(client, request->listen_port) != 0) {
         // error on connecting to client for sending output
         // TODO: send work done to LoadBalanacer with error
 
@@ -77,8 +77,25 @@ void* start_build(void* arg)
     }
 }
 
-int connect_to_client(int port)
+int connect_to_client(client_t *client, int client_port)
 {
+    int client_socket, port = client_port;
+    struct sockaddr_in client_addr = client->addr;
+
+    // create the socket
+    client_socket = socket(AF_INET, SOCK_STREAM, 0);
+
+    if(client_socket < 0) {
+        LOG("ERROR opening client output socket");
+        return -1;
+    }
+
+    client_addr.sin_port = htons(port);
+
+    if (connect(client_socket, (struct sockaddr *)&client_addr, sizeof(struct sockaddr_in)) < 0) {
+        LOG("ERROR connecting to client output");
+        return -1;
+    }
 
     return 0;
 }

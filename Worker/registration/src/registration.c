@@ -32,15 +32,16 @@ void connect_to_server()
     }
 
     // init address structure
-    memset(&server_addr, 0, sizeof(server_addr));
+    memset(&server_addr, 0, sizeof(struct sockaddr_in));
 
     port = SERVER_PORT;
 
     server_addr.sin_family = AF_INET;
+    // TODO: take the real server addr
     server_addr.sin_addr.s_addr = INADDR_ANY;
     server_addr.sin_port = htons(port);
 
-    if (connect(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+    if (connect(server_socket, (struct sockaddr *)&server_addr, sizeof(struct sockaddr_in)) < 0) {
         perror("ERROR connecting to LoadBalancer");
         exit(1);
     }
