@@ -20,30 +20,32 @@ static void* listen_work_done(void*);
 
 void* assign_secretary(void* arg)
 {
-	client_t client = *((client_t*)arg);
+	client_t *client = (client_t*)arg;
 	char service[20] = {0};
 
-	if(getnameinfo((struct sockaddr *)&(client.addr), sizeof(client.addr),
-		client.hostname, sizeof(client.hostname), service, sizeof(service), 0) == 0) {
+	if(getnameinfo((struct sockaddr *)&(client->addr), sizeof(client->addr),
+		client->hostname, sizeof(client->hostname), service, sizeof(service), 0) == 0) {
 		LOG("Secretary: Client introduced himself, hostname: %s, ip: %s",
-			client.hostname, format_ip_addr(&(client.addr)));
+			client->hostname, format_ip_addr(&(client->addr)));
 	} else {
 		LOG("WARNING Secretary: Client didn't introduced himself, ip: %s",
-			format_ip_addr(&(client.addr)));
+			format_ip_addr(&(client->addr)));
 	}
 
 	for(;;) {
 		int byte_read;
 		char buffer[256] = {0};
-		byte_read = read(client.socket, buffer, sizeof(buffer));
+		byte_read = read(client->socket, buffer, sizeof(buffer));
 		if(byte_read) {
 			// DEBUG
 			printf("%s", buffer);
-			process_message(&client, (message_t*)buffer,
-				client.hostname, format_ip_addr(&(client.addr)));
+			process_message(client, (message_t*)buffer,
+				client->hostname, format_ip_addr(&(client->addr)));
 		} else {
 			LOG("Secretary: Client closed connection, hostname: %s, ip: %s",
-				client.hostname, format_ip_addr(&(client.addr)));
+				client->hostname, format_ip_addr(&(client->addr)));
+
+			free(client);
 			break;
 		}
 	}
@@ -90,7 +92,7 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 
 				// spawn a thread to listen to the worker for when the build is done
 				pthread_t thread_id;
-				pthread_create(&thread_id, NULL, &listen_work_done, &worker);
+				pthread_create(&thread_id, NULL, &listen_work_done, worker);
 
 				LOG("Secretary: Worker assigned worker: %s  client: %s",
 					worker->hostname, client->hostname);
@@ -114,7 +116,7 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 
 static void* listen_work_done(void* arg)
 {
-	worker_t* worker = *((worker_t**)arg);
+	worker_t* worker = (worker_t*)arg;
 	int bytes_read;
 	char buffer[256] = {0};
 
@@ -123,7 +125,7 @@ static void* listen_work_done(void* arg)
 	if(bytes_read) {
 		process_message(worker, (message_t*)buffer, worker->hostname, format_ip_addr(&(worker->addr)));
 	} else {
-		// TODO we lost connection to the worker we're kind of fucked
+		// TODO: we lost connection to the worker we're kind of fucked
 	}
 }
 

@@ -24,7 +24,7 @@ void sigint_handler()
 
 	for(int i = 0; i < client_listener->no_of_secretaries; i++) {
 		pthread_cancel(client_listener->secretaries[i].thread_id);
-		close(client_listener->secretaries[i].client.socket);
+		close(client_listener->secretaries[i].client->socket);
 	}
 
 	pthread_cancel(client_listener->thread_id);

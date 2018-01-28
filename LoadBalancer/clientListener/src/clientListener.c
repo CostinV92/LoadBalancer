@@ -50,11 +50,11 @@ void* start_server(void* arg)
 			exit(1);
 		} else {
 			LOG("Client listener: client connected, ip: %s", format_ip_addr(&client_addr));
-			client_t client;
-			client.socket = client_socket;
-			client.addr = client_addr;
+			client_t* client = calloc(1, sizeof(client_t));
+			client->socket = client_socket;
+			client->addr = client_addr;
 
-			pthread_create(&secretary_thread_id, NULL, &assign_secretary, &client);
+			pthread_create(&secretary_thread_id, NULL, &assign_secretary, client);
 
 			secretary.thread_id = secretary_thread_id;
 			secretary.client = client;

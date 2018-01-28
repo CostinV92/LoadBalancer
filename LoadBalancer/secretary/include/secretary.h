@@ -12,7 +12,7 @@ typedef struct CLIENT {
 
 typedef struct SECRETARY {
 	pthread_t		thread_id;
-	client_t		client;
+	client_t		*client;
 } secretary_t;
 
 typedef struct BUILD_REQ_MSG {

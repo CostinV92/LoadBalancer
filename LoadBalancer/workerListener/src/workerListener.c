@@ -38,7 +38,6 @@ void init_worker_listener()
 	worker_listener->thread_id = server_thread_id;
 
 	worker_heap = heap_init();
-	fast_worker_heap = heap_init();
 }
 
 void* start_server(void* arg) 
@@ -58,12 +57,11 @@ void* start_server(void* arg)
 			pthread_t worker_thread_id;
 			LOG("Worker listener: worker connected, ip: %s", format_ip_addr(&worker_addr));
 
-			worker_t worker;
-			memset(&worker, 0, sizeof(worker_t));
+			worker_t* worker = calloc(1, sizeof(worker_t));
 
-			worker.socket = worker_socket;
-			worker.addr = worker_addr;
-			pthread_create(&worker_thread_id, NULL, &register_worker, &worker);
+			worker->socket = worker_socket;
+			worker->addr = worker_addr;
+			pthread_create(&worker_thread_id, NULL, &register_worker, worker);
 		}
 	}
 }
@@ -110,12 +108,10 @@ void create_server()
 void* register_worker(void* arg)
 {
 	char service[20] = {0};
-	worker_t *worker = malloc(sizeof(worker_t));
-	memset(worker, 0, sizeof(worker_t));
-	memcpy((void*)worker, arg, sizeof(worker_t));
+	worker_t *worker = (worker_t*)arg;
 
 	if(getnameinfo((struct sockaddr *)&(worker->addr), sizeof(worker->addr), worker->hostname, sizeof(worker->hostname), service, sizeof(service), 0) == 0) {
-		heap_push(worker->fast_worker ? fast_worker_heap : worker_heap, &(worker->heap_node));
+		heap_push(worker_heap, &(worker->heap_node));
 		LOG("Worker listener: worker added to database, hostname: %s, ip: %s", worker->hostname, format_ip_addr(&(worker->addr)));
 	} else {
 		LOG("ERROR Worker listener: failed to add worker to database (no hostname), ip: %s", format_ip_addr(&(worker->addr)));
