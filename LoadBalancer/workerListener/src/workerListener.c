@@ -61,6 +61,8 @@ void* start_server(void* arg)
 
 			worker->socket = worker_socket;
 			worker->addr = worker_addr;
+			pthread_mutex_init(&worker->mutex, NULL);
+
 			pthread_create(&worker_thread_id, NULL, &register_worker, worker);
 		}
 	}

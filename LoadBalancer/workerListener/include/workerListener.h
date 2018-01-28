@@ -14,7 +14,6 @@ typedef struct WORKER_LISTENER {
 
 
 typedef struct WORKER {
-	// the heap info; must be first in structure
 	heap_node_t 			heap_node;
 
 	// network info
@@ -24,6 +23,7 @@ typedef struct WORKER {
 	// worker info
 	char 					hostname[256];
 	int 					no_current_builds;
+	pthread_mutex_t 		mutex;
 } worker_t;
 
 void init_worker_listener();

@@ -70,19 +70,22 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 
 		worker = INFO(heap_pop(heap), worker_t);
 
-		if(worker) {
-			if(worker->no_current_builds >= 2) {
-				LOG("WARNING Secretary: Best worker already has 2 or more current builds!");
-				status = false;
-				reason = 1;
-			}
-		} else {
+		if (!worker) {
 			LOG("WARNING Secretary: Don't have any worker registered!");
 			status = false;
 			reason = 2;
+			send_build_res(client, status, reason);
+			return;
 		}
 
-		if(send_build_res(client, status, reason)) {
+		pthread_mutex_lock(&(worker->mutex));
+		if(worker->no_current_builds >= 2) {
+			LOG("WARNING Secretary: Best worker already has 2 or more current builds!");
+			status = false;
+			reason = 1;
+		}
+
+		if(send_build_res(client, status, reason && status)) {
 			//send build and client info to the worker
 			if(send_build_order(worker, client, message)) {
 				//Here the worker would have begin the build so update the worker info and re add it to the heap
@@ -111,6 +114,7 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 			// the build couldn't be started so add the worker back to the heap
 			heap_push(heap, &(worker->heap_node));
 		}
+		pthread_mutex_unlock(&(worker->mutex));
 	} while (another_one);
 }
 
@@ -122,18 +126,19 @@ static void* listen_work_done(void* arg)
 
 	// wait for done message from the worker
 	bytes_read = read(worker->socket, buffer, sizeof(buffer));
+	pthread_mutex_lock(&(worker->mutex));
 	if(bytes_read) {
 		process_message(worker, (message_t*)buffer, worker->hostname, format_ip_addr(&(worker->addr)));
 	} else {
 		// TODO: we lost connection to the worker we're kind of fucked
 	}
+	pthread_mutex_unlock(&(worker->mutex));
 }
 
 void process_build_done(worker_t* worker, build_order_done_msg_t* message)
 {
 	int status = message->status;
 	client_t client = message->build_order.client;
-	bool fast_build = message->build_order.request.fast;
 
 	if(status) {
 		LOG("WARNING Secretary: Build failed with status: %d on hostname: %s, ip: %s, for hostname: %s, ip: %s",
@@ -147,7 +152,7 @@ void process_build_done(worker_t* worker, build_order_done_msg_t* message)
 
 	worker->no_current_builds--;
 	//update the heap key
-	heap_update_node_key(fast_build ? fast_worker_heap : worker_heap, &(worker->heap_node), worker->no_current_builds);
+	heap_update_node_key(worker_heap, &(worker->heap_node), worker->no_current_builds);
 }
 
 static bool send_build_res(client_t* client, bool status, int reason)
