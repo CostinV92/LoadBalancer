@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include "utils.h"
 #include "messages.h"
@@ -25,13 +26,13 @@ typedef struct OUTPUT_LISTENER {
 load_balancer_server_t  loadBalancer;
 output_listener_t       output_listener;
 build_res_msg_t         build_res;
+char *lb_address;
 
 void create_server();
 void* start_server(void* arg);
 
 void listen_for_output()
 {
-    ;;
     int socket;
 
     create_server();
@@ -92,7 +93,6 @@ void* start_server(void* arg)
     struct sockaddr_in worker_addr;
 
     output_socket = accept(output_listener.socket, (struct sockaddr*)&worker_addr, &client_len);
-    printf("a\n");
     if(output_socket < 0) {
         LOG("ERROR on accepting output");
         exit(1);
@@ -138,8 +138,7 @@ void connect_to_lb()
     port = 7891;
 
     lb_addr.sin_family = AF_INET;
-    // TODO: take the real lb addr
-    lb_addr.sin_addr.s_addr = INADDR_ANY;
+    lb_addr.sin_addr.s_addr = inet_addr(lb_address);
     lb_addr.sin_port = htons(port);
 
 
@@ -192,6 +191,15 @@ void process_build_res(build_res_msg_t* message)
     close(loadBalancer.socket);
 }
 
+void get_lb_address()
+{
+    lb_address = getenv("LOAD_BALANCER_ADDRESS");
+    if(!lb_address) {
+        LOG("LOAD_BALANCER_ADDRESS environment variable not set");
+        exit(1);
+    }
+}
+
 void sigint_handler()
 {
     pthread_cancel(output_listener.thread_id);
@@ -211,6 +219,8 @@ int main()
         perror("WARNING: the log file could not be opened!\n");
         exit(1);
     }
+
+    get_lb_address();
 
     listen_for_output();
     send_request();
