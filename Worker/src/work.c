@@ -22,7 +22,7 @@ void wait_for_work()
     for(;;) {
         // wait for messages
         bytes_read = read(loadBalancer->socket, buffer, sizeof(buffer));
-        if(bytes_read) {
+        if(bytes_read > 0) {
             LOG("Read %d bytes from LoadBalancer (needed %d)", bytes_read, sizeof(build_order_msg_t));
             process_message((message_t*)buffer);
         } else {

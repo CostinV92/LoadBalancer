@@ -37,7 +37,7 @@ void* assign_secretary(void* arg)
 		int byte_read;
 		char buffer[256] = {0};
 		byte_read = read(client->socket, buffer, sizeof(buffer));
-		if(byte_read != -1) {
+		if(byte_read > 0) {
 			// TODO: DEBUG
 			process_message(client, (message_t*)buffer,
 				client->hostname, format_ip_addr(&(client->addr)));
