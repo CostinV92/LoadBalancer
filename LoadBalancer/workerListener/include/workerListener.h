@@ -24,6 +24,7 @@ typedef struct WORKER {
 	char 					hostname[256];
 	int 					no_current_builds;
 	pthread_mutex_t 		mutex;
+	bool					alive;
 } worker_t;
 
 void init_worker_listener();

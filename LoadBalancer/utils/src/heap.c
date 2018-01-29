@@ -69,13 +69,16 @@ heap_node_t* heap_pop(heap_t* heap)
 	heap_lock(heap);
 	node = HEAP_ROOT(heap);
 
-	if(!node)
+	if(!node) {
+		heap_unlock(heap);
 		return 0;
+	}
 
 	LAST_ELEM(heap)->heap_index = 1;
 	HEAP_ROOT(heap) = LAST_ELEM(heap);
 	heap->current_index--;
 	((heap_node_t**)heap)[heap->current_index] = NULL;
+
 	balance_heap_down_from(heap, HEAP_ROOT(heap));
 	heap_unlock(heap);
 

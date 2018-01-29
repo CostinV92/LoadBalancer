@@ -6,8 +6,8 @@
 #include <netinet/in.h>
 
 typedef enum BOOL {
-	false,
-	true
+	false = 0,
+	true = 1
 } bool;
 
 typedef enum PLATFORM {

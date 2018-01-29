@@ -61,6 +61,7 @@ void* start_server(void* arg)
 
 			worker->socket = worker_socket;
 			worker->addr = worker_addr;
+			worker->alive = true;
 			pthread_mutex_init(&worker->mutex, NULL);
 
 			pthread_create(&worker_thread_id, NULL, &register_worker, worker);
@@ -119,5 +120,28 @@ void* register_worker(void* arg)
 	} else {
 		LOG("ERROR Worker listener: failed to add worker to database (no hostname), ip: %s", format_ip_addr(&(worker->addr)));
 		free(worker);
+	}
+
+	listen_to_worker(worker);
+}
+
+void listen_to_worker(worker_t *worker)
+{
+	int bytes_read;
+	char buffer[2 * 256] = {0};
+
+	// wait for done message from the worker
+	for(;;) {
+		bytes_read = read(worker->socket, buffer, sizeof(buffer));
+		pthread_mutex_lock(&(worker->mutex));
+		if(bytes_read) {
+			process_message(worker, (void*)buffer, worker->hostname, format_ip_addr(&(worker->addr)));
+		} else {
+			LOG("%x Worker listener: worker disconnected, hostname: %s, ip: %s", worker, worker->hostname, format_ip_addr(&(worker->addr)));
+			worker->alive = false;
+			pthread_mutex_unlock(&(worker->mutex));
+			break;
+		}
+		pthread_mutex_unlock(&(worker->mutex));
 	}
 }

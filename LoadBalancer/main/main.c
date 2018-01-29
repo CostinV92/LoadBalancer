@@ -34,6 +34,8 @@ void signal_handler(int signum)
 		case SIGINT:
 			sigint_handler();
 			break;
+		default:
+			break;
 	}
 
 	write(1, "\n", 1);

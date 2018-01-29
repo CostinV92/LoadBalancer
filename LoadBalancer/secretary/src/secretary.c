@@ -75,66 +75,59 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 		if (!worker) {
 			LOG("WARNING Secretary: Don't have any worker registered!");
 			status = false;
-			reason = 2;
-			send_build_res(client, status, reason);
-			return;
+			reason = 1;
+			continue;
 		}
+
 
 		pthread_mutex_lock(&(worker->mutex));
-		if(worker->no_current_builds >= 2) {
+		if(status && worker->no_current_builds >= 2) {
 			LOG("WARNING Secretary: Best worker already has 2 or more current builds!");
 			status = false;
-			reason = 1;
-		}
-
-		if(send_build_res(client, status, reason) && status) {
-			//send build and client info to the worker
-			if(send_build_order(worker, client, message)) {
-				//Here the worker would have begin the build so update the worker info and re add it to the heap
-				worker->no_current_builds++;
-				worker->heap_node.heap_key = worker->no_current_builds;
-				heap_push(heap, &(worker->heap_node));
-
-				// spawn a thread to listen to the worker for when the build is done
-				pthread_t thread_id;
-				pthread_create(&thread_id, NULL, &listen_work_done, worker);
-
-				LOG("Secretary: Worker assigned worker: %s  client: %s",
-					worker->hostname, client->hostname);
-			} else {
-				// the worker disconnected
-				// free the memory for the disconnected worker
-				LOG("WARNING Secretary: Worker no longer available worker: %s  ip: %s",
-					worker->hostname, format_ip_addr(&(worker->addr)));
-				free(worker);
-				worker = NULL;
-
-				// pick another worker
-				another_one = true;
-			}
-		} else {
-			// the build couldn't be started so add the worker back to the heap
+			reason = 2;
 			heap_push(heap, &(worker->heap_node));
 		}
+
+		if(status && !worker->alive) {
+			LOG("WARNING Secretary: Worker no longer available worker: %s  ip: %s",
+					worker->hostname, format_ip_addr(&(worker->addr)));
+			status = false;
+			reason = 3;
+
+			pthread_mutex_unlock(&(worker->mutex));
+			pthread_mutex_destroy(&(worker->mutex));
+			free(worker);
+			worker = NULL;
+
+			another_one = true;
+			continue;
+		}
+
+		if(status && !send_build_order(worker, client, message)) {
+			status = false;
+			reason = 4;
+		}
+
+		if(status) {
+			//Here the worker would have begin the build so update the worker info and re add it to the heap
+			worker->no_current_builds++;
+			worker->heap_node.heap_key = worker->no_current_builds;
+			heap_push(heap, &(worker->heap_node));
+
+			LOG("Secretary: Worker assigned worker: %s  client: %s",
+				worker->hostname, client->hostname);
+		}
+
 		pthread_mutex_unlock(&(worker->mutex));
+
+		if (!status && reason == 4) {
+			pthread_mutex_destroy(&(worker->mutex));
+			free(worker);
+			worker = NULL;
+		}
 	} while (another_one);
-}
 
-static void* listen_work_done(void* arg)
-{
-	worker_t* worker = (worker_t*)arg;
-	int bytes_read;
-	char buffer[2 * 256] = {0};
-
-	// wait for done message from the worker
-	bytes_read = read(worker->socket, buffer, sizeof(buffer));
-	pthread_mutex_lock(&(worker->mutex));
-	if(bytes_read) {
-		process_message(worker, (message_t*)buffer, worker->hostname, format_ip_addr(&(worker->addr)));
-	} else {
-		// TODO: we lost connection to the worker we're kind of fucked
-	}
-	pthread_mutex_unlock(&(worker->mutex));
+	send_build_res(client, status, reason);
 }
 
 void process_build_done(worker_t* worker, build_order_done_msg_t* message)
