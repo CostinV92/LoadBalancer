@@ -52,14 +52,13 @@ void* start_build(void* arg)
     // first connect to the client
     if((output_socket = connect_to_client(client, request->listen_port)) < 0) {
         // error on connecting to client for sending output
-        // TODO: send work done to LoadBalanacer with error
-
+        send_build_done(message, -1);
         return NULL;
     }
 
     LOG("Starting build for client %s", format_ip_addr(&(client->addr)));
 
-    // TODO: spawn a process to do the work and wait for it
+    // spawn a process to do the work and wait for it
     if ((pid = fork()) < 0) {
         // error on forking
         LOG("ERROR forking failed");
@@ -67,19 +66,19 @@ void* start_build(void* arg)
     } else if (pid) {
         // in parent
         int status;
+        close(output_socket);
+
         wait(&status);
         LOG("Build for client %s it's over with status: %d", format_ip_addr(&(client->addr)), status);
 
-        close(output_socket);
         send_build_done(message, status);
     } else {
         // in child
-        /*dup2(output_socket, 1);*/
-        close(request->listen_port);
+        dup2(output_socket, 1);
+        close(output_socket);
 
         // TODO: here put the "build" script
-        printf("AAAA");
-        execlp("/bin/echo", "AAHAHAHAHAHAHAHAHAHA",  (char*)NULL);
+        execl("/bin/echo", "/bin/echo", "Hello from the other side!", (char*)NULL);
     }
 }
 
