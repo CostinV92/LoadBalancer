@@ -78,7 +78,7 @@ void* start_build(void* arg)
         close(output_socket);
 
         // TODO: here put the "build" script
-        execl("/home/victor/Desktop/LoadBalancer/Worker/work.sh",
+        execl("/vagrant/work.sh",
             "/home/victor/Desktop/LoadBalancer/Worker/work.sh", (char*)NULL);
     }
 }

@@ -1,5 +1,6 @@
 NAME := worker
 BUILD_DIR := $(shell pwd)/build
+VAGRANT_DIR := $(shell pwd)/vagrant/ansible/files
 
 PWD := $(shell pwd)
 
@@ -16,7 +17,7 @@ ifdef OBJ
 
 OBJ := $(addprefix $(BUILD_DIR)/, $(OBJ))
 
-all: BUILD_DIR main
+all: BUILD_DIR main main2
 
 BUILD_DIR:
 	if [ ! -d "$(BUILD_DIR)" ]; then mkdir $(BUILD_DIR); fi
@@ -26,6 +27,9 @@ $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c $(INCLUDE_DIR)/%.h $(INCLUDE_DIR)/$(COMMON)
 
 main: $(OBJ)
 	$(CC) -std=gnu99 -o $(BUILD_DIR)/$(NAME) $(SOURCE_DIR)/main.c $(OBJ) $(INCLUDE) $(LIBRARIES)
+
+main2: $(OBJ)
+	$(CC) -std=gnu99 -o $(VAGRANT_DIR)/$(NAME) $(SOURCE_DIR)/main.c $(OBJ) $(INCLUDE) $(LIBRARIES)
 
 endif
 

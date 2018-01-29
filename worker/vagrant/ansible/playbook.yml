@@ -1,0 +1,11 @@
+---
+- hosts: default
+  become: yes
+  vars:
+    lb_address: 192.168.22.2
+
+  tasks:
+  - name: Save lb_address
+    copy: 
+      content: "{{ lb_address }}" 
+      dest: /vagrant/lb_address

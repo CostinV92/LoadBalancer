@@ -1,0 +1,13 @@
+---
+- hosts: default
+  become: yes
+
+  tasks:
+  - name: Copy worker
+    copy:
+      src: files/worker
+      dest: /usr/bin/worker_lb
+      mode: 755
+      
+  - name: Start worker
+    shell: /usr/bin/worker_lb &

@@ -3,5 +3,11 @@
   become: yes
 
   tasks:
+  - name: Copy loadBalancer
+    copy:
+      src: files/loadBalancer
+      dest: /usr/bin/loadBalancer
+      mode: 755
+
   - name: Start loadBalancer
     shell: /usr/bin/loadBalancer &
