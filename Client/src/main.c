@@ -92,10 +92,9 @@ void* start_server(void* arg)
     struct sockaddr_in worker_addr;
 
     output_socket = accept(output_listener.socket, (struct sockaddr*)&worker_addr, &client_len);
+    printf("a\n");
     if(output_socket < 0) {
         LOG("ERROR on accepting output");
-            //this is for reusing the port imeddiatly after error
-        setsockopt(output_listener.socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
         exit(1);
     } else {
         LOG("Worker connected to output socket, ip: %s", format_ip_addr(&worker_addr));
@@ -104,7 +103,7 @@ void* start_server(void* arg)
             int byte_read;
             char buffer[2 * 256] = {0};
             byte_read = read(output_socket, buffer, sizeof(buffer));
-            if(byte_read) {
+            if(byte_read > 0) {
                 printf("%s", buffer);
             }
             else {
@@ -187,7 +186,7 @@ void process_build_res(build_res_msg_t* message)
     }
     else {
         LOG("Build could not start! Reason: %d", message->reason);
-        close(output_listener.socket);
+        pthread_kill(output_listener.thread_id, SIGTERM);
     }
 
     close(loadBalancer.socket);
