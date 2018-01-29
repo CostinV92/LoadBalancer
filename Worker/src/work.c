@@ -78,7 +78,8 @@ void* start_build(void* arg)
         close(output_socket);
 
         // TODO: here put the "build" script
-        execl("/bin/echo", "/bin/echo", "Hello from the other side!", (char*)NULL);
+        execl("/home/victor/Desktop/LoadBalancer/Worker/work.sh",
+            "/home/victor/Desktop/LoadBalancer/Worker/work.sh", (char*)NULL);
     }
 }
 

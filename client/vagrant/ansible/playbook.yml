@@ -1,0 +1,18 @@
+---
+- hosts: default
+  become: yes
+  vars:
+    lb_address: 192.168.22.1
+
+  tasks:
+
+  - name: Save lb_address
+    copy: 
+      content: "{{ lb_address }}" 
+      dest: /vagrant/lb_address
+
+  - name: Copy client
+    copy:
+      src: files/client
+      dest: /usr/bin/client
+      mode: 755

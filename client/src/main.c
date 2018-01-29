@@ -26,7 +26,7 @@ typedef struct OUTPUT_LISTENER {
 load_balancer_server_t  loadBalancer;
 output_listener_t       output_listener;
 build_res_msg_t         build_res;
-char *lb_address;
+char lb_address[20];
 
 void create_server();
 void* start_server(void* arg);
@@ -193,10 +193,19 @@ void process_build_res(build_res_msg_t* message)
 
 void get_lb_address()
 {
-    lb_address = getenv("LOAD_BALANCER_ADDRESS");
-    if(!lb_address) {
-        LOG("LOAD_BALANCER_ADDRESS environment variable not set");
-        exit(1);
+    char *env;
+    env = getenv("LOAD_BALANCER_ADDRESS");
+    if(!env) {
+        FILE *f = fopen("/vagrant/lb_address", "r");
+        if(f) {
+            fgets(lb_address, sizeof(lb_address), f);
+            fclose(f);
+        } else {
+            LOG("Don't know server address");
+            exit(1);
+        }
+    } else {
+        strcpy(lb_address, env);
     }
 }
 
