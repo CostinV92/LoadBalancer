@@ -1,7 +1,7 @@
 #ifndef __LOG_H__
 #define __LOG_H__
 
-#define LOG_PATH "/tmp/LoadBalancer.log"
+#define LOG_PATH "/tmp/loadBalancer.log"
 
 #include <netinet/in.h>
 

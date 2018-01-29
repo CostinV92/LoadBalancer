@@ -1,7 +1,7 @@
 #ifndef __LOG_H__
 #define __LOG_H__
 
-#define LOG_PATH "/tmp/Worker.log"
+#define LOG_PATH "/tmp/worker.log"
 
 #include <netinet/in.h>
 

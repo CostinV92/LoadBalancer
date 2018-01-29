@@ -3,4 +3,5 @@ loadBalancer/tests/*
 worker/build/*
 client/build/*
 client/vagrant/.vagrant/*
+client/vagrant/lb_address
 client/vagrant/ansible/files/*
