@@ -16,8 +16,11 @@
 static FILE *log_file;
 static char ip_string[20];
 
+extern void process_build_res(void*);
+
 int init_log() 
 {
+	;;
 	log_file = fopen(LOG_PATH, "a");
 
 	if(!log_file) {
@@ -67,21 +70,21 @@ void LOG(char* format, ...)
     fsync(fileno(log_file));
 }
 
-/*void process_message(message_t* message)
+void process_message(message_t* message)
 {
 	message_type_t msg_type = message->type;
 
 	switch(msg_type) {
-		case WORKER_BUILD_ORDER:
-			LOG("Procces message: Got WORKER_BUILD_ORDER message");
-			process_build_order((void*)(message->buffer));
+		case SECRETARY_BUILD_RES:
+			LOG("Procces message: Got SECRETARY_BUILD_RES message");
+			process_build_res((void*)(message->buffer));
 			break;
 
 		default:
 			LOG("WARNING Procces message: Unknown message");
 			break;
 	}
-}*/
+}
 
 int send_message(int socket, message_type_t type, int size, char* buffer)
 {

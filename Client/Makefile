@@ -1,30 +1,33 @@
+export NAME := Client
 export BUILD_DIR := $(shell pwd)/Build
 
 export PWD := $(shell pwd)
 
 export SOURCE_DIR := ./src
 export INCLUDE_DIR := ./include
+export INCLUDE := -I$(INCLUDE_DIR)
 
 export LIBRARIES := -pthread
 
-UTILS_INCLUDE_DIR := $(PWD)/utils/include
-export INCLUDE := -I$(UTILS_INCLUDE_DIR)
+OBJ := utils.o
+COMMON := messages.h
 
+ifdef OBJ
 
-DIRS := $(filter-out Build/., $(wildcard */.))
-DIRS := $(filter-out main/., $(DIRS))
-DIRS := $(filter-out tests/., $(DIRS))
+OBJ := $(addprefix $(BUILD_DIR)/, $(OBJ))
 
-all: BUILD_DIR $(DIRS) main/.
+all: BUILD_DIR main
 
 BUILD_DIR:
 	if [ ! -d "$(BUILD_DIR)" ]; then mkdir $(BUILD_DIR); fi
 
-$(DIRS):
-	$(MAKE) -C $@
+$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c $(INCLUDE_DIR)/%.h $(INCLUDE_DIR)/$(COMMON)
+	$(CC) -std=gnu99 -c -o $@ $< $(INCLUDE) $(LIBRARIES)
 
-main/.: $(DIRS)
-	$(MAKE) -C $@
+main: $(OBJ)
+	$(CC) -std=gnu99 -o $(BUILD_DIR)/$(NAME) $(SOURCE_DIR)/main.c $(OBJ) $(INCLUDE) $(LIBRARIES)
+
+endif
 
 clean: 
 	rm -rf $(BUILD_DIR)

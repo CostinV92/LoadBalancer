@@ -39,7 +39,6 @@ void* assign_secretary(void* arg)
 		byte_read = read(client->socket, buffer, sizeof(buffer));
 		if(byte_read) {
 			// TODO: DEBUG
-			printf("%s", buffer);
 			process_message(client, (message_t*)buffer,
 				client->hostname, format_ip_addr(&(client->addr)));
 		} else {
@@ -144,6 +143,8 @@ void process_build_done(worker_t* worker, build_order_done_msg_t* message)
 			worker->hostname, format_ip_addr(&(worker->addr)),
 				client.hostname, format_ip_addr(&(client.addr)));
 	}
+
+	close(client.socket);
 
 	worker->no_current_builds--;
 	//update the heap key

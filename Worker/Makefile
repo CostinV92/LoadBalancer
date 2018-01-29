@@ -1,32 +1,33 @@
+export NAME := Worker
 export BUILD_DIR := $(shell pwd)/Build
 
 export PWD := $(shell pwd)
 
 export SOURCE_DIR := ./src
 export INCLUDE_DIR := ./include
+export INCLUDE := -I$(INCLUDE_DIR)
 
 export LIBRARIES := -pthread
 
-REGISTRATION_INCLUDE_DIR := $(PWD)/registration/include
-WORK_INCLUDE_DIR := $(PWD)/work/include
-UTILS_INCLUDE_DIR := $(PWD)/utils/include
-export INCLUDE := -I$(REGISTRATION_INCLUDE_DIR) -I$(UTILS_INCLUDE_DIR) -I$(WORK_INCLUDE_DIR)
+OBJ := registration.o utils.o work.o
+COMMON := messages.h
 
+ifdef OBJ
 
-DIRS := $(filter-out Build/., $(wildcard */.))
-DIRS := $(filter-out main/., $(DIRS))
-DIRS := $(filter-out tests/., $(DIRS))
+OBJ := $(addprefix $(BUILD_DIR)/, $(OBJ))
 
-all: BUILD_DIR $(DIRS) main/.
+all: BUILD_DIR main
 
 BUILD_DIR:
 	if [ ! -d "$(BUILD_DIR)" ]; then mkdir $(BUILD_DIR); fi
 
-$(DIRS):
-	$(MAKE) -C $@
+$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c $(INCLUDE_DIR)/%.h $(INCLUDE_DIR)/$(COMMON)
+	$(CC) -std=gnu99 -c -o $@ $< $(INCLUDE) $(LIBRARIES)
 
-main/.: $(DIRS)
-	$(MAKE) -C $@
+main: $(OBJ)
+	$(CC) -std=gnu99 -o $(BUILD_DIR)/$(NAME) $(SOURCE_DIR)/main.c $(OBJ) $(INCLUDE) $(LIBRARIES)
+
+endif
 
 clean: 
 	rm -rf $(BUILD_DIR)

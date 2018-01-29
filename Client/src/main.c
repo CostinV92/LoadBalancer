@@ -24,12 +24,14 @@ typedef struct OUTPUT_LISTENER {
 
 load_balancer_server_t  loadBalancer;
 output_listener_t       output_listener;
+build_res_msg_t         build_res;
 
 void create_server();
 void* start_server(void* arg);
 
 void listen_for_output()
 {
+    ;;
     int socket;
 
     create_server();
@@ -98,10 +100,18 @@ void* start_server(void* arg)
     } else {
         LOG("Worker connected to output socket, ip: %s", format_ip_addr(&worker_addr));
 
-        int byte_read;
-        char buffer[256] = {0};
-        while (byte_read = read(output_socket, buffer, sizeof(buffer)))
-            printf("%s", buffer);
+        for(;;) {
+            int byte_read;
+            char buffer[2 * 256] = {0};
+            byte_read = read(output_socket, buffer, sizeof(buffer));
+            if(byte_read) {
+                printf("%s", buffer);
+            }
+            else {
+                close(output_socket);
+                break;
+            }
+        }
 
         LOG("Worker disconnected from output socket");
     }
@@ -155,18 +165,40 @@ void send_request()
 
     send_message(loadBalancer.socket, SECRETARY_BUILD_REQ, sizeof(build_req_msg_t), (char*)&req);
 
-    int byte_read;
-    char buffer[256] = {0};
-    byte_read = read(loadBalancer.socket, buffer, sizeof(buffer));
-    printf("%s\n", buffer);
+    for (;;) {
+        int byte_read;
+        char buffer[2 * 256] = {0};
+        byte_read = read(loadBalancer.socket, buffer, sizeof(buffer));
+        if(byte_read) {
+            printf("%s\n",buffer);
+            process_message(buffer);
+        } else {
+            close(loadBalancer.socket);
+            break;
+        }
+    }
+}
+
+void process_build_res(build_res_msg_t* message) 
+{
+    build_res.status = message->status;
+    build_res.reason = message->reason;
+    if(message->status) {
+        LOG("Build started");
+    }
+    else {
+        LOG("Build could not start! Reason: %d", message->reason);
+        close(output_listener.socket);
+    }
+
+    close(loadBalancer.socket);
 }
 
 void sigint_handler()
 {
+    pthread_cancel(output_listener.thread_id);
     close(loadBalancer.socket);
     close(output_listener.socket);
-
-    pthread_cancel(output_listener.thread_id);
 
     LOG("WARNING Client going down");
 
