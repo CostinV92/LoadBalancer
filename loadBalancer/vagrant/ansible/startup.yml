@@ -1,0 +1,7 @@
+---
+- hosts: default
+  become: yes
+
+  tasks:
+  - name: Start loadBalancer
+    shell: /usr/bin/loadBalancer &

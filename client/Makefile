@@ -1,14 +1,14 @@
-export NAME := client
-export BUILD_DIR := $(shell pwd)/build
-export VAGRANT_DIR := $(shell pwd)/vagrant/ansible/files
+NAME := client
+BUILD_DIR := $(shell pwd)/build
+VAGRANT_DIR := $(shell pwd)/vagrant/ansible/files
 
-export PWD := $(shell pwd)
+PWD := $(shell pwd)
 
-export SOURCE_DIR := ./src
-export INCLUDE_DIR := ./include
-export INCLUDE := -I$(INCLUDE_DIR)
+SOURCE_DIR := ./src
+INCLUDE_DIR := ./include
+INCLUDE := -I$(INCLUDE_DIR)
 
-export LIBRARIES := -pthread
+LIBRARIES := -pthread
 
 OBJ := utils.o
 COMMON := messages.h

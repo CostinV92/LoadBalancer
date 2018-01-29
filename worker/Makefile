@@ -1,13 +1,13 @@
-export NAME := worker
-export BUILD_DIR := $(shell pwd)/build
+NAME := worker
+BUILD_DIR := $(shell pwd)/build
 
-export PWD := $(shell pwd)
+PWD := $(shell pwd)
 
-export SOURCE_DIR := ./src
-export INCLUDE_DIR := ./include
-export INCLUDE := -I$(INCLUDE_DIR)
+SOURCE_DIR := ./src
+INCLUDE_DIR := ./include
+INCLUDE := -I$(INCLUDE_DIR)
 
-export LIBRARIES := -pthread
+LIBRARIES := -pthread
 
 OBJ := registration.o utils.o work.o
 COMMON := messages.h

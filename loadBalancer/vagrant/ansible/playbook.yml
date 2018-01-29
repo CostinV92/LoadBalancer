@@ -1,0 +1,10 @@
+---
+- hosts: default
+  become: yes
+
+  tasks:
+  - name: Copy loadBalancer
+    copy:
+      src: files/loadBalancer
+      dest: /usr/bin/loadBalancer
+      mode: 755
