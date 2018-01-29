@@ -1,6 +1,6 @@
-LoadBalancer/Build/*
-LoadBalancer/tests/*
-Worker/Build/*
-Client/build/*
-Client/vagrant/.vagrant/*
-Client/vagrant/ansible/files/*
+loadBalancer/build/*
+loadBalancer/tests/*
+worker/build/*
+client/build/*
+client/vagrant/.vagrant/*
+client/vagrant/ansible/files/*

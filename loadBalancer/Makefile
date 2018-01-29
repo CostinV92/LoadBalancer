@@ -1,5 +1,5 @@
-export NAME := Worker
-export BUILD_DIR := $(shell pwd)/Build
+export NAME := loadBalancer
+export BUILD_DIR := $(shell pwd)/build
 
 export PWD := $(shell pwd)
 
@@ -9,7 +9,7 @@ export INCLUDE := -I$(INCLUDE_DIR)
 
 export LIBRARIES := -pthread
 
-OBJ := registration.o utils.o work.o
+OBJ := clientListener.o heap.o secretary.o utils.o workerListener.o
 COMMON := messages.h
 
 ifdef OBJ
