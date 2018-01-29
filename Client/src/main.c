@@ -169,8 +169,7 @@ void send_request()
         int byte_read;
         char buffer[2 * 256] = {0};
         byte_read = read(loadBalancer.socket, buffer, sizeof(buffer));
-        if(byte_read) {
-            printf("%s\n",buffer);
+        if(byte_read != -1) {
             process_message(buffer);
         } else {
             close(loadBalancer.socket);
