@@ -12,7 +12,7 @@
 #include "utils.h"
 #include "workerListener.h"
 
-extern heap_t *worker_heap, *fast_worker_heap;
+extern heap_t *worker_heap;
 
 static bool send_build_res(client_t*, bool, int);
 static bool send_build_order(worker_t*, client_t*, build_req_msg_t*);
@@ -56,7 +56,7 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 {
 	bool another_one;
 	// get a worker from the specific heap
-	heap_t *heap = message->fast ? fast_worker_heap : worker_heap;
+	heap_t *heap = worker_heap;
 	worker_t *worker;
 
 	// for responding to the client
@@ -126,17 +126,19 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 		}
 	} while (another_one);
 
-	send_build_res(client, status, reason);
+	if (!status)
+		send_build_res(client, status, reason);
 }
 
 void process_build_done(worker_t* worker, build_order_done_msg_t* message)
 {
 	int status = message->status;
+	int reason = message->reason;
 	client_t client = message->build_order.client;
 
-	if(status) {
-		LOG("WARNING Secretary: Build failed with status: %d on hostname: %s, ip: %s, for hostname: %s, ip: %s",
-			message->status, worker->hostname, format_ip_addr(&(worker->addr)),
+	if(!status) {
+		LOG("WARNING Secretary: Build failed with reason: %d on hostname: %s, ip: %s, for hostname: %s, ip: %s",
+			reason, worker->hostname, format_ip_addr(&(worker->addr)),
 				client.hostname, format_ip_addr(&(client.addr)));
 	} else {
 		LOG("Secretary: Build succeded on hostname: %s, ip: %s, for hostname: %s, ip: %s",
@@ -144,7 +146,10 @@ void process_build_done(worker_t* worker, build_order_done_msg_t* message)
 				client.hostname, format_ip_addr(&(client.addr)));
 	}
 
+	send_build_res(&client, status, reason);
+	pthread_mutex_lock(&(worker->mutex));
 	worker->no_current_builds--;
+	pthread_mutex_unlock(&(worker->mutex));
 	//update the heap key
 	heap_update_node_key(worker_heap, &(worker->heap_node), worker->no_current_builds);
 }

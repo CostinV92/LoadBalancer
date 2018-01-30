@@ -13,7 +13,7 @@
 
 static void* start_build(void* arg);
 static int connect_to_client(client_t *client, int client_port);
-static void send_build_done(build_order_msg_t *req, int status);
+static void send_build_done(build_order_msg_t *req, bool status, int reason);
 
 void wait_for_work()
 {
@@ -52,7 +52,7 @@ void* start_build(void* arg)
     // first connect to the client
     if((output_socket = connect_to_client(client, request->listen_port)) < 0) {
         // error on connecting to client for sending output
-        send_build_done(message, -1);
+        send_build_done(message, false, 5);
         return NULL;
     }
 
@@ -62,7 +62,7 @@ void* start_build(void* arg)
     if ((pid = fork()) < 0) {
         // error on forking
         LOG("ERROR forking failed");
-        send_build_done(message, -1);
+        send_build_done(message, false, 6);
     } else if (pid) {
         // in parent
         int status;
@@ -71,7 +71,7 @@ void* start_build(void* arg)
         wait(&status);
         LOG("Build for client %s it's over with status: %d", format_ip_addr(&(client->addr)), status);
 
-        send_build_done(message, status);
+        send_build_done(message, true, status);
     } else {
         // in child
         dup2(output_socket, 1);
@@ -83,13 +83,14 @@ void* start_build(void* arg)
     }
 }
 
-void send_build_done(build_order_msg_t *req, int status)
+void send_build_done(build_order_msg_t *req, bool status, int reason)
 {
     build_order_done_msg_t res;
     res.build_order = *req;
     res.status = status;
+    res.reason = reason;
 
-    send_message(loadBalancer->socket, WORKER_BUILD_DONE, sizeof(build_order_done_msg_t), (char*)&req);
+    send_message(loadBalancer->socket, WORKER_BUILD_DONE, sizeof(build_order_done_msg_t), (char*)&res);
 }
 
 int connect_to_client(client_t *client, int client_port)

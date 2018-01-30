@@ -22,7 +22,7 @@ typedef struct BUILD_REQ_MSG {
 typedef struct BUILD_RES_MSG {
     bool            status;
     int             reason;
-}   build_res_msg_t;
+} build_res_msg_t;
 
 typedef struct BUILD_ORDER_MSG {
     client_t            client;
@@ -32,6 +32,7 @@ typedef struct BUILD_ORDER_MSG {
 typedef struct BUILD_ORDER_DONE_MSG {
     build_order_msg_t       build_order;
     int                     status;
+    int                     reason;
 } build_order_done_msg_t;
 
 #endif

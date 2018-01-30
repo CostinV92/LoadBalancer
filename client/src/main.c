@@ -44,6 +44,26 @@ void listen_for_output()
     LOG("Output server created");
 }
 
+int get_listen_port()
+{
+    char *env, port[10];
+    env = getenv("LOAD_BALANCER_CLIENT_LISTEN_PORT");
+    if(!env) {
+        FILE *f = fopen("/vagrant/output_listen_port", "r");
+        if(f) {
+            fgets(port, sizeof(port), f);
+            fclose(f);
+        } else {
+            LOG("Don't know listen for output port");
+            exit(1);
+        }
+    } else {
+        strcpy(port, env);
+    }
+
+    return atoi(port);
+}
+
 void create_server() 
 {
     int server_socket, port, iSetOption = 1;
@@ -62,8 +82,7 @@ void create_server()
     // init address structure
     memset(&server, 0, sizeof(struct sockaddr_in));
 
-    // TODO: make it genereic
-    port = 7893;
+    port = get_listen_port();
 
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
