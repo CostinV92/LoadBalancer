@@ -1,6 +1,7 @@
 NAME := client
 BUILD_DIR := $(shell pwd)/build
 VAGRANT_DIR := $(shell pwd)/vagrant/ansible/files
+TEST_BED_DIR := /home/victor/Desktop/LICENTA/TestBed/x
 
 PWD := $(shell pwd)
 
@@ -17,7 +18,7 @@ ifdef OBJ
 
 OBJ := $(addprefix $(BUILD_DIR)/, $(OBJ))
 
-all: BUILD_DIR main1 main2
+all: BUILD_DIR main1 main2 cp
 
 BUILD_DIR:
 	if [ ! -d "$(BUILD_DIR)" ]; then mkdir $(BUILD_DIR); fi
@@ -30,6 +31,9 @@ main1: $(OBJ)
 
 main2: $(OBJ)
 	$(CC) -std=gnu99 -o $(VAGRANT_DIR)/$(NAME) $(SOURCE_DIR)/main.c $(OBJ) $(INCLUDE) $(LIBRARIES)
+
+cp:
+	cp $(BUILD_DIR)/$(NAME) $(TEST_BED_DIR)/$(NAME)
 
 endif
 
