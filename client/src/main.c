@@ -27,6 +27,7 @@ load_balancer_server_t  loadBalancer;
 output_listener_t       output_listener;
 build_res_msg_t         build_res;
 char lb_address[20];
+int output_listen_port;
 
 void create_server();
 void* start_server(void* arg);
@@ -44,7 +45,7 @@ void listen_for_output()
     LOG("Output server created");
 }
 
-int get_listen_port()
+void get_listen_port()
 {
     char *env, port[10];
     env = getenv("LOAD_BALANCER_CLIENT_LISTEN_PORT");
@@ -61,7 +62,7 @@ int get_listen_port()
         strcpy(port, env);
     }
 
-    return atoi(port);
+    output_listen_port = atoi(port);
 }
 
 void create_server() 
@@ -82,7 +83,8 @@ void create_server()
     // init address structure
     memset(&server, 0, sizeof(struct sockaddr_in));
 
-    port = get_listen_port();
+    get_listen_port();
+    port = output_listen_port;
 
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
@@ -178,7 +180,7 @@ void send_request()
 
     build_req_msg_t req;
     req.platform = p9400_cetus;
-    req.listen_port = 7893;
+    req.listen_port = output_listen_port;
 
     send_message(loadBalancer.socket, SECRETARY_BUILD_REQ, sizeof(build_req_msg_t), (char*)&req);
 

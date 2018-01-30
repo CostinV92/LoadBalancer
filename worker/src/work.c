@@ -65,10 +65,11 @@ void* start_build(void* arg)
         send_build_done(message, false, 6);
     } else if (pid) {
         // in parent
-        int status;
+        int status = 0;
         close(output_socket);
 
-        wait(&status);
+        wait(0);
+
         LOG("Build for client %s it's over with status: %d", format_ip_addr(&(client->addr)), status);
 
         send_build_done(message, true, status);
@@ -78,8 +79,7 @@ void* start_build(void* arg)
         close(output_socket);
 
         // TODO: here put the "build" script
-        execl("/vagrant/work.sh",
-            "/home/victor/Desktop/LoadBalancer/Worker/work.sh", (char*)NULL);
+        execl("/vagrant/work.sh", "work_lb", (char*)NULL);
     }
 }
 
