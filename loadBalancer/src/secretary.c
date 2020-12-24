@@ -58,6 +58,7 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 	// get a worker from the specific heap
 	heap_t *heap = worker_heap;
 	worker_t *worker;
+	heap_node_t *heap_node;
 
 	// for responding to the client
 	bool status = true;
@@ -69,10 +70,15 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 		status = true;
 		reason = 0;
 
-		worker = INFO(heap_pop(heap), worker_t);
+
+		heap_node = heap_pop(heap);
+		if (heap_node)
+			worker = INFO(heap_node, worker_t);
+		else
+			worker = 0;
 
 		if (!worker) {
-			LOG("WARNING Secretary: Don't have any worker registered!");
+			LOG("WARNING Secretary: Don't have any workers available!");
 			status = false;
 			reason = 1;
 			continue;

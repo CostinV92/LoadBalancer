@@ -55,10 +55,6 @@ void* start_server(void* arg)
 			client->addr = client_addr;
 
 			pthread_create(&secretary_thread_id, NULL, &assign_secretary, client);
-
-			secretary.thread_id = secretary_thread_id;
-			secretary.client = client;
-			client_listener->secretaries[client_listener->no_of_secretaries++] = secretary;
 		}
 	}
 }
