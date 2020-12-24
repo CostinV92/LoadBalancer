@@ -1,6 +1,8 @@
 ---
 - hosts: default
   become: yes
+  vars:
+    lb_address: 192.168.22.2
 
   tasks:
   - name: Copy worker
@@ -11,3 +13,5 @@
        
   - name: Start worker
     shell: /usr/bin/worker_lb &
+    environment:
+      LOAD_BALANCER_ADDRESS: "{{ lb_address }}"
