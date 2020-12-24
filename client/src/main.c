@@ -191,6 +191,7 @@ void send_request()
         if(byte_read > 0) {
             process_message(buffer);
         } else {
+            LOG("WARNING: lost connection with load balancer");
             close(loadBalancer.socket);
             break;
         }
@@ -202,7 +203,7 @@ void process_build_res(build_res_msg_t* message)
     build_res.status = message->status;
     build_res.reason = message->reason;
     if(message->status) {
-        LOG("Build started");
+        LOG("Build finished");
     }
     else {
         LOG("Build could not start! Reason: %d", message->reason);
@@ -254,8 +255,6 @@ int main()
 
     listen_for_output();
     send_request();
-
-    pthread_join(output_listener.thread_id, res);
 
     return 0;
 }

@@ -82,7 +82,7 @@ void process_message(void* peer, message_t* message, char* hostname, char* ip_ad
 			break;
 
 		case WORKER_BUILD_DONE:
-			LOG("Procces message: Got WORKER_BUILD_DONE message from hostname: %s, ip: %s", hostname, ip_addr);
+			LOG("Procces message: Got WORKER_BUILD_DONE message size %d from hostname: %s, ip: %s",message->size, hostname, ip_addr);
 			process_build_done(peer, (void*)(message->buffer));
 			break;
 

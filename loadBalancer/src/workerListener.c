@@ -133,15 +133,12 @@ void listen_to_worker(worker_t *worker)
 	// wait for done message from the worker
 	for(;;) {
 		bytes_read = read(worker->socket, buffer, sizeof(buffer));
-		pthread_mutex_lock(&(worker->mutex));
 		if(bytes_read) {
 			process_message(worker, (void*)buffer, worker->hostname, format_ip_addr(&(worker->addr)));
 		} else {
 			LOG("%x Worker listener: worker disconnected, hostname: %s, ip: %s", worker, worker->hostname, format_ip_addr(&(worker->addr)));
 			worker->alive = false;
-			pthread_mutex_unlock(&(worker->mutex));
 			break;
 		}
-		pthread_mutex_unlock(&(worker->mutex));
 	}
 }

@@ -11,3 +11,4 @@ client/vagrant/.vagrant/*
 client/vagrant/lb_address
 client/vagrant/ansible/files/*
 *.retry
+cscope.out

@@ -68,7 +68,7 @@ void* start_build(void* arg)
         int status = 0;
         close(output_socket);
 
-        wait(0);
+        waitpid(pid, &status, 0);
 
         LOG("Build for client %s it's over with status: %d", format_ip_addr(&(client->addr)), status);
 
@@ -79,7 +79,12 @@ void* start_build(void* arg)
         close(output_socket);
 
         // TODO: here put the "build" script
+#ifdef LOAD_BALANCER_LOCAL_HOST_DEBUG
+        execl("/tmp/work.sh", "work_lb", (char*)NULL);
+#else
         execl("/vagrant/work.sh", "work_lb", (char*)NULL);
+#endif
+
     }
 }
 

@@ -29,7 +29,7 @@ heap_t* heap_init()
 	// initialize a new heap
 	// allocate memory 
 	heap_t* new_heap;
-	new_heap = (heap_t*)malloc(sizeof(heap_t));
+	new_heap = (heap_t*)calloc(1, sizeof(heap_t));
 
 	// init mutex
 	pthread_mutex_init(&new_heap->mutex, NULL);

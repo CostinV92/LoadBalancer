@@ -1,7 +1,7 @@
 NAME := client
 BUILD_DIR := $(shell pwd)/build
 VAGRANT_DIR := $(shell pwd)/vagrant/ansible/files
-TEST_BED_DIR := /home/victor/Desktop/LICENTA/TestBed/x
+TEST_BED_DIR := /home/victor/Desktop/LICENTA/test_bed/x
 
 PWD := $(shell pwd)
 
@@ -24,10 +24,10 @@ BUILD_DIR:
 	if [ ! -d "$(BUILD_DIR)" ]; then mkdir $(BUILD_DIR); fi
 
 $(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c $(INCLUDE_DIR)/%.h $(INCLUDE_DIR)/$(COMMON)
-	$(CC) -std=gnu99 -c -o $@ $< $(INCLUDE) $(LIBRARIES)
+	$(CC) -std=gnu99 -g -c -o $@ $< $(INCLUDE) $(LIBRARIES)
 
 main1: $(OBJ)
-	$(CC) -std=gnu99 -o $(BUILD_DIR)/$(NAME) $(SOURCE_DIR)/main.c $(OBJ) $(INCLUDE) $(LIBRARIES)
+	$(CC) -std=gnu99 -g -o $(BUILD_DIR)/$(NAME) $(SOURCE_DIR)/main.c $(OBJ) $(INCLUDE) $(LIBRARIES)
 
 main2: $(OBJ)
 	$(CC) -std=gnu99 -o $(VAGRANT_DIR)/$(NAME) $(SOURCE_DIR)/main.c $(OBJ) $(INCLUDE) $(LIBRARIES)

@@ -35,7 +35,7 @@ void* assign_secretary(void* arg)
 
 	for(;;) {
 		int byte_read;
-		char buffer[256] = {0};
+		char buffer[2 * 256] = {0};
 		byte_read = read(client->socket, buffer, sizeof(buffer));
 		if(byte_read > 0) {
 			// TODO: DEBUG
@@ -149,9 +149,9 @@ void process_build_done(worker_t* worker, build_order_done_msg_t* message)
 	send_build_res(&client, status, reason);
 	pthread_mutex_lock(&(worker->mutex));
 	worker->no_current_builds--;
-	pthread_mutex_unlock(&(worker->mutex));
 	//update the heap key
 	heap_update_node_key(worker_heap, &(worker->heap_node), worker->no_current_builds);
+	pthread_mutex_unlock(&(worker->mutex));
 }
 
 static bool send_build_res(client_t* client, bool status, int reason)
