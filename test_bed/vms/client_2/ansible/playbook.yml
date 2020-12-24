@@ -1,0 +1,25 @@
+---
+- hosts: default
+  become: yes
+  vars:
+    lb_address: 192.168.22.1
+    output_listen_port: 7894
+
+  tasks:
+
+  - name: Save lb_address
+    copy: 
+      content: "{{ lb_address }}" 
+      dest: /vagrant/lb_address
+      
+  - name: Save output_listen_port
+    copy:
+      content: "{{ output_listen_port }}"
+      dest: /vagrant/output_listen_port
+
+  - name: Copy client
+    copy:
+      src: files/client
+      dest: /usr/bin/client
+      mode: 755
+      force: yes

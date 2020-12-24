@@ -1,0 +1,6 @@
+export PROJ_DIR=$(pwd)
+export OBJ_DIR=$PROJ_DIR/obj
+export BIN_DIR=$PROJ_DIR/bin
+export TEST_BED_DIR=$PROJ_DIR/test_bed
+export TEST_BED_BIN_DIR=$TEST_BED_DIR/bin
+export COMMON_HEADERS_DIR=$PROJ_DIR/common_headers

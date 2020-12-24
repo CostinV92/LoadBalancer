@@ -1,43 +1,22 @@
 NAME := worker
-BUILD_DIR := $(shell pwd)/build
-VAGRANT_DIR := $(shell pwd)/vagrant/ansible/files
-TEST_BED_DIR := /home/victor/Desktop/LICENTA/test_bed/x
-
-PWD := $(shell pwd)
-
-SOURCE_DIR := ./src
-INCLUDE_DIR := ./include
-INCLUDE := -I$(INCLUDE_DIR)
-
-LIBRARIES := -pthread
-
 OBJ := registration.o utils.o work.o
-COMMON := messages.h
 
-ifdef OBJ
+LOCAL_SOURCE_DIR := $(CURDIR)/src
+LOCAL_INCLUDE_DIR := $(CURDIR)/include
 
-OBJ := $(addprefix $(BUILD_DIR)/, $(OBJ))
+OBJ := $(addprefix $(OBJ_DIR)/$(NAME)/, $(OBJ))
 
-all: BUILD_DIR main main2 cp
+.PHONY: all
+all: check_local_obj_dir $(NAME) copy_to_test_bed
 
-BUILD_DIR:
-	if [ ! -d "$(BUILD_DIR)" ]; then mkdir $(BUILD_DIR); fi
+check_local_obj_dir:
+	@if [ ! -d "$(OBJ_DIR)/$(NAME)" ]; then mkdir $(OBJ_DIR)/$(NAME); fi
 
-$(BUILD_DIR)/%.o: $(SOURCE_DIR)/%.c $(INCLUDE_DIR)/%.h $(INCLUDE_DIR)/$(COMMON)
-	$(CC) -std=gnu99 -g -c -o $@ $< $(INCLUDE) $(LIBRARIES) -DLOAD_BALANCER_LOCAL_HOST_DEBUG
+$(NAME): $(OBJ)
+	$(CC) -std=gnu99 -g -o $(BIN_DIR)/$(NAME) $(LOCAL_SOURCE_DIR)/main.c $(OBJ) -I$(COMMON_HEADERS_DIR) -I$(LOCAL_INCLUDE_DIR) $(COMMON_LIBRARIES)
 
-main: $(OBJ)
-	$(CC) -std=gnu99 -g -o $(BUILD_DIR)/$(NAME) $(SOURCE_DIR)/main.c $(OBJ) $(INCLUDE) $(LIBRARIES) -DLOAD_BALANCER_LOCAL_HOST_DEBUG
+$(OBJ_DIR)/$(NAME)/%.o: $(LOCAL_SOURCE_DIR)/%.c $(LOCAL_INCLUDE_DIR)/%.h $(COMMON_HEADERS)
+	$(CC) -std=gnu99 -g -c -o $@ $< -I$(COMMON_HEADERS_DIR) -I$(LOCAL_INCLUDE_DIR) $(COMMON_LIBRARIES)
 
-main2: $(OBJ)
-	$(CC) -std=gnu99 -o $(VAGRANT_DIR)/$(NAME) $(SOURCE_DIR)/main.c $(OBJ) $(INCLUDE) $(LIBRARIES)
-
-cp:
-	cp $(BUILD_DIR)/$(NAME) $(TEST_BED_DIR)/$(NAME)
-
-endif
-
-clean: 
-	rm -rf $(BUILD_DIR)
-
-.PHONY: all $(DIRS) clean BUILD_DIR
+copy_to_test_bed:
+	@cp $(BIN_DIR)/$(NAME) $(TEST_BED_BIN_DIR)/$(NAME)
