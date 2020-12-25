@@ -1,5 +1,5 @@
 ---
-- hosts: default
+- hosts: all
   become: yes
   vars:
     lb_address: 192.168.22.2
