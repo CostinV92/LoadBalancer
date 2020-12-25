@@ -1,9 +1,9 @@
 ---
-- hosts: default
+- hosts: all
   become: yes
   vars:
     lb_address: 192.168.22.2
-    output_listen_port: 7895
+    output_listen_port: 7893
 
   tasks:
 
