@@ -49,9 +49,9 @@ void get_listen_port()
 {
     char *env, port[10];
     env = getenv("LOAD_BALANCER_CLIENT_LISTEN_PORT");
-    if(!env) {
+    if (!env) {
         FILE *f = fopen("/vagrant/output_listen_port", "r");
-        if(f) {
+        if (f) {
             fgets(port, sizeof(port), f);
             fclose(f);
         } else {
@@ -75,7 +75,7 @@ void create_server()
 
     setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
-    if(server_socket < 0) {
+    if (server_socket < 0) {
         LOG("ERROR opening output listener socket");
         exit(1);    
     }
@@ -91,13 +91,13 @@ void create_server()
     server.sin_port = htons(port);
 
     // bind the socket with the address
-    if(bind(server_socket, (struct sockaddr*)&server, sizeof(struct sockaddr_in)) < 0 ) {
+    if (bind(server_socket, (struct sockaddr*)&server, sizeof(struct sockaddr_in)) < 0 ) {
         LOG("ERROR on binding output listener socket");
         exit(1);
     }
 
     // mark socket as pasive socket
-    if(listen(server_socket, 20) < 0) {
+    if (listen(server_socket, 20) < 0) {
         LOG("ERROR on marking output listener socket as passive");
         exit(1);
     }
@@ -114,20 +114,19 @@ void* start_server(void* arg)
     struct sockaddr_in worker_addr;
 
     output_socket = accept(output_listener.socket, (struct sockaddr*)&worker_addr, &client_len);
-    if(output_socket < 0) {
+    if (output_socket < 0) {
         LOG("ERROR on accepting output");
         exit(1);
     } else {
         LOG("Worker connected to output socket, ip: %s", format_ip_addr(&worker_addr));
 
-        for(;;) {
+        for (;;) {
             int byte_read;
             char buffer[2 * 256] = {0};
             byte_read = read(output_socket, buffer, sizeof(buffer));
-            if(byte_read > 0) {
+            if (byte_read > 0) {
                 printf("%s", buffer);
-            }
-            else {
+            } else {
                 close(output_socket);
                 break;
             }
@@ -147,7 +146,7 @@ void connect_to_lb()
 
     setsockopt(lb_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
-    if(lb_socket < 0) {
+    if (lb_socket < 0) {
         LOG("ERROR opening LoadBalancer socket");
         exit(1);
     }
@@ -188,7 +187,7 @@ void send_request()
         int byte_read;
         char buffer[2 * 256] = {0};
         byte_read = read(loadBalancer.socket, buffer, sizeof(buffer));
-        if(byte_read > 0) {
+        if (byte_read > 0) {
             process_message(buffer);
         } else {
             LOG("WARNING: lost connection with load balancer");
@@ -202,10 +201,9 @@ void process_build_res(build_res_msg_t* message)
 {
     build_res.status = message->status;
     build_res.reason = message->reason;
-    if(message->status) {
+    if (message->status) {
         LOG("Build finished");
-    }
-    else {
+    } else {
         LOG("Build could not start! Reason: %d", message->reason);
         pthread_kill(output_listener.thread_id, SIGTERM);
     }
@@ -217,9 +215,9 @@ void get_lb_address()
 {
     char *env;
     env = getenv("LOAD_BALANCER_ADDRESS");
-    if(!env) {
+    if (!env) {
         FILE *f = fopen("/vagrant/lb_address", "r");
-        if(f) {
+        if (f) {
             fgets(lb_address, sizeof(lb_address), f);
             fclose(f);
         } else {
@@ -246,7 +244,7 @@ int main()
 {
     void *res;
     signal(SIGINT, sigint_handler);
-    if(init_log() != 0) {
+    if (init_log() != 0) {
         perror("WARNING: the log file could not be opened!\n");
         exit(1);
     }

@@ -24,7 +24,7 @@ int init_log()
 {
 	log_file = fopen(LOG_PATH, "a");
 
-	if(!log_file) {
+	if (!log_file) {
 		return 1;
 	}
 
@@ -75,7 +75,7 @@ void process_message(void* peer, message_t* message, char* hostname, char* ip_ad
 {
 	message_type_t msg_type = message->type;
 
-	switch(msg_type) {
+	switch (msg_type) {
 		case SECRETARY_BUILD_REQ:
 			LOG("Procces message: Got SECRETARY_BUILD_REQ message from hostname: %s, ip: %s", hostname, ip_addr);
 			process_build_req(peer, (void*)(message->buffer));

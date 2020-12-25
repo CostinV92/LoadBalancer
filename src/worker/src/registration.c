@@ -27,9 +27,9 @@ void get_lb_address()
 {
     char *env;
     env = getenv("LOAD_BALANCER_ADDRESS");
-    if(!env) {
+    if (!env) {
         FILE *f = fopen("/vagrant/lb_address", "r");
-        if(f) {
+        if (f) {
             fgets(lb_address, sizeof(lb_address), f);
             fclose(f);
         } else {
@@ -50,7 +50,7 @@ void connect_to_server()
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
-    if(server_socket < 0) {
+    if (server_socket < 0) {
         LOG("ERROR opening LoadBalancer socket");
         exit(1);    
     }

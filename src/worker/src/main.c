@@ -19,7 +19,7 @@ void sigint_handler()
 int main()
 {
     signal(SIGINT, sigint_handler);
-    if(init_log() != 0) {
+    if (init_log() != 0) {
         printf("WARNING: the log file could not be opened!\n");
         exit(1);
     }

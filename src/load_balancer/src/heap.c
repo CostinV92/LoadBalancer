@@ -53,7 +53,7 @@ static void heap_unlock(heap_t* heap)
 
 void heap_push(heap_t* heap, heap_node_t* node)
 {
-	if(heap->current_index >= MAX_NODES)
+	if (heap->current_index >= MAX_NODES)
 		return;
 
 	heap_lock(heap);
@@ -69,7 +69,7 @@ heap_node_t* heap_pop(heap_t* heap)
 	heap_lock(heap);
 	node = HEAP_ROOT(heap);
 
-	if(!node) {
+	if (!node) {
 		heap_unlock(heap);
 		return 0;
 	}
@@ -91,7 +91,7 @@ void heap_update_node_key(heap_t* heap, heap_node_t* node, int new_key)
 	int old_key = node->heap_key;
 	node->heap_key = new_key;
 
-	if(new_key < old_key)
+	if (new_key < old_key)
 		balance_heap_up_from(heap, node);
 	else if (new_key > old_key)
 		balance_heap_down_from(heap, node);
@@ -100,14 +100,14 @@ void heap_update_node_key(heap_t* heap, heap_node_t* node, int new_key)
 
 static void balance_heap_up_from(heap_t* heap, heap_node_t* node)
 {
-	if(!node)
+	if (!node)
 		return;
 
 	heap_node_t* parent_node = get_parent(heap, node);
-	if(!parent_node)
+	if (!parent_node)
 		return;
 	
-	while(node->heap_key < parent_node->heap_key) {
+	while (node->heap_key < parent_node->heap_key) {
 		int index = node->heap_index;
 		parent_node = PARENT(heap, node);
 		node->heap_index = parent_node->heap_index;
@@ -116,21 +116,21 @@ static void balance_heap_up_from(heap_t* heap, heap_node_t* node)
 		((heap_node_t**)heap)[parent_node->heap_index] = parent_node;
 
 		parent_node = get_parent(heap, node);
-		if(!parent_node)
+		if (!parent_node)
 			return;
 	}
 }
 
 static void balance_heap_down_from(heap_t* heap, heap_node_t* node)
 {
-	if(!node)
+	if (!node)
 		return;
 
 	heap_node_t* min_child = get_min_child(heap, node);
-	if(!min_child)
+	if (!min_child)
 		return;
 
-	while(node->heap_key > min_child->heap_key) {
+	while (node->heap_key > min_child->heap_key) {
 		int index = node->heap_index;
 		node->heap_index = min_child->heap_index;
 		min_child->heap_index = index;
@@ -138,14 +138,14 @@ static void balance_heap_down_from(heap_t* heap, heap_node_t* node)
 		((heap_node_t**)heap)[min_child->heap_index] = min_child;
 
 		min_child = get_min_child(heap, node);
-		if(!min_child)
+		if (!min_child)
 			return;
 	}
 }
 
 static heap_node_t* get_parent(heap_t* heap, heap_node_t *node)
 {
-	if(HAS_PARENT(node))
+	if (HAS_PARENT(node))
 		return PARENT(heap, node);
 	else
 		return 0;
@@ -155,12 +155,12 @@ static heap_node_t* get_min_child(heap_t* heap, heap_node_t *node)
 {
 	heap_node_t *first_child, *min_child;
 	
-	if(HAS_FIRST_CHILD(heap, node))
+	if (HAS_FIRST_CHILD(heap, node))
 		first_child = FIRST_CHILD(heap, node);
 	else
 		return 0;
 
-	if(HAS_SECOND_CHILD(heap, node))
+	if (HAS_SECOND_CHILD(heap, node))
 		return MIN_CHILD(heap, node);
 	else 
 		return first_child;

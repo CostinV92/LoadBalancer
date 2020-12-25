@@ -46,9 +46,9 @@ void* start_server(void* arg)
 	int worker_socket, worker_len = sizeof(struct sockaddr_in), *socket = (int*)arg;
 	struct sockaddr_in worker_addr;
 
-	while(1) {
+	while (1) {
 		worker_socket = accept(*socket, (struct sockaddr*)&worker_addr, &worker_len);
-		if(worker_socket < 0) {
+		if (worker_socket < 0) {
 			perror("ERROR on accepting worker connection");
 			//this is for reusing the port imeddiatly after error
 			setsockopt(*socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
@@ -78,7 +78,7 @@ void create_server()
 	server_socket = socket(AF_INET, SOCK_STREAM, 0);
 	setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
-	if(server_socket < 0) {
+	if (server_socket < 0) {
 		perror("ERROR opening worker listener socket");
 		exit(1);	
 	}
@@ -93,13 +93,13 @@ void create_server()
 	server_addr.sin_port = htons(port);
 
 	// bind the socket with the address
-	if(bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0 ) {
+	if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0 ) {
 		perror("ERROR on biding worker listener socket");
 		exit(1);
 	}
 
 	// mark socket as pasive socket
-	if(listen(server_socket,20) < 0) {
+	if (listen(server_socket,20) < 0) {
 		perror("ERROR on marking worker listener socket as passive");
 		exit(1);
 	}
@@ -114,7 +114,7 @@ void* register_worker(void* arg)
 	char service[20] = {0};
 	worker_t *worker = (worker_t*)arg;
 
-	if(getnameinfo((struct sockaddr *)&(worker->addr), sizeof(worker->addr), worker->hostname, sizeof(worker->hostname), service, sizeof(service), 0) == 0) {
+	if (getnameinfo((struct sockaddr *)&(worker->addr), sizeof(worker->addr), worker->hostname, sizeof(worker->hostname), service, sizeof(service), 0) == 0) {
 		heap_push(worker_heap, &(worker->heap_node));
 		LOG("Worker listener: worker added to database, hostname: %s, ip: %s", worker->hostname, format_ip_addr(&(worker->addr)));
 	} else {
@@ -131,9 +131,9 @@ void listen_to_worker(worker_t *worker)
 	char buffer[2 * 256] = {0};
 
 	// wait for done message from the worker
-	for(;;) {
+	for (;;) {
 		bytes_read = read(worker->socket, buffer, sizeof(buffer));
-		if(bytes_read) {
+		if (bytes_read) {
 			process_message(worker, (void*)buffer, worker->hostname, format_ip_addr(&(worker->addr)));
 		} else {
 			LOG("%x Worker listener: worker disconnected, hostname: %s, ip: %s", worker, worker->hostname, format_ip_addr(&(worker->addr)));

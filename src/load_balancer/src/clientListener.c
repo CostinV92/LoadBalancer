@@ -41,9 +41,9 @@ void* start_server(void* arg)
 	secretary_t secretary;
 	pthread_t secretary_thread_id;
 
-	while(1) {
+	while (1) {
 		client_socket = accept(*socket, (struct sockaddr*)&client_addr, &client_len);
-		if(client_socket < 0) {
+		if (client_socket < 0) {
 			perror("ERROR on accepting connection");
 			//this is for reusing the port imeddiatly after error
 			setsockopt(*socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
@@ -68,7 +68,7 @@ void create_server()
 	server_socket = socket(AF_INET, SOCK_STREAM, 0);
 	setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
-	if(server_socket < 0) {
+	if (server_socket < 0) {
 		perror("ERROR opening client listener socket");
 		exit(1);	
 	}
@@ -83,13 +83,13 @@ void create_server()
 	server.sin_port = htons(port);
 
 	// bind the socket with the address
-	if(bind(server_socket, (struct sockaddr*)&server, sizeof(server)) < 0 ) {
+	if (bind(server_socket, (struct sockaddr*)&server, sizeof(server)) < 0 ) {
 		perror("ERROR on biding client listener socket");
 		exit(1);
 	}
 
 	// mark socket as pasive socket
-	if(listen(server_socket,20) < 0) {
+	if (listen(server_socket,20) < 0) {
 		perror("ERROR on marking client listener socket as passive");
 		exit(1);
 	}

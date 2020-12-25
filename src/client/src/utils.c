@@ -23,7 +23,7 @@ int init_log()
 	;;
 	log_file = fopen(LOG_PATH, "a");
 
-	if(!log_file) {
+	if (!log_file) {
 		return 1;
 	}
 
@@ -74,7 +74,7 @@ void process_message(message_t* message)
 {
 	message_type_t msg_type = message->type;
 
-	switch(msg_type) {
+	switch (msg_type) {
 		case SECRETARY_BUILD_RES:
 			LOG("Procces message: Got SECRETARY_BUILD_RES message");
 			process_build_res((void*)(message->buffer));

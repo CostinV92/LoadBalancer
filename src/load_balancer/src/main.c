@@ -17,7 +17,7 @@ extern worker_listener_t *worker_listener;
 
 void sigint_handler()
 {
-	for(int i = 0; i < client_listener->no_of_secretaries; i++) {
+	for (int i = 0; i < client_listener->no_of_secretaries; i++) {
 		pthread_cancel(client_listener->secretaries[i].thread_id);
 		close(client_listener->secretaries[i].client->socket);
 	}
@@ -30,7 +30,7 @@ void sigint_handler()
 
 void signal_handler(int signum)
 {
-	switch(signum) {
+	switch (signum) {
 		case SIGINT:
 			sigint_handler();
 			break;
@@ -46,7 +46,7 @@ int main()
 {
 	void *res;
 	signal(SIGINT, signal_handler);
-	if(init_log() != 0) {
+	if (init_log() != 0) {
 		printf("WARNING: the log file could not be opened!\n");
 	}
 	init_client_listener();

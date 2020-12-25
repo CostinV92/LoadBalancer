@@ -24,7 +24,7 @@ void* assign_secretary(void* arg)
 	client_t *client = (client_t*)arg;
 	char service[20] = {0};
 
-	if(getnameinfo((struct sockaddr *)&(client->addr), sizeof(client->addr),
+	if (getnameinfo((struct sockaddr *)&(client->addr), sizeof(client->addr),
 		client->hostname, sizeof(client->hostname), service, sizeof(service), 0) == 0) {
 		LOG("Secretary: Client introduced himself, hostname: %s, ip: %s",
 			client->hostname, format_ip_addr(&(client->addr)));
@@ -33,11 +33,11 @@ void* assign_secretary(void* arg)
 			format_ip_addr(&(client->addr)));
 	}
 
-	for(;;) {
+	for (;;) {
 		int byte_read;
 		char buffer[2 * 256] = {0};
 		byte_read = read(client->socket, buffer, sizeof(buffer));
-		if(byte_read > 0) {
+		if (byte_read > 0) {
 			// TODO: DEBUG
 			process_message(client, (message_t*)buffer,
 				client->hostname, format_ip_addr(&(client->addr)));
@@ -86,14 +86,14 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 
 
 		pthread_mutex_lock(&(worker->mutex));
-		if(status && worker->no_current_builds >= 2) {
+		if (status && worker->no_current_builds >= 2) {
 			LOG("WARNING Secretary: Best worker already has 2 or more current builds!");
 			status = false;
 			reason = 2;
 			heap_push(heap, &(worker->heap_node));
 		}
 
-		if(status && !worker->alive) {
+		if (status && !worker->alive) {
 			LOG("WARNING Secretary: Worker no longer available worker: %s  ip: %s",
 					worker->hostname, format_ip_addr(&(worker->addr)));
 			status = false;
@@ -108,12 +108,12 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 			continue;
 		}
 
-		if(status && !send_build_order(worker, client, message)) {
+		if (status && !send_build_order(worker, client, message)) {
 			status = false;
 			reason = 4;
 		}
 
-		if(status) {
+		if (status) {
 			//Here the worker would have begin the build so update the worker info and re add it to the heap
 			worker->no_current_builds++;
 			worker->heap_node.heap_key = worker->no_current_builds;
@@ -142,7 +142,7 @@ void process_build_done(worker_t* worker, build_order_done_msg_t* message)
 	int reason = message->reason;
 	client_t client = message->build_order.client;
 
-	if(!status) {
+	if (!status) {
 		LOG("WARNING Secretary: Build failed with reason: %d on hostname: %s, ip: %s, for hostname: %s, ip: %s",
 			reason, worker->hostname, format_ip_addr(&(worker->addr)),
 				client.hostname, format_ip_addr(&(client.addr)));
@@ -184,7 +184,7 @@ static bool send_build_order(worker_t* worker, client_t* client, build_req_msg_t
 	build_order.client = *client;
 	build_order.request = *build_message;
 
-	if(send_message(worker->socket, WORKER_BUILD_ORDER, sizeof(build_order_msg_t), (char*)&build_order) < 0) {
+	if (send_message(worker->socket, WORKER_BUILD_ORDER, sizeof(build_order_msg_t), (char*)&build_order) < 0) {
 		// return, the unconnected worker will be handled in process_build_req
 		return false;
 	}

@@ -19,10 +19,10 @@ void wait_for_work()
 {
     int bytes_read;
     char buffer[2 * 256] = {0};
-    for(;;) {
+    for (;;) {
         // wait for messages
         bytes_read = read(loadBalancer->socket, buffer, sizeof(buffer));
-        if(bytes_read > 0) {
+        if (bytes_read > 0) {
             LOG("Read %d bytes from LoadBalancer (needed %d)", bytes_read, sizeof(build_order_msg_t));
             process_message((message_t*)buffer);
         } else {
@@ -50,7 +50,7 @@ void* start_build(void* arg)
     build_req_msg_t *request = &(message->request);
 
     // first connect to the client
-    if((output_socket = connect_to_client(client, request->listen_port)) < 0) {
+    if ((output_socket = connect_to_client(client, request->listen_port)) < 0) {
         // error on connecting to client for sending output
         send_build_done(message, false, 5);
         return NULL;
@@ -107,7 +107,7 @@ int connect_to_client(client_t *client, int client_port)
     client_socket = socket(AF_INET, SOCK_STREAM, 0);
     setsockopt(client_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
-    if(client_socket < 0) {
+    if (client_socket < 0) {
         LOG("ERROR opening client output socket");
         return -1;
     }
