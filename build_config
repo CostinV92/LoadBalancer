@@ -1,4 +1,4 @@
-export PROJ_DIR=$(pwd)
+export PROJ_DIR=$(cd $(dirname ${BASH_SOURCE[0]}) > /dev/null 2>&1 && pwd )
 export OBJ_DIR=$PROJ_DIR/obj
 export BIN_DIR=$PROJ_DIR/bin
 export TEST_BED_DIR=$PROJ_DIR/test_bed

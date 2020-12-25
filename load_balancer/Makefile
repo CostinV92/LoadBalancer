@@ -7,7 +7,7 @@ LOCAL_INCLUDE_DIR := $(CURDIR)/include
 OBJ := $(addprefix $(OBJ_DIR)/$(NAME)/, $(OBJ))
 
 .PHONY: all
-all: check_local_obj_dir $(NAME) copy_to_test_bed
+all: check_local_obj_dir $(NAME)
 
 check_local_obj_dir:
 	@if [ ! -d "$(OBJ_DIR)/$(NAME)" ]; then mkdir $(OBJ_DIR)/$(NAME); fi
@@ -17,6 +17,3 @@ $(NAME): $(OBJ)
 
 $(OBJ_DIR)/$(NAME)/%.o: $(LOCAL_SOURCE_DIR)/%.c $(LOCAL_INCLUDE_DIR)/%.h $(COMMON_HEADERS)
 	$(CC) -std=gnu99 -g -c -o $@ $< -I$(COMMON_HEADERS_DIR) -I$(LOCAL_INCLUDE_DIR) $(COMMON_LIBRARIES)
-
-copy_to_test_bed:
-	@cp $(BIN_DIR)/$(NAME) $(TEST_BED_BIN_DIR)/$(NAME)
