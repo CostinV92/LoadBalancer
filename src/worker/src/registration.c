@@ -19,6 +19,11 @@ void register_worker()
 {
     // connect to the load balancer and anounce yourself
     loadBalancer = calloc(1, sizeof(load_balancer_server_t));
+    if (!loadBalancer) {
+        LOG("Error: %s cannot alloc memory!", __FUNCTION__);
+        clean_exit();
+    }
+
     get_lb_address();
     connect_to_server();
 }
@@ -28,14 +33,8 @@ void get_lb_address()
     char *env;
     env = getenv("LOAD_BALANCER_ADDRESS");
     if (!env) {
-        FILE *f = fopen("/vagrant/lb_address", "r");
-        if (f) {
-            fgets(lb_address, sizeof(lb_address), f);
-            fclose(f);
-        } else {
-            LOG("Don't know server address");
-            exit(1);
-        }
+        LOG("Error: %s LOAD_BALANCER_ADDRESS env variable doesn't exist", __FUNCTION__);
+        clean_exit();
     } else {
         strcpy(lb_address, env);
     }
@@ -43,31 +42,30 @@ void get_lb_address()
 
 void connect_to_server()
 {
-    int server_socket, port, iSetOption = 1;
+    int server_socket = 0, port = 0, iSetOption = 1;
     struct sockaddr_in server_addr;
 
     // create the socket
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (server_socket == -1) {
+        LOG("Error: %s cannot create socket to load balancer.", __FUNCTION__);
+        clean_exit();
+    }
     setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
-    if (server_socket < 0) {
-        LOG("ERROR opening LoadBalancer socket");
-        exit(1);    
-    }
 
     // init address structure
     memset(&server_addr, 0, sizeof(struct sockaddr_in));
 
     port = SERVER_PORT;
-
     server_addr.sin_family = AF_INET;
     // TODO: take the real server addr
     server_addr.sin_addr.s_addr = inet_addr(lb_address);
     server_addr.sin_port = htons(port);
 
-    if (connect(server_socket, (struct sockaddr *)&server_addr, sizeof(struct sockaddr_in)) < 0) {
-        LOG("ERROR connecting to LoadBalancer");
-        exit(1);
+    if (connect(server_socket, (struct sockaddr *)&server_addr, sizeof(struct sockaddr_in)) == -1) {
+        LOG("Error: %s cannot connect to load balancer.", __FUNCTION__);
+        clean_exit();
     }
 
     loadBalancer->socket = server_socket;

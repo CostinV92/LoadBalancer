@@ -6,12 +6,12 @@
 #include <netinet/in.h>
 
 typedef enum BOOL {
-	false,
-	true
+    false,
+    true
 } bool;
 
 typedef enum PLATFORM {
-	p9400_cetus
+    p9400_cetus
 } platform_t;
 
 typedef struct CLIENT {
@@ -22,9 +22,11 @@ typedef struct CLIENT {
 } client_t;
 
 int init_log();
+void close_log();
 void LOG(char*, ...);
 char* format_ip_addr(struct sockaddr_in*);
 void process_message();
 int send_message();
+void clean_exit();
 
 #endif

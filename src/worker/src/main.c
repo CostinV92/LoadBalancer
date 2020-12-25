@@ -9,9 +9,11 @@
 
 void sigint_handler()
 {
-    close(loadBalancer->socket);
+    if (loadBalancer->socket)
+        close(loadBalancer->socket);
+    close_log();
 
-    LOG("WARNING Worker going down");
+    LOG("Error: worker going down");
 
     exit(SIGINT);
 }
@@ -19,9 +21,9 @@ void sigint_handler()
 int main()
 {
     signal(SIGINT, sigint_handler);
-    if (init_log() != 0) {
-        printf("WARNING: the log file could not be opened!\n");
-        exit(1);
+    if (init_log() == -1) {
+        printf("Error: %s the log file could not be opened!\n", __FUNCTION__);
+        clean_exit();
     }
 
     register_worker();

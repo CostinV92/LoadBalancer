@@ -26,7 +26,7 @@ void wait_for_work()
             LOG("Read %d bytes from LoadBalancer (needed %d)", bytes_read, sizeof(build_order_msg_t));
             process_message((message_t*)buffer);
         } else {
-            LOG("Lost connection to LoadBalancer");
+            LOG("Error: %s error on reading from socket.", __FUNCTION__);
             close(loadBalancer->socket);
             break;
         }
@@ -35,22 +35,28 @@ void wait_for_work()
 
 void process_build_order(build_order_msg_t* message)
 {
-    pthread_t build_thread_id;
-    build_order_msg_t *thread_message = calloc(1, sizeof(build_order_msg_t));
+    pthread_t build_thread_id = 0;
+    build_order_msg_t *thread_message = NULL;
+
+    thread_message = calloc(1, sizeof(build_order_msg_t));
+    if (!thread_message) {
+        LOG("Error: %s cannot allocate memory.", __FUNCTION__);
+        clean_exit();
+    }
+
     memcpy(thread_message, message, sizeof(build_order_msg_t));
-    // spawn a thread to take care of this
     pthread_create(&build_thread_id, NULL, &start_build, thread_message);
 }
 
 void* start_build(void* arg)
 {
-    int pid, output_socket;
+    int pid = 0, output_socket = 0;
     build_order_msg_t *message = (build_order_msg_t*)arg;
     client_t *client = &(message->client);
     build_req_msg_t *request = &(message->request);
 
     // first connect to the client
-    if ((output_socket = connect_to_client(client, request->listen_port)) < 0) {
+    if ((output_socket = connect_to_client(client, request->listen_port)) == -1) {
         // error on connecting to client for sending output
         send_build_done(message, false, 5);
         return NULL;
@@ -59,12 +65,10 @@ void* start_build(void* arg)
     LOG("Starting build for client %s", format_ip_addr(&(client->addr)));
 
     // spawn a process to do the work and wait for it
-    if ((pid = fork()) < 0) {
-        // error on forking
-        LOG("ERROR forking failed");
+    if ((pid = fork()) == -1) {
+        LOG("Error:%s forking failed.", __FUNCTION__);
         send_build_done(message, false, 6);
     } else if (pid) {
-        // in parent
         int status = 0;
         close(output_socket);
 
@@ -74,7 +78,6 @@ void* start_build(void* arg)
 
         send_build_done(message, true, status);
     } else {
-        // in child
         dup2(output_socket, 1);
         close(output_socket);
 
@@ -100,22 +103,20 @@ void send_build_done(build_order_msg_t *req, bool status, int reason)
 
 int connect_to_client(client_t *client, int client_port)
 {
-    int client_socket, port = client_port, iSetOption = 1;
+    int client_socket = 0, port = client_port, iSetOption = 1;
     struct sockaddr_in client_addr = client->addr;
 
     // create the socket
     client_socket = socket(AF_INET, SOCK_STREAM, 0);
-    setsockopt(client_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
-
     if (client_socket < 0) {
-        LOG("ERROR opening client output socket");
+        LOG("Error: %s cannot open client output socket.", __FUNCTION__);
         return -1;
     }
+    setsockopt(client_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
     client_addr.sin_port = htons(port);
-
-    if (connect(client_socket, (struct sockaddr *)&client_addr, sizeof(struct sockaddr_in)) < 0) {
-        LOG("ERROR connecting to client output");
+    if (connect(client_socket, (struct sockaddr *)&client_addr, sizeof(struct sockaddr_in)) == -1) {
+        LOG("Error: %s cannot connect to client.", __FUNCTION__);
         return -1;
     }
 
