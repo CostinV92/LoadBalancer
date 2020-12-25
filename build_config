@@ -1,6 +1,7 @@
-export PROJ_DIR=$(cd $(dirname ${BASH_SOURCE[0]}) > /dev/null 2>&1 && pwd )
+export PROJ_DIR=$(cd $(dirname ${BASH_SOURCE[0]}) > /dev/null 2>&1 && pwd)
+export SRC_DIR=$PROJ_DIR/src
 export OBJ_DIR=$PROJ_DIR/obj
 export BIN_DIR=$PROJ_DIR/bin
 export TEST_BED_DIR=$PROJ_DIR/test_bed
 export TEST_BED_BIN_DIR=$TEST_BED_DIR/bin
-export COMMON_HEADERS_DIR=$PROJ_DIR/common_headers
+export COMMON_HEADERS_DIR=$SRC_DIR/common_headers
