@@ -1,6 +1,5 @@
 bin/*
 obj/*
-test_bed/bin/*
 **/.vagrant/*
 **/ansible/files/*
 cscope.out

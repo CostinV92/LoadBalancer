@@ -1,0 +1,17 @@
+load_balancer:
+  ip_addr: "192.168.22.2"
+  hostname: "load-balancer"
+  app_name: "load_balancer"
+  provision_script: "load_balancer_startup.yml"
+
+workers:
+  no_of_workers: 2
+  base_hostname: "worker"
+  app_name: "worker"
+  provision_script: "worker_startup.yml"
+
+clients:
+  no_of_clients: 3
+  base_hostname: "client"
+  app_name: "client"
+  provision_script: "client_startup.yml"
