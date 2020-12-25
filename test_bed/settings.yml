@@ -1,5 +1,5 @@
 load_balancer:
-  ip_addr: "192.168.22.2"
+  ip_addr: "192.168.111.2"
   hostname: "load-balancer"
   app_name: "load_balancer"
   provision_script: "load_balancer_startup.yml"
@@ -15,3 +15,4 @@ clients:
   base_hostname: "client"
   app_name: "client"
   provision_script: "client_startup.yml"
+  output_listen_port: 7893
