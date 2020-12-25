@@ -1,0 +1,70 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  # load_balancer
+  config.vm.define "load_balancer" do |load_balancer|
+    load_balancer.vm.box = "ubuntu/trusty64"
+    load_balancer.vm.hostname = "load-balancer"
+
+    load_balancer.vm.network "private_network", ip: "192.168.22.2"
+
+    load_balancer.vm.provider "virtualbox" do |vb|
+      vb.memory = "1024"
+      vb.cpus = 2
+    end
+
+    load_balancer.vm.provision "file", run: "always", source: ENV["BIN_DIR"] + "/load_balancer", destination: "/vagrant/ansible/files/load_balancer"
+    load_balancer.vm.provision "ansible_local", run: "always" do |ansible|
+      ansible.provisioning_path = "/vagrant/ansible"
+      ansible.playbook = "load_balancer_startup.yml"
+    end
+  end
+
+  # workers
+  (1..2).each do |i|
+    config.vm.define "worker_#{i}" do |worker|
+      worker.vm.box = "ubuntu/trusty64"
+      worker.vm.hostname = "worker-#{i}"
+
+      #network
+      worker.vm.network "private_network", ip: "192.168.22.1#{i}"
+
+      # vm specs
+      worker.vm.provider "virtualbox" do |vb|
+        vb.memory = "1024"
+        vb.cpus = 2
+      end
+
+      worker.vm.provision "file", run: "always", source: ENV["BIN_DIR"] + "/worker", destination: "/vagrant/ansible/files/worker"
+      worker.vm.provision "ansible_local", run: "always" do |ansible|
+        ansible.provisioning_path = "/vagrant/ansible"
+        ansible.playbook = "worker_startup.yml"
+      end
+    end
+  end
+
+  # client
+  (1..2).each do |i|
+    config.vm.define "client_#{i}" do |client|
+      client.vm.box = "ubuntu/trusty64"
+      client.vm.hostname = "client-#{i}"
+
+      # networking
+      client.vm.network "private_network", ip: "192.168.22.2#{i}"
+
+      # vm specs
+      client.vm.provider "virtualbox" do |vb|
+        vb.memory = "1024"
+        vb.cpus = 2
+      end
+
+      client.vm.provision "file", run: "always", source: ENV["BIN_DIR"] + "/client", destination: "/vagrant/ansible/files/client"
+      client.vm.provision "ansible_local" do |ansible|
+        ansible.provisioning_path = "/vagrant/ansible"
+        ansible.playbook = "client_startup.yml"
+      end
+    end
+  end
+end
