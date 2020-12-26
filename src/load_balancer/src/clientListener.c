@@ -26,7 +26,7 @@ void init_client_listener()
 {
     int socket = 0;
 
-    client_listener = malloc(sizeof(client_listener_t));
+    client_listener = calloc(1, sizeof(client_listener_t));
     if (!client_listener) {
         LOG("Error: %s() cannot allocate memory.", __FUNCTION__);
         clean_exit(-1);

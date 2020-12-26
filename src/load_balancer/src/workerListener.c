@@ -36,7 +36,7 @@ void init_worker_listener()
 {
     int socket = 0;
 
-    worker_listener = malloc(sizeof(worker_listener_t));
+    worker_listener = calloc(1, sizeof(worker_listener_t));
     if (!worker_listener) {
         LOG("Error: %s() cannot allocate memory.", __FUNCTION__);
         clean_exit(-1);

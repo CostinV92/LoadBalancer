@@ -28,7 +28,7 @@ static void listen_connections(connections_t *connections);
 
 void start_listening()
 {
-    connections_t connections;
+    connections_t connections = {0};
 
     if (!client_listener) {
         LOG("Error: %s() client_listener not initialized.", __FUNCTION__);
@@ -62,7 +62,7 @@ static void listen_connections(connections_t *connections)
     while (1) {
         struct timeval tv = {.tv_sec = 1, .tv_usec = 0};
         read_sockets = connections->sockets;
-        rc = select(connections->max_socket, &read_sockets, NULL, NULL, &tv);
+        rc = select(connections->max_socket + 1, &read_sockets, NULL, NULL, &tv);
         if (rc == -1) {
             LOG("Error: %s() error on select().", __FUNCTION__);
             clean_exit(-1);
