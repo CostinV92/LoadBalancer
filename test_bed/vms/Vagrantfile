@@ -79,7 +79,7 @@ Vagrant.configure("2") do |config|
       end
 
       client.vm.provision "file", run: "always", source: app_path, destination: "/vagrant/ansible/files/" + app_name
-      client.vm.provision "ansible_local" do |ansible|
+      client.vm.provision "ansible_local", run: "always" do |ansible|
         ansible.provisioning_path = "/vagrant/ansible"
         ansible.playbook = provision_script
         ansible.extra_vars = {
