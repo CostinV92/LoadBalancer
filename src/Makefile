@@ -1,4 +1,4 @@
-MOD_DIR = client load_balancer worker
+MOD_DIR = client load_balancer worker libs
 MOD_DIR := $(addprefix $(CURDIR)/, $(MOD_DIR))
 
 COMMON_HEADERS = messages.h
