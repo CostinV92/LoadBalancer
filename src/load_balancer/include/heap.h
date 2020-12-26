@@ -3,18 +3,18 @@
 
 #include <pthread.h>
 
-#define MAX_NODES		   	101
+#define MAX_NODES           101
 
 typedef struct HEAP_INFO {
-	int heap_key;
-	int heap_index;
+    int heap_key;
+    int heap_index;
 } heap_node_t;
 
 typedef struct HEAP {
-	heap_node_t*		heap[MAX_NODES];
-	pthread_mutex_t		mutex;
-	int 				max_size;
-	int 				current_index;
+    heap_node_t*        heap[MAX_NODES];
+    pthread_mutex_t     mutex;
+    int                 max_size;
+    int                 current_index;
 } heap_t;
 
 heap_t* heap_init();
@@ -26,6 +26,6 @@ void heap_push(heap_t*, heap_node_t*);
 heap_node_t* heap_pop(heap_t*);
 void heap_update_node_key(heap_t*, heap_node_t*, int);
 
-#define INFO(node, type)			((type*)((char*)node - (char*)(&(((type*)0)->heap_node))))
+#define INFO(node, type)            ((type*)((char*)node - (char*)(&(((type*)0)->heap_node))))
 
 #endif

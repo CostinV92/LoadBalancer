@@ -6,12 +6,12 @@
 #include <netinet/in.h>
 
 typedef enum BOOL {
-	false,
-	true
+    false,
+    true
 } bool;
 
 typedef enum PLATFORM {
-	p9400_cetus
+    p9400_cetus
 } platform_t;
 
 typedef struct CLIENT {

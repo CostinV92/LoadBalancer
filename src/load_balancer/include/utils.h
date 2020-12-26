@@ -6,12 +6,12 @@
 #include <netinet/in.h>
 
 typedef enum BOOL {
-	false = 0,
-	true = 1
+    false = 0,
+    true = 1
 } bool;
 
 typedef enum PLATFORM {
-	p9400_cetus
+    p9400_cetus
 } platform_t;
 
 int init_log();

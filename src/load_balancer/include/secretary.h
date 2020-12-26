@@ -4,15 +4,15 @@
 #include "utils.h"
 
 typedef struct CLIENT {
-	int 					socket;
-	struct sockaddr_in		addr;
+    int                     socket;
+    struct sockaddr_in      addr;
 
-	char 					hostname[256];
+    char                    hostname[256];
 } client_t;
 
 typedef struct SECRETARY {
-	pthread_t		thread_id;
-	client_t		*client;
+    pthread_t       thread_id;
+    client_t        *client;
 } secretary_t;
 
 void* assign_secretary(void*);
