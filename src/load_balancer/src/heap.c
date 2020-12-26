@@ -31,6 +31,10 @@ heap_t* heap_init()
     heap_t* new_heap;
     new_heap = (heap_t*)calloc(1, sizeof(heap_t));
 
+    if (!new_heap) {
+        return NULL;
+    }
+
     // init mutex
     pthread_mutex_init(&new_heap->mutex, NULL);
 
@@ -39,6 +43,15 @@ heap_t* heap_init()
     new_heap->current_index = 1;
 
     return new_heap;
+}
+
+void heap_destroy(heap_t **heap_p)
+{
+    heapt_t *heap = *heap_p;
+
+    pthread_mutex_destroy(heap->mutex);
+    free(heap);
+    *heap_p = NULL;
 }
 
 static void heap_lock(heap_t* heap)
