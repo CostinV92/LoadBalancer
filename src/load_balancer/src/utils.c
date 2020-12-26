@@ -122,11 +122,6 @@ int send_message(int socket, message_type_t type, int size, char* buffer)
 
 void clean_exit(int status)
 {
-    for (int i = 0; i < client_listener->no_of_secretaries; i++) {
-        pthread_cancel(client_listener->secretaries[i].thread_id);
-        close(client_listener->secretaries[i].client->socket);
-    }
-
     pthread_cancel(client_listener->thread_id);
     pthread_cancel(worker_listener->thread_id);
     close(client_listener->socket);

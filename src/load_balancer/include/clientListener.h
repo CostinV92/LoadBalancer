@@ -11,12 +11,11 @@ typedef struct CLIENT_LISTENER {
     struct sockaddr_in      server;
 
     pthread_t               thread_id;
-
-    // debug purposes only
-    int                     no_of_secretaries;
-    secretary_t             secretaries[MAX_NO_OF_SECRETARIES];
 } client_listener_t;
 
 void init_client_listener();
+void register_client(connections_t *connections,
+                     int client_socket,
+                     struct sockaddr_in *client_addr);
 
 #endif 

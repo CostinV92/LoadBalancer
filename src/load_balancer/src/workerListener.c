@@ -18,12 +18,19 @@
 
 static void create_server();
 static void* start_server(void*);
+#if 0 /* TODO(victor): rework */
 static void* register_worker(void*);
+#endif
 static bool get_worker_hostname(worker_t*);
 static void listen_to_worker(worker_t*);
 
+
+/***************************************************************/
+void create_worker_listener();
+
+
 worker_listener_t *worker_listener;
-heap_t *worker_heap, *fast_worker_heap;
+heap_t *worker_heap;
 
 void init_worker_listener()
 {
@@ -35,16 +42,16 @@ void init_worker_listener()
         clean_exit(-1);
     }
 
-    create_server();
-
-    pthread_t server_thread_id;
-    pthread_create(&server_thread_id, NULL, &start_server, &(worker_listener->socket));
-
-    worker_listener->thread_id = server_thread_id;
+    create_worker_listener();
 
     worker_heap = heap_init();
+    if (!worker_heap) {
+        LOG("Error: %s() failed to init worker heap.", __FUNCTION__);
+        clean_exit(-1);
+    }
 }
 
+#if 0 /* TODO(victor): rework */
 void* start_server(void* arg) 
 {
     int iSetOption = 1;
@@ -77,8 +84,9 @@ void* start_server(void* arg)
         }
     }
 }
+#endif
 
-void create_server()
+void create_worker_listener()
 {
     int server_socket, port, iSetOption = 1;
     struct sockaddr_in server_addr;
@@ -117,6 +125,32 @@ void create_server()
     worker_listener->server = server_addr;
 }
 
+void register_worker(connections_t *connections,
+                     int worker_socket,
+                     struct sockaddr_in *worker_addr)
+{
+    worker_t* worker = calloc(1, sizeof(worker_t));
+    if (!worker) {
+        LOG("Error: %s() cannot allocate memory.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    worker->socket = worker_socket;
+    worker->addr = *worker_addr;
+    worker->alive = true;
+
+    /* TODO(victor): this doesn't work use a list */
+    connections->worker_sockets[connections->num_worker_sockets++] = worker_socket;
+    FD_SET(worker_socket, &connections->sockets);
+    if (worker_socket > connections->max_socket)
+        connections->max_socket = worker_socket;
+
+    heap_push(worker_heap, &(worker->heap_node));
+
+    LOG("Worker: %s registered.", format_ip_addr(worker_addr));
+}
+
+#if 0 /* TODO(victor) rework */
 void* register_worker(void* arg)
 {
     char service[20] = {0};
@@ -132,6 +166,7 @@ void* register_worker(void* arg)
 
     listen_to_worker(worker);
 }
+#endif
 
 void listen_to_worker(worker_t *worker)
 {

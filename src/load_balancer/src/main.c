@@ -17,11 +17,6 @@ extern worker_listener_t *worker_listener;
 
 void sigint_handler()
 {
-    for (int i = 0; i < client_listener->no_of_secretaries; i++) {
-        pthread_cancel(client_listener->secretaries[i].thread_id);
-        close(client_listener->secretaries[i].client->socket);
-    }
-
     pthread_cancel(client_listener->thread_id);
     pthread_cancel(worker_listener->thread_id);
     close(client_listener->socket);
@@ -51,9 +46,7 @@ int main()
     }
     init_client_listener();
     init_worker_listener();
-
-    // the thread should never join as the server must run constantly
-    pthread_join(client_listener->thread_id, res);
+    start_listening();
 
     return 0;
 }

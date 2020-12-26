@@ -2,6 +2,7 @@
 #define __WORKER_LISTENER_H__
 
 #include "heap.h"
+#include "secretary.h"
 
 #define WORKER_PORT         7892
 
@@ -28,5 +29,8 @@ typedef struct WORKER {
 } worker_t;
 
 void init_worker_listener();
+void register_worker(connections_t *connections,
+                     int worker_socket,
+                     struct sockaddr_in *worker_addr);
 
 #endif

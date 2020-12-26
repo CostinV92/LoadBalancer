@@ -20,6 +20,8 @@ static void create_server();
 
 client_listener_t *client_listener;
 
+void create_client_listener();
+
 void init_client_listener()
 {
     int socket = 0;
@@ -30,12 +32,7 @@ void init_client_listener()
         clean_exit(-1);
     }
 
-    create_server();
-
-    pthread_t server_thread_id;
-    pthread_create(&server_thread_id, NULL, &start_server, &(client_listener->socket));
-
-    client_listener->thread_id = server_thread_id;
+    create_client_listener();
 }
 
 void* start_server(void* arg) 
@@ -43,7 +40,6 @@ void* start_server(void* arg)
     int iSetOption = 1;
     int client_socket, client_len = sizeof(struct sockaddr_in), *socket = (int*)arg;
     struct sockaddr_in client_addr;
-    secretary_t secretary;
     pthread_t secretary_thread_id;
 
     while (1) {
@@ -70,7 +66,29 @@ void* start_server(void* arg)
     }
 }
 
-void create_server() 
+void register_client(connections_t *connections,
+                     int client_socket,
+                     struct sockaddr_in *client_addr)
+{
+    client_t* client = calloc(1, sizeof(client_t));
+    if (!client) {
+        LOG("Error: %s() cannot allocate memory.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    client->socket = client_socket;
+    client->addr = *client_addr;
+
+    /* TODO(victor): this doesn't work use a list */
+    connections->client_sockets[connections->num_client_sockets++] = client_socket;
+    FD_SET(client_socket, &connections->sockets);
+    if (client_socket > connections->max_socket)
+        connections->max_socket = client_socket;
+
+    LOG("Client: %s registered.", format_ip_addr(client_addr));
+}
+
+void create_client_listener()
 {
     int server_socket, port, iSetOption = 1;
     struct sockaddr_in server;
@@ -108,5 +126,4 @@ void create_server()
     // save listener info
     client_listener->socket = server_socket;
     client_listener->server = server;
-    client_listener->no_of_secretaries = 0;
 }
