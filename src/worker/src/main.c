@@ -22,7 +22,7 @@ int main()
 {
     signal(SIGINT, sigint_handler);
     if (init_log() == -1) {
-        printf("Error: %s the log file could not be opened!\n", __FUNCTION__);
+        printf("Error: %s() the log file could not be opened!\n", __FUNCTION__);
         clean_exit();
     }
 

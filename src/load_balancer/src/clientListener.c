@@ -22,8 +22,13 @@ client_listener_t *client_listener;
 
 void init_client_listener()
 {
-    int socket;
+    int socket = 0;
+
     client_listener = malloc(sizeof(client_listener_t));
+    if (!client_listener) {
+        LOG("Error: %s() cannot allocate memory.", __FUNCTION__);
+        clean_exit(-1);
+    }
 
     create_server();
 
@@ -44,13 +49,19 @@ void* start_server(void* arg)
     while (1) {
         client_socket = accept(*socket, (struct sockaddr*)&client_addr, &client_len);
         if (client_socket < 0) {
-            perror("ERROR on accepting connection");
+            LOG("Error: %s() error on accepting connection.", __FUNCTION__);
             //this is for reusing the port imeddiatly after error
             setsockopt(*socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
-            exit(1);
+            clean_exit(-1);
         } else {
             LOG("Client listener: client connected, ip: %s", format_ip_addr(&client_addr));
+
             client_t* client = calloc(1, sizeof(client_t));
+            if (!client) {
+                LOG("Error: %s() cannot allocate memory.", __FUNCTION__);
+                clean_exit(-1);
+            }
+
             client->socket = client_socket;
             client->addr = client_addr;
 
@@ -68,9 +79,9 @@ void create_server()
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
     setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
-    if (server_socket < 0) {
-        perror("ERROR opening client listener socket");
-        exit(1);    
+    if (server_socket == -1) {
+        LOG("Error: %s() on opening client listener socket.", __FUNCTION__);
+        clean_exit(-1);
     }
 
     // init address structure
@@ -84,14 +95,14 @@ void create_server()
 
     // bind the socket with the address
     if (bind(server_socket, (struct sockaddr*)&server, sizeof(server)) < 0 ) {
-        perror("ERROR on biding client listener socket");
-        exit(1);
+        LOG("Error: %s() on biding client listener socket.", __FUNCTION__);
+        clean_exit(-1);
     }
 
     // mark socket as pasive socket
-    if (listen(server_socket,20) < 0) {
-        perror("ERROR on marking client listener socket as passive");
-        exit(1);
+    if (listen(server_socket, 20) == -1) {
+        LOG("Error: %s() on marking client listener socket as passive.", __FUNCTION__);
+        clean_exit(-1);
     }
 
     // save listener info

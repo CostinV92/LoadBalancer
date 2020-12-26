@@ -29,7 +29,7 @@ void* assign_secretary(void* arg)
         LOG("Secretary: Client introduced himself, hostname: %s, ip: %s",
             client->hostname, format_ip_addr(&(client->addr)));
     } else {
-        LOG("WARNING Secretary: Client didn't introduced himself, ip: %s",
+        LOG("Warning: Client didn't introduced himself, ip: %s",
             format_ip_addr(&(client->addr)));
     }
 
@@ -78,7 +78,7 @@ void process_build_req(client_t* client, build_req_msg_t* message)
             worker = 0;
 
         if (!worker) {
-            LOG("WARNING Secretary: Don't have any workers available!");
+            LOG("Warning: Don't have any workers available!");
             status = false;
             reason = 1;
             continue;
@@ -87,14 +87,14 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 
         pthread_mutex_lock(&(worker->mutex));
         if (status && worker->no_current_builds >= 2) {
-            LOG("WARNING Secretary: Best worker already has 2 or more current builds!");
+            LOG("Warning: Best worker already has 2 or more current builds!");
             status = false;
             reason = 2;
             heap_push(heap, &(worker->heap_node));
         }
 
         if (status && !worker->alive) {
-            LOG("WARNING Secretary: Worker no longer available worker: %s  ip: %s",
+            LOG("Warning: Worker no longer available worker: %s  ip: %s",
                     worker->hostname, format_ip_addr(&(worker->addr)));
             status = false;
             reason = 3;
@@ -143,7 +143,7 @@ void process_build_done(worker_t* worker, build_order_done_msg_t* message)
     client_t client = message->build_order.client;
 
     if (!status) {
-        LOG("WARNING Secretary: Build failed with reason: %d on hostname: %s, ip: %s, for hostname: %s, ip: %s",
+        LOG("Warning: Build failed with reason: %d on hostname: %s, ip: %s, for hostname: %s, ip: %s",
             reason, worker->hostname, format_ip_addr(&(worker->addr)),
                 client.hostname, format_ip_addr(&(client.addr)));
     } else {

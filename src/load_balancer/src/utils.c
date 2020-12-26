@@ -10,9 +10,17 @@
 
 #include <unistd.h>
 
+#include <pthread.h>
+
 #include "utils.h"
 #include "secretary.h"
 #include "messages.h"
+#include "clientListener.h"
+#include "workerListener.h"
+
+extern client_listener_t *client_listener;
+extern worker_listener_t *worker_listener;
+
 
 extern void process_build_req(client_t*, void*);
 extern void process_build_done(client_t*, void*);
@@ -25,7 +33,7 @@ int init_log()
     log_file = fopen(LOG_PATH, "a");
 
     if (!log_file) {
-        return 1;
+        return -1;
     }
 
     return 0;
@@ -95,7 +103,13 @@ void process_message(void* peer, message_t* message, char* hostname, char* ip_ad
 int send_message(int socket, message_type_t type, int size, char* buffer)
 {
     int bytes_written = 0;
+
     message_t* msg = malloc(sizeof(message_t) + size);
+    if (!msg) {
+        LOG("Error: %s() cannot allocate memory.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
     msg->type = type;
     msg->size = sizeof(message_t) + size;
     memcpy(msg->buffer, buffer, size);
@@ -104,4 +118,19 @@ int send_message(int socket, message_type_t type, int size, char* buffer)
     free(msg);
 
     return bytes_written;
+}
+
+void clean_exit(int status)
+{
+    for (int i = 0; i < client_listener->no_of_secretaries; i++) {
+        pthread_cancel(client_listener->secretaries[i].thread_id);
+        close(client_listener->secretaries[i].client->socket);
+    }
+
+    pthread_cancel(client_listener->thread_id);
+    pthread_cancel(worker_listener->thread_id);
+    close(client_listener->socket);
+    close(worker_listener->socket);
+
+    exit(status);
 }

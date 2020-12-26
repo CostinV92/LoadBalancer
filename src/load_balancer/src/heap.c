@@ -47,9 +47,9 @@ heap_t* heap_init()
 
 void heap_destroy(heap_t **heap_p)
 {
-    heapt_t *heap = *heap_p;
+    heap_t *heap = *heap_p;
 
-    pthread_mutex_destroy(heap->mutex);
+    pthread_mutex_destroy(&heap->mutex);
     free(heap);
     *heap_p = NULL;
 }
@@ -84,7 +84,7 @@ heap_node_t* heap_pop(heap_t* heap)
 
     if (!node) {
         heap_unlock(heap);
-        return 0;
+        return NULL;
     }
 
     LAST_ELEM(heap)->heap_index = 1;
@@ -161,7 +161,7 @@ static heap_node_t* get_parent(heap_t* heap, heap_node_t *node)
     if (HAS_PARENT(node))
         return PARENT(heap, node);
     else
-        return 0;
+        return NULL;
 }
 
 static heap_node_t* get_min_child(heap_t* heap, heap_node_t *node)
@@ -171,7 +171,7 @@ static heap_node_t* get_min_child(heap_t* heap, heap_node_t *node)
     if (HAS_FIRST_CHILD(heap, node))
         first_child = FIRST_CHILD(heap, node);
     else
-        return 0;
+        return NULL;
 
     if (HAS_SECOND_CHILD(heap, node))
         return MIN_CHILD(heap, node);

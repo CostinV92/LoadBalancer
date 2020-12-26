@@ -26,5 +26,6 @@ void LOG(char*, ...);
 char* format_ip_addr(struct sockaddr_in*);
 void process_message();
 int send_message();
+void clean_exit();
 
 #endif

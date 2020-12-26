@@ -26,7 +26,7 @@ void wait_for_work()
             LOG("Read %d bytes from LoadBalancer (needed %d)", bytes_read, sizeof(build_order_msg_t));
             process_message((message_t*)buffer);
         } else {
-            LOG("Error: %s error on reading from socket.", __FUNCTION__);
+            LOG("Error: %s() error on reading from socket.", __FUNCTION__);
             close(loadBalancer->socket);
             break;
         }
@@ -40,7 +40,7 @@ void process_build_order(build_order_msg_t* message)
 
     thread_message = calloc(1, sizeof(build_order_msg_t));
     if (!thread_message) {
-        LOG("Error: %s cannot allocate memory.", __FUNCTION__);
+        LOG("Error: %s() cannot allocate memory.", __FUNCTION__);
         clean_exit();
     }
 
@@ -109,14 +109,14 @@ int connect_to_client(client_t *client, int client_port)
     // create the socket
     client_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (client_socket < 0) {
-        LOG("Error: %s cannot open client output socket.", __FUNCTION__);
+        LOG("Error: %s() cannot open client output socket.", __FUNCTION__);
         return -1;
     }
     setsockopt(client_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
     client_addr.sin_port = htons(port);
     if (connect(client_socket, (struct sockaddr *)&client_addr, sizeof(struct sockaddr_in)) == -1) {
-        LOG("Error: %s cannot connect to client.", __FUNCTION__);
+        LOG("Error: %s() cannot connect to client.", __FUNCTION__);
         return -1;
     }
 

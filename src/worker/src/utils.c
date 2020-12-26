@@ -86,7 +86,7 @@ void process_message(message_t* message)
             break;
 
         default:
-            LOG("Error: %s unknown message", __FUNCTION__);
+            LOG("Error: %s() unknown message", __FUNCTION__);
             break;
     }
 }
@@ -94,7 +94,13 @@ void process_message(message_t* message)
 int send_message(int socket, message_type_t type, int size, char* buffer)
 {
     int bytes_written = 0;
+
     message_t* msg = malloc(sizeof(message_t) + size);
+    if (!msg) {
+        LOG("Error: %s() cannot allocate memory.", __FUNCTION__);
+        clean_exit();
+    }
+
     msg->type = type;
     msg->size = sizeof(message_t) + size;
     memcpy(msg->buffer, buffer, size);

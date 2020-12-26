@@ -72,13 +72,11 @@ void create_server()
 
     // create the socket
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
-
-    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
-
     if (server_socket < 0) {
-        LOG("ERROR opening output listener socket");
-        exit(1);    
+        LOG("Error: %s() error on opening output listener socket.", __FUNCTION__);
+        clean_exit(-1);
     }
+    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
     // init address structure
     memset(&server, 0, sizeof(struct sockaddr_in));
@@ -92,14 +90,14 @@ void create_server()
 
     // bind the socket with the address
     if (bind(server_socket, (struct sockaddr*)&server, sizeof(struct sockaddr_in)) < 0 ) {
-        LOG("ERROR on binding output listener socket");
-        exit(1);
+        LOG("Error: %s() error on binding output listener socket.", __FUNCTION__);
+        clean_exit(-1);
     }
 
     // mark socket as pasive socket
     if (listen(server_socket, 20) < 0) {
-        LOG("ERROR on marking output listener socket as passive");
-        exit(1);
+        LOG("Error: %s() error on marking output listener socket as passive.", __FUNCTION__);
+        clean_exit(-1);
     }
 
     // save listener info
@@ -115,8 +113,8 @@ void* start_server(void* arg)
 
     output_socket = accept(output_listener.socket, (struct sockaddr*)&worker_addr, &client_len);
     if (output_socket < 0) {
-        LOG("ERROR on accepting output");
-        exit(1);
+        LOG("Error: %s() error on accepting output.", __FUNCTION__);
+        clean_exit(-1);
     } else {
         LOG("Worker connected to output socket, ip: %s", format_ip_addr(&worker_addr));
 
@@ -147,8 +145,8 @@ void connect_to_lb()
     setsockopt(lb_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
     if (lb_socket < 0) {
-        LOG("ERROR opening LoadBalancer socket");
-        exit(1);
+        LOG("Error: %s() error opening load balancer socket.", __FUNCTION__);
+        clean_exit(-1);
     }
 
     // init address structure
@@ -163,8 +161,8 @@ void connect_to_lb()
 
 
     if (connect(lb_socket, (struct sockaddr *)&lb_addr, sizeof(struct sockaddr_in)) < 0) {
-        LOG("ERROR connecting to LoadBalancer");
-        exit(1);
+        LOG("Error: %s() error on connecting to load balancer.", __FUNCTION__);
+        clean_exit(-1);
     }
 
     loadBalancer.socket = lb_socket;
@@ -190,7 +188,7 @@ void send_request()
         if (byte_read > 0) {
             process_message(buffer);
         } else {
-            LOG("WARNING: lost connection with load balancer");
+            LOG("Warning: lost connection with load balancer");
             close(loadBalancer.socket);
             break;
         }
@@ -202,12 +200,13 @@ void process_build_res(build_res_msg_t* message)
     build_res.status = message->status;
     build_res.reason = message->reason;
     if (message->status) {
-        LOG("Build finished");
+        LOG("Build finished.");
     } else {
         LOG("Build could not start! Reason: %d", message->reason);
         pthread_kill(output_listener.thread_id, SIGTERM);
     }
 
+    /* TODO(victor) clean_exit() */
     close(loadBalancer.socket);
 }
 
@@ -235,7 +234,7 @@ void sigint_handler()
     close(loadBalancer.socket);
     close(output_listener.socket);
 
-    LOG("WARNING Client going down");
+    LOG("Warning: client going down");
 
     exit(SIGINT);
 }
@@ -245,8 +244,8 @@ int main()
     void *res;
     signal(SIGINT, sigint_handler);
     if (init_log() != 0) {
-        perror("WARNING: the log file could not be opened!\n");
-        exit(1);
+        LOG("Error: the log file could not be opened!\n");
+        clean_exit(-1);
     }
 
     get_lb_address();

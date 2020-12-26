@@ -80,7 +80,7 @@ void process_message(message_t* message)
             break;
 
         default:
-            LOG("WARNING Procces message: Unknown message");
+            LOG("Warnng: %s() unknown message.", __FUNCTION__);
             break;
     }
 }
@@ -88,7 +88,13 @@ void process_message(message_t* message)
 int send_message(int socket, message_type_t type, int size, char* buffer)
 {
     int bytes_written = 0;
+
     message_t* msg = malloc(sizeof(message_t) + size);
+    if (!msg) {
+        LOG("Error: %s() cannot allocate memory.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
     msg->type = type;
     msg->size = sizeof(message_t) + size;
     memcpy(msg->buffer, buffer, size);
@@ -97,4 +103,10 @@ int send_message(int socket, message_type_t type, int size, char* buffer)
     free(msg);
 
     return bytes_written;
+}
+
+void clean_exit(int status)
+{
+    /* TODO(victor) */
+    exit(status);
 }

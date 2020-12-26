@@ -27,8 +27,13 @@ heap_t *worker_heap, *fast_worker_heap;
 
 void init_worker_listener()
 {
-    int socket;
+    int socket = 0;
+
     worker_listener = malloc(sizeof(worker_listener_t));
+    if (!worker_listener) {
+        LOG("Error: %s() cannot allocate memory.", __FUNCTION__);
+        clean_exit(-1);
+    }
 
     create_server();
 
@@ -49,7 +54,7 @@ void* start_server(void* arg)
     while (1) {
         worker_socket = accept(*socket, (struct sockaddr*)&worker_addr, &worker_len);
         if (worker_socket < 0) {
-            perror("ERROR on accepting worker connection");
+            LOG("Error: %s() error on accepting worker connection.", __FUNCTION__);
             //this is for reusing the port imeddiatly after error
             setsockopt(*socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
             exit(1);
@@ -58,6 +63,10 @@ void* start_server(void* arg)
             LOG("Worker listener: worker connected, ip: %s", format_ip_addr(&worker_addr));
 
             worker_t* worker = calloc(1, sizeof(worker_t));
+            if (!worker) {
+                LOG("Error: %s() cannot allocate memory.", __FUNCTION__);
+                clean_exit(-1);
+            }
 
             worker->socket = worker_socket;
             worker->addr = worker_addr;
@@ -76,12 +85,11 @@ void create_server()
 
     // create the socket
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
-    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
-
     if (server_socket < 0) {
-        perror("ERROR opening worker listener socket");
-        exit(1);    
+        LOG("Error: %s() error on opening worker listener socket.", __FUNCTION__);
+        clean_exit(-1);
     }
+    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
 
     // init address structure
     memset(&server_addr, 0, sizeof(server_addr));
@@ -94,14 +102,14 @@ void create_server()
 
     // bind the socket with the address
     if (bind(server_socket, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0 ) {
-        perror("ERROR on biding worker listener socket");
-        exit(1);
+        LOG("Error: %s() error on biding worker listener socket.", __FUNCTION__);
+        clean_exit(-1);
     }
 
     // mark socket as pasive socket
-    if (listen(server_socket,20) < 0) {
-        perror("ERROR on marking worker listener socket as passive");
-        exit(1);
+    if (listen(server_socket, 20) < 0) {
+        LOG("Error: %s() error on marking worker listener socket as passive.", __FUNCTION__);
+        clean_exit(-1);
     }
 
     // save listener info
