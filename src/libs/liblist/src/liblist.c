@@ -6,7 +6,12 @@
 struct list {
     list_node_t  *head;
     list_node_t  *tail;
-    list_node_t  *iterator;
+
+    struct list_it {
+        list_node_t  *next;
+        list_node_t  *prev;
+        list_node_t  *current;
+    } it;
 };
 
 void list_node_init(list_node_t *node)
@@ -106,9 +111,6 @@ void list_node_delete(list_t *list, list_node_t *node)
     if (!list || !node)
         return;
 
-    if (list->iterator && list->iterator == node)
-        list->iterator = node->prev;
-
     next_node = node->next;
     prev_node = node->prev;
 
@@ -122,8 +124,27 @@ void list_node_delete(list_t *list, list_node_t *node)
     else
         list->head = next_node;
 
+    if (list->it.next && list->it.next == node)
+        list->it.next = list->it.next->next;
+
     node->next = NULL;
     node->prev = NULL;
+}
+
+list_node_t* list_head(list_t *list)
+{
+    if (!list)
+        return NULL;
+
+    return list->head;
+}
+
+list_node_t* list_tail(list_t *list)
+{
+    if (!list)
+        return NULL;
+
+    return list->tail;
 }
 
 list_node_t* list_node_next(list_node_t *node)
@@ -142,20 +163,47 @@ list_node_t* list_node_prev(list_node_t *node)
     return node->prev;
 }
 
-int list_iterate(list_t *list, list_node_t **node_p)
+list_it* list_begin(list_t *list)
 {
-    if (!list || !node_p)
-        return 0;
+    if (!list)
+        return NULL;
 
-    if (!list->iterator)
-        list->iterator = list->head;
-    else
-        list->iterator = list->iterator->next;
+    list->it.next = NULL;
+    list->it.current = NULL;
 
-    *node_p = list->iterator;
+    if (list->head)
+        list->it.next = list->head->next;
+    list->it.prev = NULL;
+    list->it.current = list->head;
 
-    if (*node_p)
+    return &list->it;
+}
+
+int list_end(list_it *it)
+{
+    if (!it)
         return 1;
-    else
-        return 0;
+
+    if (it->current == NULL)
+        return 1;
+
+    return 0;
+}
+
+void list_next(list_it *it)
+{
+    if (!it)
+        return;
+
+    it->current = it->next;
+    if (it->next)
+        it->next = it->next->next;
+}
+
+list_node_t *list_node_from_it(list_it *it)
+{
+    if (!it)
+        return NULL;
+
+    return it->current;
 }
