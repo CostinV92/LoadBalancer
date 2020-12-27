@@ -39,15 +39,52 @@ void start_listening()
         LOG("Error: %s() worker_listener not initialized.", __FUNCTION__);
     }
 
-    connections.num_sockets = 2;
     connections.max_socket = client_listener->socket > worker_listener->socket ?
                                     client_listener->socket : worker_listener->socket;
     FD_ZERO(&connections.sockets);
     FD_SET(client_listener->socket, &connections.sockets);
     FD_SET(worker_listener->socket, &connections.sockets);
 
+    connections.client_listener = client_listener;
+    connections.worker_listener = worker_listener;
+
     LOG("Starting listening...");
     listen_connections(&connections);
+}
+
+static void register_client(connections_t *connections,
+                            int client_socket,
+                            struct sockaddr_in *client_addr)
+{
+    if (!connections || !client_socket || !client_addr) {
+        LOG("Error: %s() invalid arguments.", __FUNCTION__);
+        return;
+    }
+
+    client_listener_new_client(client_socket, client_addr);
+    FD_SET(client_socket, &connections->sockets);
+
+    if (client_socket > connections->max_socket)
+        connections->max_socket = client_socket;
+
+    LOG("Client: %s registered.", format_ip_addr(client_addr));
+}
+
+static void register_worker(connections_t *connections,
+                            int worker_socket,
+                            struct sockaddr_in *worker_addr)
+{
+    if (!connections || !worker_socket || !worker_addr) {
+        LOG("Error: %s() invalid arguments.", __FUNCTION__);
+        return;
+    }
+
+    worker_listener_new_worker(worker_socket, worker_addr);
+    FD_SET(worker_socket, &connections->sockets);
+    if (worker_socket > connections->max_socket)
+        connections->max_socket = worker_socket;
+
+    LOG("Worker: %s registered.", format_ip_addr(worker_addr));
 }
 
 static void listen_connections(connections_t *connections)
@@ -67,8 +104,8 @@ static void listen_connections(connections_t *connections)
             LOG("Error: %s() error on select().", __FUNCTION__);
             clean_exit(-1);
         } else if (rc) {
-            if (FD_ISSET(client_listener->socket, &read_sockets)) {
-                client_socket = accept(client_listener->socket,
+            if (FD_ISSET(connections->client_listener->socket, &read_sockets)) {
+                client_socket = accept(connections->client_listener->socket,
                                        (struct sockaddr*)&addr,
                                        &addr_len);
 
@@ -84,8 +121,8 @@ static void listen_connections(connections_t *connections)
                     continue;
             }
 
-            if (FD_ISSET(worker_listener->socket, &read_sockets)) {
-                worker_socket = accept(worker_listener->socket,
+            if (FD_ISSET(connections->worker_listener->socket, &read_sockets)) {
+                worker_socket = accept(connections->worker_listener->socket,
                                        (struct sockaddr*)&addr,
                                        &addr_len);
 
@@ -101,19 +138,11 @@ static void listen_connections(connections_t *connections)
                     continue;
             }
 
-            /* TODO(victor): iterate through a list */
-            for (int i = 0; i < connections->num_client_sockets; i++) {
-                /* TODO(victor): check all clients */
-            }
-
+            /* TODO(victor): iterate through client list */
             if (rc == 0)
                 continue;
 
-            /* TODO(victor): iterate through a list */
-            for (int i = 0; i < connections->num_worker_sockets; i++) {
-                /* TODO(victor): check all workers */
-            }
-
+            /* TODO(victor): iterate through worker list */
             if (rc == 0)
                 continue;
         }

@@ -32,6 +32,12 @@ void init_client_listener()
         clean_exit(-1);
     }
 
+    client_listener->client_list = list_new();
+    if (!client_listener->client_list) {
+        LOG("Error: %s() cannot allocate client list.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
     create_client_listener();
 }
 
@@ -66,10 +72,14 @@ void* start_server(void* arg)
     }
 }
 
-void register_client(connections_t *connections,
-                     int client_socket,
-                     struct sockaddr_in *client_addr)
+void client_listener_new_client(int client_socket,
+                                struct sockaddr_in *client_addr)
 {
+    if (!client_listener) {
+        LOG("Error: %s() client_listener not initialized.");
+        return;
+    }
+
     client_t* client = calloc(1, sizeof(client_t));
     if (!client) {
         LOG("Error: %s() cannot allocate memory.", __FUNCTION__);
@@ -79,13 +89,10 @@ void register_client(connections_t *connections,
     client->socket = client_socket;
     client->addr = *client_addr;
 
-    /* TODO(victor): this doesn't work use a list */
-    connections->client_sockets[connections->num_client_sockets++] = client_socket;
-    FD_SET(client_socket, &connections->sockets);
-    if (client_socket > connections->max_socket)
-        connections->max_socket = client_socket;
+    list_node_init(&client->list_node);
+    list_add_back(client_listener->client_list, &client->list_node);
 
-    LOG("Client: %s registered.", format_ip_addr(client_addr));
+    LOG("client_listener: new client %s.", format_ip_addr(client_addr));
 }
 
 void create_client_listener()

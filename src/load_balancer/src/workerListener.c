@@ -42,13 +42,19 @@ void init_worker_listener()
         clean_exit(-1);
     }
 
-    create_worker_listener();
+    worker_listener->worker_list = list_new();
+    if (!worker_listener->worker_list) {
+        LOG("Error: %s() cannot allocate worker list.", __FUNCTION__);
+        clean_exit(-1);
+    }
 
     worker_heap = heap_init();
     if (!worker_heap) {
         LOG("Error: %s() failed to init worker heap.", __FUNCTION__);
         clean_exit(-1);
     }
+
+    create_worker_listener();
 }
 
 #if 0 /* TODO(victor): rework */
@@ -125,10 +131,14 @@ void create_worker_listener()
     worker_listener->server = server_addr;
 }
 
-void register_worker(connections_t *connections,
-                     int worker_socket,
-                     struct sockaddr_in *worker_addr)
+void worker_listener_new_worker(int worker_socket,
+                                struct sockaddr_in *worker_addr)
 {
+    if (!worker_listener) {
+        LOG("Error: %s() worker_listener not initialized.");
+        return;
+    }
+
     worker_t* worker = calloc(1, sizeof(worker_t));
     if (!worker) {
         LOG("Error: %s() cannot allocate memory.", __FUNCTION__);
@@ -139,15 +149,12 @@ void register_worker(connections_t *connections,
     worker->addr = *worker_addr;
     worker->alive = true;
 
-    /* TODO(victor): this doesn't work use a list */
-    connections->worker_sockets[connections->num_worker_sockets++] = worker_socket;
-    FD_SET(worker_socket, &connections->sockets);
-    if (worker_socket > connections->max_socket)
-        connections->max_socket = worker_socket;
+    list_node_init(&worker->list_node);
+    list_add_back(worker_listener->worker_list, &worker->list_node);
 
-    heap_push(worker_heap, &(worker->heap_node));
+    heap_push(worker_heap, &worker->heap_node);
 
-    LOG("Worker: %s registered.", format_ip_addr(worker_addr));
+    LOG("Worker: new worker %s.", format_ip_addr(worker_addr));
 }
 
 #if 0 /* TODO(victor) rework */
