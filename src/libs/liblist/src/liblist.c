@@ -176,7 +176,10 @@ list_it* list_begin(list_t *list)
     list->it.prev = NULL;
     list->it.current = list->head;
 
-    return &list->it;
+    if (list->it.current)
+        return &list->it;
+    else
+        return NULL;
 }
 
 int list_end(list_it *it)
@@ -184,20 +187,19 @@ int list_end(list_it *it)
     if (!it)
         return 1;
 
-    if (it->current == NULL)
-        return 1;
-
     return 0;
 }
 
-void list_next(list_it *it)
+void list_next(list_it **it)
 {
-    if (!it)
+    if (!it || !(*it))
         return;
 
-    it->current = it->next;
-    if (it->next)
-        it->next = it->next->next;
+    (*it)->current = (*it)->next;
+    if ((*it)->next)
+        (*it)->next = (*it)->next->next;
+    else
+        *it = NULL;
 }
 
 list_node_t *list_node_from_it(list_it *it)

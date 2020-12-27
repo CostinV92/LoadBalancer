@@ -25,14 +25,15 @@ list_node_t* list_node_prev(list_node_t *node);
 
 list_it* list_begin(list_t *list);
 int list_end(list_it *it);
-void list_next(list_it *it);
+void list_next(list_it **it);
 list_node_t *list_node_from_it(list_it *it);
 
 #define list_iterate(list, it)      \
     for(it = list_begin(list);      \
         !list_end(it);              \
-        list_next(it))              \
+        list_next(&it))             \
 
-#define info_from_node(node, type) ((type *)((char *)node - (char *)(&(((type *)0)->list_node))))
+#define info_from_node(node, type)  ((type *)((char *)node - (char *)(&(((type *)0)->list_node))))
+#define info_from_it(it, type)      (info_from_node(list_node_from_it(it), type))
 
 #endif
