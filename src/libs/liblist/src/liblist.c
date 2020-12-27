@@ -4,12 +4,12 @@
 #include "liblist.h"
 
 struct list {
-    node_t  *head;
-    node_t  *tail;
-    node_t  *iterator;
+    list_node_t  *head;
+    list_node_t  *tail;
+    list_node_t  *iterator;
 };
 
-void list_node_init(node_t *node)
+void list_node_init(list_node_t *node)
 {
     node->next = NULL;
     node->prev = NULL;
@@ -30,8 +30,8 @@ list_t* list_new()
 void list_delete(list_t **list_p)
 {
     list_t *list = NULL;
-    node_t *iterator = NULL;
-    node_t *working_node = NULL;
+    list_node_t *iterator = NULL;
+    list_node_t *working_node = NULL;
 
     if (!list_p || !(*list_p))
         return;
@@ -51,7 +51,7 @@ void list_delete(list_t **list_p)
     *list_p = NULL;
 }
 
-void list_add_front(list_t *list, node_t *node)
+void list_add_front(list_t *list, list_node_t *node)
 {
     if (!list || !node)
         return;
@@ -66,7 +66,7 @@ void list_add_front(list_t *list, node_t *node)
         list->tail = node;
 }
 
-void list_add_back(list_t *list, node_t *node)
+void list_add_back(list_t *list, list_node_t *node)
 {
     if (!list || !node)
         return;
@@ -81,9 +81,9 @@ void list_add_back(list_t *list, node_t *node)
         list->head = node;
 }
 
-void list_add_after(node_t *node, node_t *new_node)
+void list_add_after(list_node_t *node, list_node_t *new_node)
 {
-    node_t *next_node = NULL;
+    list_node_t *next_node = NULL;
 
     if (!node || !new_node)
         return;
@@ -98,10 +98,10 @@ void list_add_after(node_t *node, node_t *new_node)
     new_node->prev = node;
 }
 
-void list_node_delete(list_t *list, node_t *node)
+void list_node_delete(list_t *list, list_node_t *node)
 {
-    node_t *next_node = NULL;
-    node_t *prev_node = NULL;
+    list_node_t *next_node = NULL;
+    list_node_t *prev_node = NULL;
 
     if (!list || !node)
         return;
@@ -126,7 +126,7 @@ void list_node_delete(list_t *list, node_t *node)
     node->prev = NULL;
 }
 
-node_t* list_node_next(node_t *node)
+list_node_t* list_node_next(list_node_t *node)
 {
     if (!node)
         return NULL;
@@ -134,7 +134,7 @@ node_t* list_node_next(node_t *node)
     return node->next;
 }
 
-node_t* list_node_prev(node_t *node)
+list_node_t* list_node_prev(list_node_t *node)
 {
     if (!node)
         return NULL;
@@ -142,7 +142,7 @@ node_t* list_node_prev(node_t *node)
     return node->prev;
 }
 
-int list_iterate(list_t *list, node_t **node_p)
+int list_iterate(list_t *list, list_node_t **node_p)
 {
     if (!list || !node_p)
         return 0;
