@@ -87,7 +87,11 @@ void create_worker_listener()
         LOG("Error: %s() error on opening worker listener socket.", __FUNCTION__);
         clean_exit(-1);
     }
-    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
+    setsockopt(server_socket,
+               SOL_SOCKET,
+               SO_REUSEADDR,
+               (char*)&iSetOption,
+               sizeof(iSetOption));
 
     // init address structure
     memset(&server_addr, 0, sizeof(server_addr));
@@ -190,11 +194,13 @@ void worker_listener_check_worker_sockets(int *num_socks, fd_set *read_sockets)
 
             rc = utils_receive_message_from_socket(worker->socket, buffer);
             if (rc == -1) {
-                LOG("worker_listener: %s() error on receiving from %s.", __FUNCTION__, utils_format_ip_addr(&worker->addr));
+                LOG("worker_listener: %s() error on receiving from %s.",
+                    __FUNCTION__, utils_format_ip_addr(&worker->addr));
                 worker_listener_free_worker(worker);
                 return;
             } else if (rc == 1) {
-                LOG("worker_listener: %s closed connection.", utils_format_ip_addr(&worker->addr));
+                LOG("worker_listener: %s closed connection.",
+                    utils_format_ip_addr(&worker->addr));
                 worker_listener_free_worker(worker);
                 return;
             }
@@ -287,14 +293,12 @@ void process_build_req(client_t* client, build_req_msg_t* message)
         }
 
         if (status) {
-            //Here the worker will have begun the build so update the worker info and re add it to the heap
+            /* Here the worker will have begun the build so update the worker info
+               and re add it to the heap */
             worker->no_current_builds++;
             client_listener_add_client_to_list(worker->client_list, client);
             worker->heap_node.heap_key = worker->no_current_builds;
             heap_push(heap, &(worker->heap_node));
-
-            /*LOG("Secretary: Worker assigned worker: %s  client: %s",
-                worker->hostname, client->hostname);*/
         }
 
         if (!status && reason == 4) {
@@ -314,7 +318,10 @@ bool send_build_order(worker_t* worker, client_t* client, build_req_msg_t* build
     build_order.client_addr = client_listener_get_client_addr(client);
     build_order.request = *build_message;
 
-    if (send_message(worker->socket, WORKER_BUILD_ORDER, sizeof(build_order_msg_t), (char*)&build_order) < 0) {
+    if (send_message(worker->socket,
+                     WORKER_BUILD_ORDER,
+                     sizeof(build_order_msg_t),
+                     (char*)&build_order) < 0) {
         // return, the unconnected worker will be handled in process_build_req
         return false;
     }

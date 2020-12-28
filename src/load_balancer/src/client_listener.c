@@ -114,7 +114,11 @@ void create_client_listener()
 
     // create the socket
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
-    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
+    setsockopt(server_socket,
+               SOL_SOCKET,
+               SO_REUSEADDR,
+               (char*)&iSetOption,
+               sizeof(iSetOption));
 
     if (server_socket == -1) {
         LOG("Error: %s() on opening client listener socket.", __FUNCTION__);
@@ -168,11 +172,13 @@ void client_listener_check_client_sockets(int *num_socks, fd_set *read_sockets)
 
             rc = utils_receive_message_from_socket(client->socket, buffer);
             if (rc == -1) {
-                LOG("worker_listener: %s() error on receiving from %s.", __FUNCTION__, utils_format_ip_addr(&client->addr));
+                LOG("worker_listener: %s() error on receiving from %s.",
+                    __FUNCTION__, utils_format_ip_addr(&client->addr));
                 client_listener_free_client(client);
                 return;
             } else if (rc == 1) {
-                LOG("worker_listener: %s closed connection.", utils_format_ip_addr(&client->addr));
+                LOG("worker_listener: %s closed connection.",
+                    utils_format_ip_addr(&client->addr));
                 client_listener_free_client(client);
                 return;
             }
@@ -194,7 +200,10 @@ bool send_build_res(client_t* client, bool status, int reason)
     res_msg.status = status;
     res_msg.reason = reason;
 
-    if (send_message(client->socket, SECRETARY_BUILD_RES, sizeof(build_res_msg_t), (char*)&res_msg) < 0) {
+    if (send_message(client->socket,
+                     SECRETARY_BUILD_RES,
+                     sizeof(build_res_msg_t),
+                     (char*)&res_msg) < 0) {
         //here we will return, the unconnected client will be logged by the read in assign secretary
         return false;
     }
@@ -220,7 +229,8 @@ void client_listener_add_client_to_list(list_t *list, client_t *client)
     list_add_back(list, &client->list_worker_node);
 }
 
-client_t *client_listener_get_client_from_address(list_t *list, struct sockaddr_in *client_addr)
+client_t *client_listener_get_client_from_address(list_t *list,
+                                                  struct sockaddr_in *client_addr)
 {
     client_t *client = NULL;
     list_it *it = NULL;

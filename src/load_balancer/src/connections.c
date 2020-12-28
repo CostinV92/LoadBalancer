@@ -20,7 +20,6 @@ bool send_build_res(client_t*, bool, int);
 
 static void* listen_work_done(void*);
 
-/***********************************************************************/
 extern client_listener_t *client_listener;
 extern worker_listener_t *worker_listener;
 
