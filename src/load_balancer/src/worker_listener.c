@@ -190,7 +190,28 @@ void worker_listener_new_worker(int worker_socket,
 
 void worker_listener_free_worker(worker_t *worker)
 {
-    /* TODO(victor): to be implemented */
+    list_t *list = NULL;
+
+    if (!worker) {
+        LOG("error: %s invalid parameter.", __FUNCTION__);
+        return;
+    }
+
+    list = worker_listener_get_worker_list();
+    if (!list) {
+        LOG("error: %s worker list not initialized.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    connections_unregister_socket(worker->socket);
+
+    heap_update_node_key(worker_heap, &worker->heap_node, -1);
+    heap_pop();
+
+    list_node_delete(list, &worker->list_node);
+    list_delete(&worker->client_list);
+
+    free(worker);
 }
 
 void worker_listener_check_worker_sockets(int *num_socks, fd_set *read_sockets)

@@ -69,15 +69,15 @@ static void register_client(int client_socket,
     LOG("Client: %s registered.", utils_format_ip_addr(client_addr));
 }
 
-void connections_unregister_client(int client_socket)
+void connections_unregister_socket(int socket)
 {
-    if (!client_socket) {
-        LOG("connections: %s() invalid argument.", __FUNCTION__);
+    if (!socket) {
+        LOG("connections: %s() invalid parameter.", __FUNCTION__);
         return;
     }
 
-    FD_CLR(client_socket, &connections.sockets);
-    close(client_socket);
+    FD_CLR(socket, &connections.sockets);
+    close(socket);
 }
 
 static void register_worker(int worker_socket,
