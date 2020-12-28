@@ -4,3 +4,4 @@ lib/*
 **/.vagrant/*
 **/ansible/files/*
 cscope.out
+test_bed/settings.yml
