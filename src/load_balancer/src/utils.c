@@ -29,12 +29,12 @@ void process_message(void* peer, message_t* message, char* ip_addr)
 
     switch (msg_type) {
         case SECRETARY_BUILD_REQ:
-            LOG("client_listener: %s sent SECRETARY_BUILD_REQ", ip_addr);
+            LOG("client_listener: from %s got SECRETARY_BUILD_REQ", ip_addr);
             process_build_req(peer, (void*)(message->buffer));
             break;
 
         case WORKER_BUILD_DONE:
-            LOG("worker_listener: %s sent WORKER_BUILD_DONE", ip_addr);
+            LOG("worker_listener: from %s got WORKER_BUILD_DONE", ip_addr);
             process_build_done(peer, (void*)(message->buffer));
             break;
 

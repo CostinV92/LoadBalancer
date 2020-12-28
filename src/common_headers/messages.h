@@ -25,8 +25,6 @@ typedef struct BUILD_RES_MSG {
 } build_res_msg_t;
 
 typedef struct BUILD_ORDER_MSG {
-    /* TODO(victor): resolve this */
-    int                 client_id;
     struct sockaddr_in  client_addr;
     build_req_msg_t     request;
 } build_order_msg_t;

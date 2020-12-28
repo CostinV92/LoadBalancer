@@ -24,6 +24,7 @@ struct client {
     int                     socket;
     struct sockaddr_in      addr;
     list_node_t             list_node;
+    list_node_t             list_worker_node;
 };
 
 static void* start_server(void*);
@@ -287,4 +288,36 @@ bool send_build_res(client_t* client, bool status, int reason)
 struct sockaddr_in client_listener_get_client_addr(client_t *client)
 {
     return client->addr;
+}
+
+void client_listener_add_client_to_list(list_t *list, client_t *client)
+{
+    if (!list || !client) {
+        LOG("error: %s() invalid arguments.", __FUNCTION__);
+        return;
+    }
+
+    list_node_init(&client->list_worker_node);
+    list_add_back(list, &client->list_worker_node);
+}
+
+client_t *client_listener_get_client_with_address(list_t *list, struct sockaddr_in *client_addr)
+{
+    client_t *client = NULL;
+    list_it *it = NULL;
+
+    if (!list || !client_addr) {
+        LOG("error: %s() invalid arguments.");
+        return NULL;
+    }
+
+    list_iterate(list, it) {
+        client = info_from_it(it, list_worker_node, client_t);
+        if (memcmp(&client->addr, client_addr, sizeof(struct sockaddr_in)) == 0) {
+            list_node_delete(list, &client->list_worker_node);
+            return client;
+        }
+    }
+
+    return NULL;
 }

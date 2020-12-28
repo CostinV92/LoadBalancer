@@ -15,6 +15,7 @@
 #include "utils.h"
 #include "libutils.h"
 
+#include "client_listener.h"
 #include "worker_listener.h"
 
 static void create_server();
@@ -41,8 +42,7 @@ typedef struct worker {
     int                     no_current_builds;
     bool                    alive;
 
-    /* TODO(victor): resolv this because a worker can have multiple clients */
-    client_t                *client;
+    list_t                  *client_list;
 } worker_t;
 
 void create_worker_listener();
@@ -181,6 +181,8 @@ void worker_listener_new_worker(int worker_socket,
     list_node_init(&worker->list_node);
     list_add_back(worker_listener->worker_list, &worker->list_node);
 
+    worker->client_list = list_new();
+
     heap_push(worker_heap, &worker->heap_node);
 
     LOG("Worker: new worker %s.", utils_format_ip_addr(worker_addr));
@@ -209,7 +211,7 @@ void worker_listener_check_worker_sockets(int *num_socks, fd_set *read_sockets)
             char buffer[2 * 256] = {0};
             bytes_read = read(worker->socket, buffer, sizeof(buffer));
             if (bytes_read) {
-                process_message(worker, (void*)buffer, worker->hostname, utils_format_ip_addr(&(worker->addr)));
+                process_message(worker, (message_t *)buffer, utils_format_ip_addr(&(worker->addr)));
             } else {
                 LOG("%x Worker listener: worker disconnected, hostname: %s, ip: %s", worker, worker->hostname, utils_format_ip_addr(&(worker->addr)));
                 worker->alive = false;
@@ -259,10 +261,22 @@ void listen_to_worker(worker_t *worker)
     }
 }
 
-/* TODO(victor): this is with regards to client list in worker */
-client_t *worker_listener_get_client(worker_t *worker)
+client_t *worker_listener_get_client(worker_t *worker, struct sockaddr_in *client_addr)
 {
-    return worker->client;
+    client_t *client = NULL;
+
+    if (!worker || !client_addr) {
+        LOG("error: %s() invalid arguments.", __FUNCTION__);
+        return NULL;
+    }
+
+    client = client_listener_get_client_with_address(worker->client_list, client_addr);
+    if (!client) {
+        LOG("error: %s() could not get client.", __FUNCTION__);
+        return NULL;
+    }
+
+    return client;
 }
 
 void process_build_req(client_t* client, build_req_msg_t* message)
@@ -324,10 +338,10 @@ void process_build_req(client_t* client, build_req_msg_t* message)
         }
 
         if (status) {
-            //Here the worker would have begin the build so update the worker info and re add it to the heap
+            //Here the worker will have begun the build so update the worker info and re add it to the heap
             worker->no_current_builds++;
             /* TODO(victor): resolv this IMIDIATLY */
-            worker->client = client;
+            client_listener_add_client_to_list(worker->client_list, client);
             worker->heap_node.heap_key = worker->no_current_builds;
             heap_push(heap, &(worker->heap_node));
 

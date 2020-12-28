@@ -188,18 +188,7 @@ void process_build_done(worker_t* worker, build_order_done_msg_t* message)
 {
     int status = message->status;
     int reason = message->reason;
-    client_t *client = worker_listener_get_client(worker);
-
-    /* TODO(victor): client_t not known */
-    /*if (!status) {
-        LOG("Warning: Build failed with reason: %d on hostname: %s, ip: %s, for hostname: %s, ip: %s",
-            reason, worker->hostname, utils_format_ip_addr(&(worker->addr)),
-                client->hostname, utils_format_ip_addr(&(client->addr)));
-    } else {
-        LOG("Secretary: Build succeded on hostname: %s, ip: %s, for hostname: %s, ip: %s",
-            worker->hostname, utils_format_ip_addr(&(worker->addr)),
-                client->hostname, utils_format_ip_addr(&(client->addr)));
-    }*/
+    client_t *client = worker_listener_get_client(worker, &message->build_order.client_addr);
 
     send_build_res(client, status, reason);
     worker_listener_decrement_no_of_builds_and_update_node_key(worker);
