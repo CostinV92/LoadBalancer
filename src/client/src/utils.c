@@ -11,6 +11,7 @@
 #include <unistd.h>
 
 #include "utils.h"
+#include "liblist.h"
 #include "messages.h"
 
 static FILE *log_file;
@@ -96,10 +97,10 @@ int send_message(int socket, message_type_t type, int size, char* buffer)
     }
 
     msg->type = type;
-    msg->size = sizeof(message_t) + size;
+    msg->size = size;
     memcpy(msg->buffer, buffer, size);
 
-    bytes_written = write(socket, msg, msg->size);
+    bytes_written = write(socket, msg, sizeof(message_t) + msg->size);
     free(msg);
 
     return bytes_written;
