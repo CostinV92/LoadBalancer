@@ -59,7 +59,7 @@ void connect_to_server()
 
     port = SERVER_PORT;
     server_addr.sin_family = AF_INET;
-    // TODO: take the real server addr
+
     server_addr.sin_addr.s_addr = inet_addr(lb_address);
     server_addr.sin_port = htons(port);
 

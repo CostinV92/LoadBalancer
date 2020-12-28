@@ -63,39 +63,6 @@ list_t* client_listener_get_client_list()
     return client_listener->client_list;
 }
 
-#if 0
-void* start_server(void* arg) 
-{
-    int iSetOption = 1;
-    int client_socket, client_len = sizeof(struct sockaddr_in), *socket = (int*)arg;
-    struct sockaddr_in client_addr;
-    pthread_t secretary_thread_id;
-
-    while (1) {
-        client_socket = accept(*socket, (struct sockaddr*)&client_addr, &client_len);
-        if (client_socket < 0) {
-            LOG("Error: %s() error on accepting connection.", __FUNCTION__);
-            //this is for reusing the port imeddiatly after error
-            setsockopt(*socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
-            clean_exit(-1);
-        } else {
-            LOG("Client listener: client connected, ip: %s", utils_format_ip_addr(&client_addr));
-
-            client_t* client = calloc(1, sizeof(client_t));
-            if (!client) {
-                LOG("Error: %s() cannot allocate memory.", __FUNCTION__);
-                clean_exit(-1);
-            }
-
-            client->socket = client_socket;
-            client->addr = client_addr;
-
-            pthread_create(&secretary_thread_id, NULL, &assign_secretary, client);
-        }
-    }
-}
-#endif
-
 void client_listener_new_client(int client_socket,
                                 struct sockaddr_in *client_addr)
 {
@@ -217,29 +184,6 @@ void client_listener_check_client_sockets(int *num_socks, fd_set *read_sockets)
         }
     }
 }
-
-#if 0
-void* assign_secretary(void* arg)
-{
-    for (;;) {
-        int byte_read;
-        char buffer[2 * 256] = {0};
-        byte_read = read(client->socket, buffer, sizeof(buffer));
-        if (byte_read > 0) {
-            // TODO: DEBUG
-            process_message(client, (message_t*)buffer,
-                client->hostname, utils_format_ip_addr(&(client->addr)));
-        } else {
-            LOG("Secretary: Client closed connection, hostname: %s, ip: %s",
-                client->hostname, utils_format_ip_addr(&(client->addr)));
-
-            close(client->socket);
-            free(client);
-            break;
-        }
-    }
-}
-#endif
 
 bool send_build_res(client_t* client, bool status, int reason)
 {

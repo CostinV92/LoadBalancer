@@ -81,13 +81,7 @@ void* start_build(void* arg)
         dup2(output_socket, 1);
         close(output_socket);
 
-        // TODO: here put the "build" script
-#ifdef LOAD_BALANCER_LOCAL_HOST_DEBUG
-        execl("/tmp/work.sh", "work_lb", (char*)NULL);
-#else
         execl("/vagrant/work.sh", "work_lb", (char*)NULL);
-#endif
-
     }
 }
 

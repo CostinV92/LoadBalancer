@@ -19,11 +19,6 @@
 #include "client_listener.h"
 #include "worker_listener.h"
 
-static void create_server();
-static void* start_server(void*);
-#if 0 /* TODO(victor): rework */
-static void* register_worker(void*);
-#endif
 static bool get_worker_hostname(worker_t*);
 static void listen_to_worker(worker_t*);
 
@@ -316,7 +311,6 @@ void process_build_req(client_t* client, build_req_msg_t* message)
         if (status) {
             //Here the worker will have begun the build so update the worker info and re add it to the heap
             worker->no_current_builds++;
-            /* TODO(victor): resolv this IMIDIATLY */
             client_listener_add_client_to_list(worker->client_list, client);
             worker->heap_node.heap_key = worker->no_current_builds;
             heap_push(heap, &(worker->heap_node));
