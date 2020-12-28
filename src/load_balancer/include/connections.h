@@ -17,9 +17,10 @@ typedef struct connections {
     worker_listener_t   *worker_listener;
 } connections_t;
 
-void* assign_secretary(void*);
 void start_listening();
 void connections_unregister_socket(int client_socket);
 void connections_process_message(void* peer, header_t* message, char* ip_addr);
+
+int send_message(int socket, message_type_t type, int size, char* buffer);
 
 #endif
