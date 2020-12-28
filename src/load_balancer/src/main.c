@@ -8,7 +8,6 @@
 
 #include <netdb.h>
 
-#include "utils.h"
 #include "libutils.h"
 #include "client_listener.h"
 #include "worker_listener.h"
@@ -16,6 +15,8 @@
 
 extern client_listener_t *client_listener;
 extern worker_listener_t *worker_listener;
+
+#define LOG_PATH "/tmp/loadBalancer.log"
 
 void sigint_handler()
 {
@@ -37,6 +38,16 @@ void signal_handler(int signum)
 
     write(1, "\n", 1);
     exit(signum);
+}
+
+void clean_exit(int status)
+{
+    pthread_cancel(client_listener->thread_id);
+    pthread_cancel(worker_listener->thread_id);
+    close(client_listener->socket);
+    close(worker_listener->socket);
+
+    exit(status);
 }
 
 int main()

@@ -28,6 +28,6 @@ client_t *client_listener_get_client_from_address(list_t *list,
                                                   struct sockaddr_in *client_addr);
 
 /* TODO(victor): refactor the fuck out if this */
-bool send_build_res(client_t* client, bool status, int reason);
+int send_build_res(client_t* client, int status, int reason);
 
 #endif 

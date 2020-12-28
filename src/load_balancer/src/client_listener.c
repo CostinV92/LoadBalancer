@@ -10,7 +10,6 @@
 
 #include <pthread.h>
 
-#include "utils.h"
 #include "connections.h"
 #include "messages.h"
 
@@ -26,6 +25,8 @@ struct client {
     list_node_t             list_node;
     list_node_t             list_worker_node;
 };
+
+extern void clean_exit(int status);
 
 static void* start_server(void*);
 static void create_server();
@@ -193,7 +194,7 @@ void client_listener_check_client_sockets(int *num_socks, fd_set *read_sockets)
     }
 }
 
-bool send_build_res(client_t* client, bool status, int reason)
+int send_build_res(client_t* client, int status, int reason)
 {
     build_res_msg_t res_msg;
 
@@ -205,12 +206,12 @@ bool send_build_res(client_t* client, bool status, int reason)
                      sizeof(build_res_msg_t),
                      (char*)&res_msg) < 0) {
         //here we will return, the unconnected client will be logged by the read in assign secretary
-        return false;
+        return 0;
     }
 
     LOG("Send message: Send message SECRETARY_BUILD_RES to client ip: %s",
         utils_format_ip_addr(&(client->addr)));
-    return true;
+    return 1;
 }
 
 struct sockaddr_in client_listener_get_client_addr(client_t *client)

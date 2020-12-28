@@ -12,12 +12,13 @@
 
 #include <pthread.h>
 
-#include "utils.h"
 #include "libutils.h"
 
 #include "connections.h"
 #include "client_listener.h"
 #include "worker_listener.h"
+
+extern void clean_exit(int status);
 
 typedef struct worker {
     heap_node_t             heap_node;
@@ -30,7 +31,7 @@ typedef struct worker {
     // worker info
     char                    hostname[256];
     int                     no_current_builds;
-    bool                    alive;
+    int                     alive;
 
     list_t                  *client_list;
 } worker_t;
@@ -135,7 +136,7 @@ void worker_listener_new_worker(int worker_socket,
 
     worker->socket = worker_socket;
     worker->addr = *worker_addr;
-    worker->alive = true;
+    worker->alive = 1;
 
     list_node_init(&worker->list_node);
     list_add_back(worker_listener->worker_list, &worker->list_node);
@@ -236,20 +237,20 @@ client_t *worker_listener_get_client_from_address(worker_t *worker,
 
 void process_build_req(client_t* client, build_req_msg_t* message)
 {
-    bool another_one;
+    int another_one;
     // get a worker from the specific heap
     heap_t *heap = worker_heap;
     worker_t *worker;
     heap_node_t *heap_node;
 
     // for responding to the client
-    bool status = true;
+    int status = 1;
     int reason = 0;
 
     do {
-        another_one = false;
+        another_one = 0;
 
-        status = true;
+        status = 1;
         reason = 0;
 
 
@@ -261,7 +262,7 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 
         if (!worker) {
             LOG("Warning: Don't have any workers available!");
-            status = false;
+            status = 0;
             reason = 1;
             continue;
         }
@@ -269,7 +270,7 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 
         if (status && worker->no_current_builds >= 2) {
             LOG("Warning: Best worker already has 2 or more current builds!");
-            status = false;
+            status = 0;
             reason = 2;
             heap_push(heap, &(worker->heap_node));
         }
@@ -277,18 +278,18 @@ void process_build_req(client_t* client, build_req_msg_t* message)
         if (status && !worker->alive) {
             LOG("Warning: Worker no longer available worker: %s  ip: %s",
                     worker->hostname, utils_format_ip_addr(&worker->addr));
-            status = false;
+            status = 0;
             reason = 3;
 
             free(worker);
             worker = NULL;
 
-            another_one = true;
+            another_one = 1;
             continue;
         }
 
         if (status && !send_build_order(worker, client, message)) {
-            status = false;
+            status = 0;
             reason = 4;
         }
 
@@ -311,7 +312,7 @@ void process_build_req(client_t* client, build_req_msg_t* message)
         send_build_res(client, status, reason);
 }
 
-bool send_build_order(worker_t* worker, client_t* client, build_req_msg_t* build_message)
+int send_build_order(worker_t* worker, client_t* client, build_req_msg_t* build_message)
 {
     build_order_msg_t build_order;
 
@@ -323,12 +324,12 @@ bool send_build_order(worker_t* worker, client_t* client, build_req_msg_t* build
                      sizeof(build_order_msg_t),
                      (char*)&build_order) < 0) {
         // return, the unconnected worker will be handled in process_build_req
-        return false;
+        return 0;
     }
 
     LOG("Send message: Send message WORKER_BUILD_ORDER to worker hostname: %s, ip: %s",
         worker->hostname, utils_format_ip_addr(&worker->addr));
-    return true;
+    return 1;
 }
 
 void worker_listener_decrement_no_of_builds_and_update_node_key(worker_t *worker)

@@ -9,19 +9,20 @@
 
 #include "connections.h"
 #include "messages.h"
-#include "utils.h"
 #include "libutils.h"
 #include "client_listener.h"
 #include "worker_listener.h"
 
 extern heap_t *worker_heap;
 
-bool send_build_res(client_t*, bool, int);
+int send_build_res(client_t*, int, int);
 
 static void* listen_work_done(void*);
 
 extern client_listener_t *client_listener;
 extern worker_listener_t *worker_listener;
+
+extern void clean_exit(int status);
 
 static void listen_connections();
 
