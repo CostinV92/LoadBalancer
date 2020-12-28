@@ -19,12 +19,6 @@
 #include "client_listener.h"
 #include "worker_listener.h"
 
-static bool get_worker_hostname(worker_t*);
-static void listen_to_worker(worker_t*);
-
-
-/***************************************************************/
-
 typedef struct worker {
     heap_node_t             heap_node;
 
@@ -205,28 +199,12 @@ void worker_listener_check_worker_sockets(int *num_socks, fd_set *read_sockets)
                 return;
             }
 
-            process_message(worker, (header_t *)buffer, utils_format_ip_addr(&worker->addr));
+            connections_process_message(worker,
+                                        (header_t *)buffer,
+                                        utils_format_ip_addr(&worker->addr));
             (*num_socks)--;
             if (*num_socks == 0)
                 return;
-        }
-    }
-}
-
-void listen_to_worker(worker_t *worker)
-{
-    int bytes_read;
-    char buffer[2 * 256] = {0};
-
-    // wait for done message from the worker
-    for (;;) {
-        bytes_read = read(worker->socket, buffer, sizeof(buffer));
-        if (bytes_read) {
-            process_message(worker, (void*)buffer, worker->hostname, utils_format_ip_addr(&worker->addr));
-        } else {
-            LOG("%x Worker listener: worker disconnected, hostname: %s, ip: %s", worker, worker->hostname, utils_format_ip_addr(&worker->addr));
-            worker->alive = false;
-            break;
         }
     }
 }

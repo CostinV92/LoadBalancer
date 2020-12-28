@@ -177,7 +177,9 @@ void client_listener_check_client_sockets(int *num_socks, fd_set *read_sockets)
                 return;
             }
 
-            process_message(client, (header_t *)buffer, utils_format_ip_addr(&client->addr));
+            connections_process_message(client,
+                                        (header_t *)buffer,
+                                        utils_format_ip_addr(&client->addr));
             (*num_socks)--;
             if (*num_socks == 0)
                 return;

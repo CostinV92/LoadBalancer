@@ -23,27 +23,6 @@ extern worker_listener_t *worker_listener;
 
 extern void process_build_done(client_t*, void*);
 
-void process_message(void* peer, header_t* message, char* ip_addr)
-{
-    message_type_t msg_type = message->type;
-
-    switch (msg_type) {
-        case SECRETARY_BUILD_REQ:
-            LOG("client_listener: from %s got SECRETARY_BUILD_REQ", ip_addr);
-            process_build_req(peer, (void*)(message->buffer));
-            break;
-
-        case WORKER_BUILD_DONE:
-            LOG("worker_listener: from %s got WORKER_BUILD_DONE", ip_addr);
-            process_build_done(peer, (void*)(message->buffer));
-            break;
-
-        default:
-            LOG("WARNING Procces message: Unknown message from  ip: %s", ip_addr);
-            break;
-    }
-}
-
 int send_message(int socket, message_type_t type, int size, char* buffer)
 {
     int bytes_written = 0;

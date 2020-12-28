@@ -20,5 +20,6 @@ typedef struct connections {
 void* assign_secretary(void*);
 void start_listening();
 void connections_unregister_socket(int client_socket);
+void connections_process_message(void* peer, header_t* message, char* ip_addr);
 
 #endif
