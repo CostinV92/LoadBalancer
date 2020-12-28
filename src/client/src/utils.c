@@ -69,7 +69,7 @@ void LOG(char* format, ...)
     fsync(fileno(log_file));
 }
 
-void process_message(message_t* message)
+void process_message(header_t* message)
 {
     message_type_t msg_type = message->type;
 
@@ -89,7 +89,7 @@ int send_message(int socket, message_type_t type, int size, char* buffer)
 {
     int bytes_written = 0;
 
-    message_t* msg = malloc(sizeof(message_t) + size);
+    header_t* msg = malloc(sizeof(header_t) + size);
     if (!msg) {
         LOG("Error: %s() cannot allocate memory.", __FUNCTION__);
         clean_exit(-1);
@@ -99,7 +99,7 @@ int send_message(int socket, message_type_t type, int size, char* buffer)
     msg->size = size;
     memcpy(msg->buffer, buffer, size);
 
-    bytes_written = write(socket, msg, sizeof(message_t) + msg->size);
+    bytes_written = write(socket, msg, sizeof(header_t) + msg->size);
     free(msg);
 
     return bytes_written;

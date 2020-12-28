@@ -10,10 +10,6 @@ typedef enum BOOL {
     true = 1
 } bool;
 
-typedef enum PLATFORM {
-    p9400_cetus
-} platform_t;
-
 int init_log();
 void LOG(char*, ...);
 char* format_ip_addr(struct sockaddr_in*);

@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 
 #include "libutils.h"
+#include "messages.h"
 
 #define MAX_LOG_FILE_PATH_SIZE 200
 
@@ -72,9 +73,9 @@ char* utils_format_ip_addr(struct sockaddr_in* addr)
     return ip_string;
 }
 
-int utils_receive_message_from_socket(int socket,
-                                      char *buffer,
-                                      int bytes_to_read)
+static int utils_read_from_socket(int socket,
+                                  char *buffer,
+                                  int bytes_to_read)
 {
     int rc = 0;
     int bytes_read = 0;
@@ -99,4 +100,36 @@ int utils_receive_message_from_socket(int socket,
     }
 
     return 0;
+}
+
+int utils_receive_message_from_socket(int socket, char *buffer)
+{
+    int rc = 0;
+    int header_size = 0;
+    int payload_size = 0;
+
+    if (!socket || !buffer) {
+        LOG("error: %s() invalid arguments.");
+        return -1;
+    }
+
+    header_size = sizeof(header_t);
+    rc = utils_read_from_socket(socket, buffer, header_size);
+    if (rc == 1) {
+        LOG("utils: %s() peer closed connection.", __FUNCTION__);
+        return rc;
+    } else if (rc == -1) {
+        LOG("utils: %s() error on receiving from socket.", __FUNCTION__);
+        return rc;
+    }
+
+    payload_size = ((header_t*)buffer)->size;
+    rc = utils_read_from_socket(socket, buffer + header_size, payload_size);
+    if (rc == 1) {
+        LOG("utils: %s() peer closed connection.", __FUNCTION__);
+        return rc;
+    } else if (rc == -1) {
+        LOG("utils: %s() error on receiving from socket.", __FUNCTION__);
+        return rc;
+    }
 }

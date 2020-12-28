@@ -176,7 +176,6 @@ void send_request()
     connect_to_lb();
 
     build_req_msg_t req;
-    req.platform = p9400_cetus;
     req.listen_port = output_listen_port;
 
     send_message(loadBalancer.socket, SECRETARY_BUILD_REQ, sizeof(build_req_msg_t), (char*)&req);

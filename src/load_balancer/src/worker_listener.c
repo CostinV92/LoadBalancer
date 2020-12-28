@@ -188,14 +188,20 @@ void worker_listener_new_worker(int worker_socket,
     LOG("Worker: new worker %s.", utils_format_ip_addr(worker_addr));
 }
 
+void worker_listener_free_worker(worker_t *worker)
+{
+    /* TODO(victor): to be implemented */
+}
+
 void worker_listener_check_worker_sockets(int *num_socks, fd_set *read_sockets)
 {
+    int rc = 0;
     worker_t *worker = NULL;
     list_it *list_it = NULL;
     list_t *worker_list = NULL;
 
     if (!num_socks || !read_sockets) {
-        LOG("error: %s invalid parameter.", __FUNCTION__);
+        LOG("error: %s invalid parameters.", __FUNCTION__);
         clean_exit(-1);
     }
 
@@ -204,20 +210,18 @@ void worker_listener_check_worker_sockets(int *num_socks, fd_set *read_sockets)
         worker = info_from_it(list_it, list_node, worker_t);
 
         if (FD_ISSET(worker->socket, read_sockets)) {
+            char buffer[MAX_MESSAGE_SIZE] = {0};
 
-            /* TODO(victor): implement it */
-            /* worker_listener_message_from_worker(worker); */
-            int bytes_read;
-            char buffer[2 * 256] = {0};
-            bytes_read = read(worker->socket, buffer, sizeof(buffer));
-            if (bytes_read) {
-                process_message(worker, (message_t *)buffer, utils_format_ip_addr(&(worker->addr)));
-            } else {
-                LOG("%x Worker listener: worker disconnected, hostname: %s, ip: %s", worker, worker->hostname, utils_format_ip_addr(&(worker->addr)));
-                worker->alive = false;
-                break;
+            rc = utils_receive_message_from_socket(worker->socket, buffer);
+            if (rc == -1) {
+                LOG("worker_listener: %s() error on receiving from %s.", __FUNCTION__, utils_format_ip_addr(&worker->addr));
+                worker_listener_free_worker(worker);
+            } else if (rc == 1) {
+                LOG("worker_listener: %s closed connection.", utils_format_ip_addr(&worker->addr));
+                worker_listener_free_worker(worker);
             }
 
+            process_message(worker, (header_t *)buffer, utils_format_ip_addr(&worker->addr));
             (*num_socks)--;
             if (num_socks == 0)
                 return;
@@ -252,9 +256,9 @@ void listen_to_worker(worker_t *worker)
     for (;;) {
         bytes_read = read(worker->socket, buffer, sizeof(buffer));
         if (bytes_read) {
-            process_message(worker, (void*)buffer, worker->hostname, utils_format_ip_addr(&(worker->addr)));
+            process_message(worker, (void*)buffer, worker->hostname, utils_format_ip_addr(&worker->addr));
         } else {
-            LOG("%x Worker listener: worker disconnected, hostname: %s, ip: %s", worker, worker->hostname, utils_format_ip_addr(&(worker->addr)));
+            LOG("%x Worker listener: worker disconnected, hostname: %s, ip: %s", worker, worker->hostname, utils_format_ip_addr(&worker->addr));
             worker->alive = false;
             break;
         }
@@ -321,7 +325,7 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 
         if (status && !worker->alive) {
             LOG("Warning: Worker no longer available worker: %s  ip: %s",
-                    worker->hostname, utils_format_ip_addr(&(worker->addr)));
+                    worker->hostname, utils_format_ip_addr(&worker->addr));
             status = false;
             reason = 3;
 
@@ -372,7 +376,7 @@ bool send_build_order(worker_t* worker, client_t* client, build_req_msg_t* build
     }
 
     LOG("Send message: Send message WORKER_BUILD_ORDER to worker hostname: %s, ip: %s",
-        worker->hostname, utils_format_ip_addr(&(worker->addr)));
+        worker->hostname, utils_format_ip_addr(&worker->addr));
     return true;
 }
 

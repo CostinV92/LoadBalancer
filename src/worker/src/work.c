@@ -24,7 +24,7 @@ void wait_for_work()
         bytes_read = read(loadBalancer->socket, buffer, sizeof(buffer));
         if (bytes_read > 0) {
             LOG("Read %d bytes from LoadBalancer (needed %d)", bytes_read, sizeof(build_order_msg_t));
-            process_message((message_t*)buffer);
+            process_message((header_t*)buffer);
         } else {
             LOG("Error: %s() error on reading from socket.", __FUNCTION__);
             close(loadBalancer->socket);

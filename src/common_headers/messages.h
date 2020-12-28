@@ -1,6 +1,8 @@
 #ifndef __MESSAGES_H__
 #define __MESSAGES_H__
 
+#define MAX_MESSAGE_SIZE 512
+
 typedef enum  MESSAGE_TYPE {
     SECRETARY_BUILD_REQ,
     SECRETARY_BUILD_RES,
@@ -8,19 +10,18 @@ typedef enum  MESSAGE_TYPE {
     WORKER_BUILD_DONE
 } message_type_t;
 
-typedef struct MESSAGE {
+typedef struct header {
     message_type_t          type;
     int                     size;
     char                    buffer[];
-} message_t;
+} header_t;
 
 typedef struct BUILD_REQ_MSG {
-    platform_t      platform;
     int             listen_port;
 } build_req_msg_t;
 
 typedef struct BUILD_RES_MSG {
-    bool            status;
+    int             status;
     int             reason;
 } build_res_msg_t;
 

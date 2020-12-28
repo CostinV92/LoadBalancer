@@ -180,56 +180,15 @@ void create_client_listener()
     client_listener->server = server;
 }
 
-void client_listener_message_from_client(client_t *client)
-{
-    int rc = 0;
-    int header_size = 0;
-    int payload_size = 0;
-    char buffer[MAX_MESSAGE_SIZE] = {0};
-
-    if (!client) {
-        LOG("error: %s() invalid client.");
-        clean_exit(-1);
-    }
-
-    header_size = sizeof(message_t);
-    rc = utils_receive_message_from_socket(client->socket, buffer, header_size);
-    if (rc == 0) {
-        payload_size = ((message_t*)buffer)->size;
-    } else if (rc == 1) {
-        LOG("client_listener: %s closed connection.", utils_format_ip_addr(&(client->addr)));
-        client_listener_free_client(client);
-        return;
-    } else {
-        LOG("error: %s() error on receiving from socket.", __FUNCTION__);
-        client_listener_free_client(client);
-        return;
-    }
-
-    rc = utils_receive_message_from_socket(client->socket,
-                                           buffer + header_size,
-                                           payload_size);
-    if (rc == 0) {
-        process_message(client, (message_t *)buffer, utils_format_ip_addr(&(client->addr)));
-    } else if (rc == 1) {
-        LOG("client_listener: %s closed connection.", utils_format_ip_addr(&(client->addr)));
-        client_listener_free_client(client);
-        return;
-    } else {
-        LOG("error: %s() error on receiving from socket.", __FUNCTION__);
-        client_listener_free_client(client);
-        return;
-    }
-}
-
 void client_listener_check_client_sockets(int *num_socks, fd_set *read_sockets)
 {
+    int rc = 0;
     client_t *client= NULL;
     list_it *list_it = NULL;
     list_t *client_list = NULL;
 
     if (!num_socks || !read_sockets) {
-        LOG("error: %s invalid parameter.", __FUNCTION__);
+        LOG("error: %s invalid parameters.", __FUNCTION__);
         clean_exit(-1);
     }
 
@@ -238,8 +197,18 @@ void client_listener_check_client_sockets(int *num_socks, fd_set *read_sockets)
         client = info_from_it(list_it, list_node, client_t);
 
         if (FD_ISSET(client->socket, read_sockets)) {
-            client_listener_message_from_client(client);
+            char buffer[MAX_MESSAGE_SIZE] = {0};
 
+            rc = utils_receive_message_from_socket(client->socket, buffer);
+            if (rc == -1) {
+                LOG("worker_listener: %s() error on receiving from %s.", __FUNCTION__, utils_format_ip_addr(&client->addr));
+                client_listener_free_client(client);
+            } else if (rc == 1) {
+                LOG("worker_listener: %s closed connection.", utils_format_ip_addr(&client->addr));
+                client_listener_free_client(client);
+            }
+
+            process_message(client, (header_t *)buffer, utils_format_ip_addr(&client->addr));
             (*num_socks)--;
             if (num_socks == 0)
                 return;
