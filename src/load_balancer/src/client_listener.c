@@ -274,7 +274,7 @@ void client_listener_add_client_to_list(list_t *list, client_t *client)
     list_add_back(list, &client->list_worker_node);
 }
 
-client_t *client_listener_get_client_with_address(list_t *list, struct sockaddr_in *client_addr)
+client_t *client_listener_get_client_from_address(list_t *list, struct sockaddr_in *client_addr)
 {
     client_t *client = NULL;
     list_it *it = NULL;

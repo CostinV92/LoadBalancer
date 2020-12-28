@@ -27,7 +27,9 @@ void worker_listener_check_worker_sockets(int *num_socks, fd_set *read_sockets);
 /* TODO(victor): renamie this */
 void process_build_req(client_t* client, build_req_msg_t* message);
 bool send_build_order(worker_t* worker, client_t* client, build_req_msg_t* build_message);
-client_t *worker_listener_get_client(worker_t *worker, struct sockaddr_in *client_addr);
+
+client_t *worker_listener_get_client_from_address(worker_t *worker,
+                                                  struct sockaddr_in *client_addr);
 void worker_listener_decrement_no_of_builds_and_update_node_key(worker_t *worker);
 
 #endif

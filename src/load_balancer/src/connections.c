@@ -162,7 +162,9 @@ void process_build_done(worker_t* worker, build_order_done_msg_t* message)
 {
     int status = message->status;
     int reason = message->reason;
-    client_t *client = worker_listener_get_client(worker, &message->build_order.client_addr);
+    client_t *client =
+            worker_listener_get_client_from_address(worker,
+                                                    &message->build_order.client_addr);
 
     send_build_res(client, status, reason);
     worker_listener_decrement_no_of_builds_and_update_node_key(worker);

@@ -236,7 +236,8 @@ void listen_to_worker(worker_t *worker)
     }
 }
 
-client_t *worker_listener_get_client(worker_t *worker, struct sockaddr_in *client_addr)
+client_t *worker_listener_get_client_from_address(worker_t *worker,
+                                                  struct sockaddr_in *client_addr)
 {
     client_t *client = NULL;
 
@@ -245,7 +246,7 @@ client_t *worker_listener_get_client(worker_t *worker, struct sockaddr_in *clien
         return NULL;
     }
 
-    client = client_listener_get_client_with_address(worker->client_list, client_addr);
+    client = client_listener_get_client_from_address(worker->client_list, client_addr);
     if (!client) {
         LOG("error: %s() could not get client.", __FUNCTION__);
         return NULL;
