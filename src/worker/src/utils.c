@@ -102,10 +102,10 @@ int send_message(int socket, message_type_t type, int size, char* buffer)
     }
 
     msg->type = type;
-    msg->size = sizeof(header_t) + size;
+    msg->size = size;
     memcpy(msg->buffer, buffer, size);
 
-    bytes_written = write(socket, msg, msg->size);
+    bytes_written = write(socket, msg, sizeof(header_t) + msg->size);
     free(msg);
 
     return bytes_written;

@@ -15,6 +15,7 @@
 #include "utils.h"
 #include "libutils.h"
 
+#include "connections.h"
 #include "client_listener.h"
 #include "worker_listener.h"
 
@@ -206,7 +207,7 @@ void worker_listener_free_worker(worker_t *worker)
     connections_unregister_socket(worker->socket);
 
     heap_update_node_key(worker_heap, &worker->heap_node, -1);
-    heap_pop();
+    heap_pop(worker_heap);
 
     list_node_delete(list, &worker->list_node);
     list_delete(&worker->client_list);
@@ -237,14 +238,16 @@ void worker_listener_check_worker_sockets(int *num_socks, fd_set *read_sockets)
             if (rc == -1) {
                 LOG("worker_listener: %s() error on receiving from %s.", __FUNCTION__, utils_format_ip_addr(&worker->addr));
                 worker_listener_free_worker(worker);
+                return;
             } else if (rc == 1) {
                 LOG("worker_listener: %s closed connection.", utils_format_ip_addr(&worker->addr));
                 worker_listener_free_worker(worker);
+                return;
             }
 
             process_message(worker, (header_t *)buffer, utils_format_ip_addr(&worker->addr));
             (*num_socks)--;
-            if (num_socks == 0)
+            if (*num_socks == 0)
                 return;
         }
     }

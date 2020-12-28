@@ -203,14 +203,16 @@ void client_listener_check_client_sockets(int *num_socks, fd_set *read_sockets)
             if (rc == -1) {
                 LOG("worker_listener: %s() error on receiving from %s.", __FUNCTION__, utils_format_ip_addr(&client->addr));
                 client_listener_free_client(client);
+                return;
             } else if (rc == 1) {
                 LOG("worker_listener: %s closed connection.", utils_format_ip_addr(&client->addr));
                 client_listener_free_client(client);
+                return;
             }
 
             process_message(client, (header_t *)buffer, utils_format_ip_addr(&client->addr));
             (*num_socks)--;
-            if (num_socks == 0)
+            if (*num_socks == 0)
                 return;
         }
     }
