@@ -22,7 +22,9 @@ $(NAME).a: $(OBJ)
 	 ar rcs $(LIB_DIR)/$(NAME)/$(NAME).a $(OBJ)
 
 $(OBJ_DIR)/$(NAME)/%.o: $(LOCAL_SOURCE_DIR)/%.c $(LOCAL_INCLUDE_DIR)/%.h $(COMMON_HEADERS)
-	$(CC) -std=gnu99 -g -c -o $@ $< -I$(COMMON_HEADERS_DIR) -I$(LOCAL_INCLUDE_DIR)
+	$(CC) -g -c -o $@ $< \
+					-I$(COMMON_HEADERS_DIR) \
+					-I$(LOCAL_INCLUDE_DIR)
 
 copy_public_header:
 	cp $(LOCAL_INCLUDE_DIR)/$(NAME).h $(LIB_DIR)/$(NAME)/include/$(NAME).h
