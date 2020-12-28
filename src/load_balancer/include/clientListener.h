@@ -24,4 +24,7 @@ void client_listener_message_from_client(client_t *client);
 void client_listener_check_client_sockets(int *num_socks, fd_set *read_sockets);
 struct sockaddr_in client_listener_get_client_addr(client_t *client);
 
+/* TODO(victor): refactor the fuck out if this */
+bool send_build_res(client_t* client, bool status, int reason);
+
 #endif 

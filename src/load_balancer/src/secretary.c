@@ -17,7 +17,6 @@
 extern heap_t *worker_heap;
 
 bool send_build_res(client_t*, bool, int);
-static bool send_build_order(worker_t*, client_t*, build_req_msg_t*);
 
 static void* listen_work_done(void*);
 
@@ -185,97 +184,11 @@ void* assign_secretary(void* arg)
 }
 #endif
 
-void process_build_req(client_t* client, build_req_msg_t* message)
-{
-    bool another_one;
-    // get a worker from the specific heap
-    heap_t *heap = worker_heap;
-    worker_t *worker;
-    heap_node_t *heap_node;
-
-    // for responding to the client
-    bool status = true;
-    int reason = 0;
-
-    do {
-        another_one = false;
-
-        status = true;
-        reason = 0;
-
-
-        heap_node = heap_pop(heap);
-        if (heap_node)
-            worker = INFO(heap_node, worker_t);
-        else
-            worker = 0;
-
-        if (!worker) {
-            LOG("Warning: Don't have any workers available!");
-            status = false;
-            reason = 1;
-            continue;
-        }
-
-
-        pthread_mutex_lock(&(worker->mutex));
-        if (status && worker->no_current_builds >= 2) {
-            LOG("Warning: Best worker already has 2 or more current builds!");
-            status = false;
-            reason = 2;
-            heap_push(heap, &(worker->heap_node));
-        }
-
-        if (status && !worker->alive) {
-            LOG("Warning: Worker no longer available worker: %s  ip: %s",
-                    worker->hostname, utils_format_ip_addr(&(worker->addr)));
-            status = false;
-            reason = 3;
-
-            pthread_mutex_unlock(&(worker->mutex));
-            pthread_mutex_destroy(&(worker->mutex));
-            free(worker);
-            worker = NULL;
-
-            another_one = true;
-            continue;
-        }
-
-        if (status && !send_build_order(worker, client, message)) {
-            status = false;
-            reason = 4;
-        }
-
-        if (status) {
-            //Here the worker would have begin the build so update the worker info and re add it to the heap
-            worker->no_current_builds++;
-            /* TODO(victor): resolv this IMIDIATLY */
-            worker->client = client;
-            worker->heap_node.heap_key = worker->no_current_builds;
-            heap_push(heap, &(worker->heap_node));
-
-            /*LOG("Secretary: Worker assigned worker: %s  client: %s",
-                worker->hostname, client->hostname);*/
-        }
-
-        pthread_mutex_unlock(&(worker->mutex));
-
-        if (!status && reason == 4) {
-            pthread_mutex_destroy(&(worker->mutex));
-            free(worker);
-            worker = NULL;
-        }
-    } while (another_one);
-
-    if (!status)
-        send_build_res(client, status, reason);
-}
-
 void process_build_done(worker_t* worker, build_order_done_msg_t* message)
 {
     int status = message->status;
     int reason = message->reason;
-    client_t *client = worker->client;
+    client_t *client = worker_listener_get_client(worker);
 
     /* TODO(victor): client_t not known */
     /*if (!status) {
@@ -289,26 +202,5 @@ void process_build_done(worker_t* worker, build_order_done_msg_t* message)
     }*/
 
     send_build_res(client, status, reason);
-    pthread_mutex_lock(&(worker->mutex));
-    worker->no_current_builds--;
-    //update the heap key
-    heap_update_node_key(worker_heap, &(worker->heap_node), worker->no_current_builds);
-    pthread_mutex_unlock(&(worker->mutex));
-}
-
-static bool send_build_order(worker_t* worker, client_t* client, build_req_msg_t* build_message)
-{
-    build_order_msg_t build_order;
-
-    build_order.client_addr = client_listener_get_client_addr(client);
-    build_order.request = *build_message;
-
-    if (send_message(worker->socket, WORKER_BUILD_ORDER, sizeof(build_order_msg_t), (char*)&build_order) < 0) {
-        // return, the unconnected worker will be handled in process_build_req
-        return false;
-    }
-
-    LOG("Send message: Send message WORKER_BUILD_ORDER to worker hostname: %s, ip: %s",
-        worker->hostname, utils_format_ip_addr(&(worker->addr)));
-    return true;
+    worker_listener_decrement_no_of_builds_and_update_node_key(worker);
 }

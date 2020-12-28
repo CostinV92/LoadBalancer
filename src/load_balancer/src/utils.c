@@ -21,8 +21,6 @@
 extern client_listener_t *client_listener;
 extern worker_listener_t *worker_listener;
 
-
-extern void process_build_req(client_t*, void*);
 extern void process_build_done(client_t*, void*);
 
 void process_message(void* peer, message_t* message, char* ip_addr)

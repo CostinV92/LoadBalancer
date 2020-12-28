@@ -27,6 +27,24 @@ static void listen_to_worker(worker_t*);
 
 
 /***************************************************************/
+
+typedef struct worker {
+    heap_node_t             heap_node;
+
+    // network info
+    int                     socket;
+    struct sockaddr_in      addr;
+    list_node_t             list_node;
+
+    // worker info
+    char                    hostname[256];
+    int                     no_current_builds;
+    bool                    alive;
+
+    /* TODO(victor): resolv this because a worker can have multiple clients */
+    client_t                *client;
+} worker_t;
+
 void create_worker_listener();
 
 
@@ -239,4 +257,113 @@ void listen_to_worker(worker_t *worker)
             break;
         }
     }
+}
+
+/* TODO(victor): this is with regards to client list in worker */
+client_t *worker_listener_get_client(worker_t *worker)
+{
+    return worker->client;
+}
+
+void process_build_req(client_t* client, build_req_msg_t* message)
+{
+    bool another_one;
+    // get a worker from the specific heap
+    heap_t *heap = worker_heap;
+    worker_t *worker;
+    heap_node_t *heap_node;
+
+    // for responding to the client
+    bool status = true;
+    int reason = 0;
+
+    do {
+        another_one = false;
+
+        status = true;
+        reason = 0;
+
+
+        heap_node = heap_pop(heap);
+        if (heap_node)
+            worker = INFO(heap_node, worker_t);
+        else
+            worker = 0;
+
+        if (!worker) {
+            LOG("Warning: Don't have any workers available!");
+            status = false;
+            reason = 1;
+            continue;
+        }
+
+
+        if (status && worker->no_current_builds >= 2) {
+            LOG("Warning: Best worker already has 2 or more current builds!");
+            status = false;
+            reason = 2;
+            heap_push(heap, &(worker->heap_node));
+        }
+
+        if (status && !worker->alive) {
+            LOG("Warning: Worker no longer available worker: %s  ip: %s",
+                    worker->hostname, utils_format_ip_addr(&(worker->addr)));
+            status = false;
+            reason = 3;
+
+            free(worker);
+            worker = NULL;
+
+            another_one = true;
+            continue;
+        }
+
+        if (status && !send_build_order(worker, client, message)) {
+            status = false;
+            reason = 4;
+        }
+
+        if (status) {
+            //Here the worker would have begin the build so update the worker info and re add it to the heap
+            worker->no_current_builds++;
+            /* TODO(victor): resolv this IMIDIATLY */
+            worker->client = client;
+            worker->heap_node.heap_key = worker->no_current_builds;
+            heap_push(heap, &(worker->heap_node));
+
+            /*LOG("Secretary: Worker assigned worker: %s  client: %s",
+                worker->hostname, client->hostname);*/
+        }
+
+        if (!status && reason == 4) {
+            free(worker);
+            worker = NULL;
+        }
+    } while (another_one);
+
+    if (!status)
+        send_build_res(client, status, reason);
+}
+
+bool send_build_order(worker_t* worker, client_t* client, build_req_msg_t* build_message)
+{
+    build_order_msg_t build_order;
+
+    build_order.client_addr = client_listener_get_client_addr(client);
+    build_order.request = *build_message;
+
+    if (send_message(worker->socket, WORKER_BUILD_ORDER, sizeof(build_order_msg_t), (char*)&build_order) < 0) {
+        // return, the unconnected worker will be handled in process_build_req
+        return false;
+    }
+
+    LOG("Send message: Send message WORKER_BUILD_ORDER to worker hostname: %s, ip: %s",
+        worker->hostname, utils_format_ip_addr(&(worker->addr)));
+    return true;
+}
+
+void worker_listener_decrement_no_of_builds_and_update_node_key(worker_t *worker)
+{
+    worker->no_current_builds--;
+    heap_update_node_key(worker_heap, &(worker->heap_node), worker->no_current_builds);
 }
