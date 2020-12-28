@@ -8,7 +8,7 @@
 
 typedef struct client client_t;
 
-typedef struct CLIENT_LISTENER {
+typedef struct client_listener {
     int                     socket;
     struct sockaddr_in      server;
     list_t                  *client_list;

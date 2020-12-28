@@ -1,16 +1,15 @@
 #ifndef __WORKER_LISTENER_H__
 #define __WORKER_LISTENER_H__
 
-#include "heap.h"
-#include "client_listener.h"
 #include "liblist.h"
 #include "messages.h"
+#include "client_listener.h"
 
 #define WORKER_PORT         7892
 
 typedef struct worker worker_t;
 
-typedef struct WORKER_LISTENER {
+typedef struct worker_listener {
     int                     socket;
     struct sockaddr_in      server;
     list_t                  *worker_list;

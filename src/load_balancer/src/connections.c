@@ -3,54 +3,30 @@
 #include <unistd.h>
 #include <string.h>
 
-#include <pthread.h>
-#include <netdb.h>
 #include <netinet/in.h>
 
 #include "connections.h"
-#include "messages.h"
+
 #include "libutils.h"
 #include "client_listener.h"
 #include "worker_listener.h"
 
-extern heap_t *worker_heap;
+typedef struct connections {
+    fd_set              sockets;
+    int                 max_socket;
+
+    client_listener_t   *client_listener;
+    worker_listener_t   *worker_listener;
+} connections_t;
 
 int send_build_res(client_t*, int, int);
-
-static void* listen_work_done(void*);
 
 extern client_listener_t *client_listener;
 extern worker_listener_t *worker_listener;
 
 extern void clean_exit(int status);
 
-static void listen_connections();
-
 connections_t connections;
-
-void start_listening()
-{
-    if (!client_listener) {
-        LOG("Error: %s() client_listener not initialized.", __FUNCTION__);
-        clean_exit(-1);
-    }
-
-    if (!worker_listener) {
-        LOG("Error: %s() worker_listener not initialized.", __FUNCTION__);
-    }
-
-    connections.max_socket = client_listener->socket > worker_listener->socket ?
-                                    client_listener->socket : worker_listener->socket;
-    FD_ZERO(&connections.sockets);
-    FD_SET(client_listener->socket, &connections.sockets);
-    FD_SET(worker_listener->socket, &connections.sockets);
-
-    connections.client_listener = client_listener;
-    connections.worker_listener = worker_listener;
-
-    LOG("Starting listening...");
-    listen_connections(&connections);
-}
 
 static void register_client(int client_socket,
                             struct sockaddr_in *client_addr)
@@ -69,17 +45,6 @@ static void register_client(int client_socket,
     LOG("Client: %s registered.", utils_format_ip_addr(client_addr));
 }
 
-void connections_unregister_socket(int socket)
-{
-    if (!socket) {
-        LOG("connections: %s() invalid parameter.", __FUNCTION__);
-        return;
-    }
-
-    FD_CLR(socket, &connections.sockets);
-    close(socket);
-}
-
 static void register_worker(int worker_socket,
                             struct sockaddr_in *worker_addr)
 {
@@ -94,6 +59,17 @@ static void register_worker(int worker_socket,
         connections.max_socket = worker_socket;
 
     LOG("Worker: %s registered.", utils_format_ip_addr(worker_addr));
+}
+
+void connections_unregister_socket(int socket)
+{
+    if (!socket) {
+        LOG("connections: %s() invalid parameter.", __FUNCTION__);
+        return;
+    }
+
+    FD_CLR(socket, &connections.sockets);
+    close(socket);
 }
 
 static void listen_connections()
@@ -158,7 +134,31 @@ static void listen_connections()
     }
 }
 
-void process_build_done(worker_t* worker, build_order_done_msg_t* message)
+void start_listening()
+{
+    if (!client_listener) {
+        LOG("Error: %s() client_listener not initialized.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    if (!worker_listener) {
+        LOG("Error: %s() worker_listener not initialized.", __FUNCTION__);
+    }
+
+    connections.max_socket = client_listener->socket > worker_listener->socket ?
+                                    client_listener->socket : worker_listener->socket;
+    FD_ZERO(&connections.sockets);
+    FD_SET(client_listener->socket, &connections.sockets);
+    FD_SET(worker_listener->socket, &connections.sockets);
+
+    connections.client_listener = client_listener;
+    connections.worker_listener = worker_listener;
+
+    LOG("Starting listening...");
+    listen_connections(&connections);
+}
+
+static void process_build_done(worker_t* worker, build_order_done_msg_t* message)
 {
     int status = message->status;
     int reason = message->reason;

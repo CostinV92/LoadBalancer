@@ -1,35 +1,25 @@
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
-#include <sys/socket.h>
-#include <netdb.h>
 #include <netinet/in.h>
 
-#include <ctype.h>
-
-#include <string.h>
-
-#include <pthread.h>
-
-#include "libutils.h"
-
-#include "connections.h"
-#include "client_listener.h"
 #include "worker_listener.h"
+
+#include "heap.h"
+#include "libutils.h"
+#include "connections.h"
 
 extern void clean_exit(int status);
 
 typedef struct worker {
     heap_node_t             heap_node;
 
-    // network info
     int                     socket;
     struct sockaddr_in      addr;
     list_node_t             list_node;
 
-    // worker info
-    char                    hostname[256];
     int                     no_current_builds;
     int                     alive;
 
@@ -267,7 +257,6 @@ void process_build_req(client_t* client, build_req_msg_t* message)
             continue;
         }
 
-
         if (status && worker->no_current_builds >= 2) {
             LOG("Warning: Best worker already has 2 or more current builds!");
             status = 0;
@@ -276,8 +265,8 @@ void process_build_req(client_t* client, build_req_msg_t* message)
         }
 
         if (status && !worker->alive) {
-            LOG("Warning: Worker no longer available worker: %s  ip: %s",
-                    worker->hostname, utils_format_ip_addr(&worker->addr));
+            LOG("worker_listener: %s no longer available.",
+                utils_format_ip_addr(&worker->addr));
             status = 0;
             reason = 3;
 
@@ -327,8 +316,7 @@ int send_build_order(worker_t* worker, client_t* client, build_req_msg_t* build_
         return 0;
     }
 
-    LOG("Send message: Send message WORKER_BUILD_ORDER to worker hostname: %s, ip: %s",
-        worker->hostname, utils_format_ip_addr(&worker->addr));
+    LOG("Send message: Send WORKER_BUILD_ORDER to %s", utils_format_ip_addr(&worker->addr));
     return 1;
 }
 

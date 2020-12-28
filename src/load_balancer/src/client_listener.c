@@ -1,23 +1,13 @@
-#include <stdlib.h>
 #include <stdio.h>
-
-#include <netdb.h>
-#include <netinet/in.h>
-
-#include <ctype.h>
-
+#include <stdlib.h>
 #include <string.h>
-
-#include <pthread.h>
-
-#include "connections.h"
-#include "messages.h"
+#include <netinet/in.h>
 
 #include "client_listener.h"
 
+#include "messages.h"
 #include "libutils.h"
-
-#define MAX_MESSAGE_SIZE 512
+#include "connections.h"
 
 struct client {
     int                     socket;
@@ -28,12 +18,51 @@ struct client {
 
 extern void clean_exit(int status);
 
-static void* start_server(void*);
-static void create_server();
-
 client_listener_t *client_listener;
 
-void create_client_listener();
+static void create_client_listener()
+{
+    int server_socket, port, iSetOption = 1;
+    struct sockaddr_in server;
+
+    // create the socket
+    server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    setsockopt(server_socket,
+               SOL_SOCKET,
+               SO_REUSEADDR,
+               (char*)&iSetOption,
+               sizeof(iSetOption));
+
+    if (server_socket == -1) {
+        LOG("Error: %s() on opening client listener socket.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    // init address structure
+    memset(&server, 0, sizeof(server));
+
+    port = CLIENT_PORT;
+
+    server.sin_family = AF_INET;
+    server.sin_addr.s_addr = INADDR_ANY;
+    server.sin_port = htons(port);
+
+    // bind the socket with the address
+    if (bind(server_socket, (struct sockaddr*)&server, sizeof(server)) < 0 ) {
+        LOG("Error: %s() on biding client listener socket.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    // mark socket as pasive socket
+    if (listen(server_socket, 20) == -1) {
+        LOG("Error: %s() on marking client listener socket as passive.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    // save listener info
+    client_listener->socket = server_socket;
+    client_listener->server = server;
+}
 
 void init_client_listener()
 {
@@ -52,16 +81,6 @@ void init_client_listener()
     }
 
     create_client_listener();
-}
-
-list_t* client_listener_get_client_list()
-{
-    if (!client_listener || !(client_listener->client_list)) {
-        LOG("error: %s() client_listener not initialized.", __FUNCTION__);
-        clean_exit(-1);
-    }
-
-    return client_listener->client_list;
 }
 
 void client_listener_new_client(int client_socket,
@@ -108,50 +127,6 @@ void client_listener_free_client(client_t *client)
     free(client);
 }
 
-void create_client_listener()
-{
-    int server_socket, port, iSetOption = 1;
-    struct sockaddr_in server;
-
-    // create the socket
-    server_socket = socket(AF_INET, SOCK_STREAM, 0);
-    setsockopt(server_socket,
-               SOL_SOCKET,
-               SO_REUSEADDR,
-               (char*)&iSetOption,
-               sizeof(iSetOption));
-
-    if (server_socket == -1) {
-        LOG("Error: %s() on opening client listener socket.", __FUNCTION__);
-        clean_exit(-1);
-    }
-
-    // init address structure
-    memset(&server, 0, sizeof(server));
-
-    port = CLIENT_PORT;
-
-    server.sin_family = AF_INET;
-    server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons(port);
-
-    // bind the socket with the address
-    if (bind(server_socket, (struct sockaddr*)&server, sizeof(server)) < 0 ) {
-        LOG("Error: %s() on biding client listener socket.", __FUNCTION__);
-        clean_exit(-1);
-    }
-
-    // mark socket as pasive socket
-    if (listen(server_socket, 20) == -1) {
-        LOG("Error: %s() on marking client listener socket as passive.", __FUNCTION__);
-        clean_exit(-1);
-    }
-
-    // save listener info
-    client_listener->socket = server_socket;
-    client_listener->server = server;
-}
-
 void client_listener_check_client_sockets(int *num_socks, fd_set *read_sockets)
 {
     int rc = 0;
@@ -194,31 +169,6 @@ void client_listener_check_client_sockets(int *num_socks, fd_set *read_sockets)
     }
 }
 
-int send_build_res(client_t* client, int status, int reason)
-{
-    build_res_msg_t res_msg;
-
-    res_msg.status = status;
-    res_msg.reason = reason;
-
-    if (send_message(client->socket,
-                     SECRETARY_BUILD_RES,
-                     sizeof(build_res_msg_t),
-                     (char*)&res_msg) < 0) {
-        //here we will return, the unconnected client will be logged by the read in assign secretary
-        return 0;
-    }
-
-    LOG("Send message: Send message SECRETARY_BUILD_RES to client ip: %s",
-        utils_format_ip_addr(&(client->addr)));
-    return 1;
-}
-
-struct sockaddr_in client_listener_get_client_addr(client_t *client)
-{
-    return client->addr;
-}
-
 void client_listener_add_client_to_list(list_t *list, client_t *client)
 {
     if (!list || !client) {
@@ -250,4 +200,39 @@ client_t *client_listener_get_client_from_address(list_t *list,
     }
 
     return NULL;
+}
+
+list_t* client_listener_get_client_list()
+{
+    if (!client_listener || !(client_listener->client_list)) {
+        LOG("error: %s() client_listener not initialized.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    return client_listener->client_list;
+}
+
+int send_build_res(client_t* client, int status, int reason)
+{
+    build_res_msg_t res_msg;
+
+    res_msg.status = status;
+    res_msg.reason = reason;
+
+    if (send_message(client->socket,
+                     SECRETARY_BUILD_RES,
+                     sizeof(build_res_msg_t),
+                     (char*)&res_msg) < 0) {
+        //here we will return, the unconnected client will be logged by the read in assign secretary
+        return 0;
+    }
+
+    LOG("Send message: Send message SECRETARY_BUILD_RES to client ip: %s",
+        utils_format_ip_addr(&(client->addr)));
+    return 1;
+}
+
+struct sockaddr_in client_listener_get_client_addr(client_t *client)
+{
+    return client->addr;
 }
