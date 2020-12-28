@@ -6,9 +6,12 @@ COMMON_HEADERS = messages.h
 export COMMON_HEADERS := $(addprefix $(COMMON_HEADERS_DIR)/, $(COMMON_HEADERS))
 export COMMON_LIBRARIES := -pthread
 
-LIBS := liblist
-export LIBS_INCLUDE_PATH := $(addprefix $(LIB_DIR)/, $(LIBS)/include)
-export LIBS_LINK_PATH := $(addprefix $(LIB_DIR)/, $(LIBS))
+LIBS := liblist libutils
+LIBS_INCLUDE_PATH := $(addprefix $(LIB_DIR)/, $(LIBS))
+LIBS_INCLUDE_PATH := $(addsuffix /include, $(LIBS_INCLUDE_PATH))
+LIBS_LINK_PATH := $(addprefix $(LIB_DIR)/, $(LIBS))
+export LIBS_INCLUDE_ARG := $(addprefix -I, $(LIBS_INCLUDE_PATH))
+export LIBS_LINK_ARG := $(addprefix -L, $(LIBS_LINK_PATH))
 
 .PHONY : all libs $(MOD_DIR)
 all: check_obj_dir check_bin_dir libs $(MOD_DIR)

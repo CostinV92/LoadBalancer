@@ -4,12 +4,9 @@ OBJ := clientListener.o heap.o secretary.o utils.o workerListener.o
 LOCAL_SOURCE_DIR := $(CURDIR)/src
 LOCAL_INCLUDE_DIR := $(CURDIR)/include
 
-LIBS := -llist
+LIBS := -llist -lutils
 
 OBJ := $(addprefix $(OBJ_DIR)/$(NAME)/, $(OBJ))
-
-LIBS_INCLUDE_ARG := $(addprefix -I, $(LIBS_INCLUDE_PATH))
-LIBS_LINK_ARG := $(addprefix -L, $(LIBS_LINK_PATH))
 
 .PHONY: all
 all: check_local_obj_dir $(NAME)
