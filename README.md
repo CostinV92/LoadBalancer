@@ -19,6 +19,7 @@ The **Test Bed** is a vagrant environment which copies and runs the apps in diff
 
 #### RUN TEST BED:
 1. Build the project
-2. In **test_bed** directory run the following command:
+2. Rename test_bed/example.settings.yml to settings.yml 
+3. In **test_bed/vms** directory run the following command:
 
     `vagrant up`
