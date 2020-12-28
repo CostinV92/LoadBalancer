@@ -158,41 +158,6 @@ static void listen_connections()
     }
 }
 
-#if 0
-void* assign_secretary(void* arg)
-{
-    client_t *client = (client_t*)arg;
-    char service[20] = {0};
-
-    if (getnameinfo((struct sockaddr *)&(client->addr), sizeof(client->addr),
-        client->hostname, sizeof(client->hostname), service, sizeof(service), 0) == 0) {
-        LOG("Secretary: Client introduced himself, hostname: %s, ip: %s",
-            client->hostname, utils_format_ip_addr(&(client->addr)));
-    } else {
-        LOG("Warning: Client didn't introduced himself, ip: %s",
-            utils_format_ip_addr(&(client->addr)));
-    }
-
-    for (;;) {
-        int byte_read;
-        char buffer[2 * 256] = {0};
-        byte_read = read(client->socket, buffer, sizeof(buffer));
-        if (byte_read > 0) {
-            // TODO: DEBUG
-            process_message(client, (message_t*)buffer,
-                client->hostname, utils_format_ip_addr(&(client->addr)));
-        } else {
-            LOG("Secretary: Client closed connection, hostname: %s, ip: %s",
-                client->hostname, utils_format_ip_addr(&(client->addr)));
-
-            close(client->socket);
-            free(client);
-            break;
-        }
-    }
-}
-#endif
-
 void process_build_done(worker_t* worker, build_order_done_msg_t* message)
 {
     int status = message->status;

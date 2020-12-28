@@ -87,41 +87,6 @@ list_t* worker_listener_get_worker_list()
     return worker_listener->worker_list;
 }
 
-#if 0 /* TODO(victor): rework */
-void* start_server(void* arg) 
-{
-    int iSetOption = 1;
-    int worker_socket, worker_len = sizeof(struct sockaddr_in), *socket = (int*)arg;
-    struct sockaddr_in worker_addr;
-
-    while (1) {
-        worker_socket = accept(*socket, (struct sockaddr*)&worker_addr, &worker_len);
-        if (worker_socket < 0) {
-            LOG("Error: %s() error on accepting worker connection.", __FUNCTION__);
-            //this is for reusing the port imeddiatly after error
-            setsockopt(*socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
-            exit(1);
-        } else {
-            pthread_t worker_thread_id;
-            LOG("Worker listener: worker connected, ip: %s", utils_format_ip_addr(&worker_addr));
-
-            worker_t* worker = calloc(1, sizeof(worker_t));
-            if (!worker) {
-                LOG("Error: %s() cannot allocate memory.", __FUNCTION__);
-                clean_exit(-1);
-            }
-
-            worker->socket = worker_socket;
-            worker->addr = worker_addr;
-            worker->alive = true;
-            pthread_mutex_init(&worker->mutex, NULL);
-
-            pthread_create(&worker_thread_id, NULL, &register_worker, worker);
-        }
-    }
-}
-#endif
-
 void create_worker_listener()
 {
     int server_socket, port, iSetOption = 1;
@@ -252,24 +217,6 @@ void worker_listener_check_worker_sockets(int *num_socks, fd_set *read_sockets)
         }
     }
 }
-
-#if 0 /* TODO(victor) rework */
-void* register_worker(void* arg)
-{
-    char service[20] = {0};
-    worker_t *worker = (worker_t*)arg;
-
-    if (getnameinfo((struct sockaddr *)&(worker->addr), sizeof(worker->addr), worker->hostname, sizeof(worker->hostname), service, sizeof(service), 0) == 0) {
-        heap_push(worker_heap, &(worker->heap_node));
-        LOG("Worker listener: worker added to database, hostname: %s, ip: %s", worker->hostname, utils_format_ip_addr(&(worker->addr)));
-    } else {
-        LOG("ERROR Worker listener: failed to add worker to database (no hostname), ip: %s", utils_format_ip_addr(&(worker->addr)));
-        free(worker);
-    }
-
-    listen_to_worker(worker);
-}
-#endif
 
 void listen_to_worker(worker_t *worker)
 {
