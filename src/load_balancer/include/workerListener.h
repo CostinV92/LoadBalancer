@@ -2,6 +2,7 @@
 #define __WORKER_LISTENER_H__
 
 #include "heap.h"
+#include "clientListener.h"
 #include "liblist.h"
 
 #define WORKER_PORT         7892
@@ -28,10 +29,15 @@ typedef struct WORKER {
     int                     no_current_builds;
     pthread_mutex_t         mutex;
     bool                    alive;
+
+    /* TODO(victor): resolv this because a worker can have multiple clients */
+    client_t                *client;
 } worker_t;
 
 void init_worker_listener();
 void worker_listener_new_worker(int worker_socket,
                                 struct sockaddr_in *worker_addr);
+list_t* worker_listener_get_worker_list();
+void worker_listener_check_worker_sockets(int *num_socks, fd_set *read_sockets);
 
 #endif

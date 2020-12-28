@@ -4,10 +4,12 @@
 #include <unistd.h>
 #include <signal.h>
 #include <pthread.h>
+#include <string.h>
 
 #include <netdb.h>
 
 #include "utils.h"
+#include "libutils.h"
 #include "clientListener.h"
 #include "workerListener.h"
 #include "secretary.h"
@@ -41,7 +43,7 @@ int main()
 {
     void *res;
     signal(SIGINT, signal_handler);
-    if (init_log() != 0) {
+    if (utils_init_log(LOG_PATH, strlen(LOG_PATH)) != 0) {
         printf("WARNING: the log file could not be opened!\n");
     }
     init_client_listener();

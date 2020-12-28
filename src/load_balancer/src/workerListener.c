@@ -13,6 +13,7 @@
 #include <pthread.h>
 
 #include "utils.h"
+#include "libutils.h"
 
 #include "workerListener.h"
 
@@ -57,6 +58,16 @@ void init_worker_listener()
     create_worker_listener();
 }
 
+list_t* worker_listener_get_worker_list()
+{
+    if (!worker_listener || !(worker_listener->worker_list)) {
+        LOG("error: %s() worker_listener not initialized.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    return worker_listener->worker_list;
+}
+
 #if 0 /* TODO(victor): rework */
 void* start_server(void* arg) 
 {
@@ -73,7 +84,7 @@ void* start_server(void* arg)
             exit(1);
         } else {
             pthread_t worker_thread_id;
-            LOG("Worker listener: worker connected, ip: %s", format_ip_addr(&worker_addr));
+            LOG("Worker listener: worker connected, ip: %s", utils_format_ip_addr(&worker_addr));
 
             worker_t* worker = calloc(1, sizeof(worker_t));
             if (!worker) {
@@ -154,7 +165,44 @@ void worker_listener_new_worker(int worker_socket,
 
     heap_push(worker_heap, &worker->heap_node);
 
-    LOG("Worker: new worker %s.", format_ip_addr(worker_addr));
+    LOG("Worker: new worker %s.", utils_format_ip_addr(worker_addr));
+}
+
+void worker_listener_check_worker_sockets(int *num_socks, fd_set *read_sockets)
+{
+    worker_t *worker = NULL;
+    list_it *list_it = NULL;
+    list_t *worker_list = NULL;
+
+    if (!num_socks || !read_sockets) {
+        LOG("error: %s invalid parameter.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    worker_list = worker_listener_get_worker_list();
+    list_iterate(worker_list, list_it) {
+        worker = info_from_it(list_it, list_node, worker_t);
+
+        if (FD_ISSET(worker->socket, read_sockets)) {
+
+            /* TODO(victor): implement it */
+            /* worker_listener_message_from_worker(worker); */
+            int bytes_read;
+            char buffer[2 * 256] = {0};
+            bytes_read = read(worker->socket, buffer, sizeof(buffer));
+            if (bytes_read) {
+                process_message(worker, (void*)buffer, worker->hostname, utils_format_ip_addr(&(worker->addr)));
+            } else {
+                LOG("%x Worker listener: worker disconnected, hostname: %s, ip: %s", worker, worker->hostname, utils_format_ip_addr(&(worker->addr)));
+                worker->alive = false;
+                break;
+            }
+
+            (*num_socks)--;
+            if (num_socks == 0)
+                return;
+        }
+    }
 }
 
 #if 0 /* TODO(victor) rework */
@@ -165,9 +213,9 @@ void* register_worker(void* arg)
 
     if (getnameinfo((struct sockaddr *)&(worker->addr), sizeof(worker->addr), worker->hostname, sizeof(worker->hostname), service, sizeof(service), 0) == 0) {
         heap_push(worker_heap, &(worker->heap_node));
-        LOG("Worker listener: worker added to database, hostname: %s, ip: %s", worker->hostname, format_ip_addr(&(worker->addr)));
+        LOG("Worker listener: worker added to database, hostname: %s, ip: %s", worker->hostname, utils_format_ip_addr(&(worker->addr)));
     } else {
-        LOG("ERROR Worker listener: failed to add worker to database (no hostname), ip: %s", format_ip_addr(&(worker->addr)));
+        LOG("ERROR Worker listener: failed to add worker to database (no hostname), ip: %s", utils_format_ip_addr(&(worker->addr)));
         free(worker);
     }
 
@@ -184,9 +232,9 @@ void listen_to_worker(worker_t *worker)
     for (;;) {
         bytes_read = read(worker->socket, buffer, sizeof(buffer));
         if (bytes_read) {
-            process_message(worker, (void*)buffer, worker->hostname, format_ip_addr(&(worker->addr)));
+            process_message(worker, (void*)buffer, worker->hostname, utils_format_ip_addr(&(worker->addr)));
         } else {
-            LOG("%x Worker listener: worker disconnected, hostname: %s, ip: %s", worker, worker->hostname, format_ip_addr(&(worker->addr)));
+            LOG("%x Worker listener: worker disconnected, hostname: %s, ip: %s", worker, worker->hostname, utils_format_ip_addr(&(worker->addr)));
             worker->alive = false;
             break;
         }

@@ -10,12 +10,13 @@
 #include "secretary.h"
 #include "messages.h"
 #include "utils.h"
+#include "libutils.h"
 #include "clientListener.h"
 #include "workerListener.h"
 
 extern heap_t *worker_heap;
 
-static bool send_build_res(client_t*, bool, int);
+bool send_build_res(client_t*, bool, int);
 static bool send_build_order(worker_t*, client_t*, build_req_msg_t*);
 
 static void* listen_work_done(void*);
@@ -67,7 +68,7 @@ static void register_client(connections_t *connections,
     if (client_socket > connections->max_socket)
         connections->max_socket = client_socket;
 
-    LOG("Client: %s registered.", format_ip_addr(client_addr));
+    LOG("Client: %s registered.", utils_format_ip_addr(client_addr));
 }
 
 static void register_worker(connections_t *connections,
@@ -84,7 +85,7 @@ static void register_worker(connections_t *connections,
     if (worker_socket > connections->max_socket)
         connections->max_socket = worker_socket;
 
-    LOG("Worker: %s registered.", format_ip_addr(worker_addr));
+    LOG("Worker: %s registered.", utils_format_ip_addr(worker_addr));
 }
 
 static void listen_connections(connections_t *connections)
@@ -138,17 +139,18 @@ static void listen_connections(connections_t *connections)
                     continue;
             }
 
-            /* TODO(victor): iterate through client list */
+            client_listener_check_client_sockets(&rc, &read_sockets);
             if (rc == 0)
                 continue;
 
-            /* TODO(victor): iterate through worker list */
+            worker_listener_check_worker_sockets(&rc, &read_sockets);
             if (rc == 0)
                 continue;
         }
     }
 }
 
+#if 0
 void* assign_secretary(void* arg)
 {
     client_t *client = (client_t*)arg;
@@ -157,10 +159,10 @@ void* assign_secretary(void* arg)
     if (getnameinfo((struct sockaddr *)&(client->addr), sizeof(client->addr),
         client->hostname, sizeof(client->hostname), service, sizeof(service), 0) == 0) {
         LOG("Secretary: Client introduced himself, hostname: %s, ip: %s",
-            client->hostname, format_ip_addr(&(client->addr)));
+            client->hostname, utils_format_ip_addr(&(client->addr)));
     } else {
         LOG("Warning: Client didn't introduced himself, ip: %s",
-            format_ip_addr(&(client->addr)));
+            utils_format_ip_addr(&(client->addr)));
     }
 
     for (;;) {
@@ -170,10 +172,10 @@ void* assign_secretary(void* arg)
         if (byte_read > 0) {
             // TODO: DEBUG
             process_message(client, (message_t*)buffer,
-                client->hostname, format_ip_addr(&(client->addr)));
+                client->hostname, utils_format_ip_addr(&(client->addr)));
         } else {
             LOG("Secretary: Client closed connection, hostname: %s, ip: %s",
-                client->hostname, format_ip_addr(&(client->addr)));
+                client->hostname, utils_format_ip_addr(&(client->addr)));
 
             close(client->socket);
             free(client);
@@ -181,6 +183,7 @@ void* assign_secretary(void* arg)
         }
     }
 }
+#endif
 
 void process_build_req(client_t* client, build_req_msg_t* message)
 {
@@ -225,7 +228,7 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 
         if (status && !worker->alive) {
             LOG("Warning: Worker no longer available worker: %s  ip: %s",
-                    worker->hostname, format_ip_addr(&(worker->addr)));
+                    worker->hostname, utils_format_ip_addr(&(worker->addr)));
             status = false;
             reason = 3;
 
@@ -246,11 +249,13 @@ void process_build_req(client_t* client, build_req_msg_t* message)
         if (status) {
             //Here the worker would have begin the build so update the worker info and re add it to the heap
             worker->no_current_builds++;
+            /* TODO(victor): resolv this IMIDIATLY */
+            worker->client = client;
             worker->heap_node.heap_key = worker->no_current_builds;
             heap_push(heap, &(worker->heap_node));
 
-            LOG("Secretary: Worker assigned worker: %s  client: %s",
-                worker->hostname, client->hostname);
+            /*LOG("Secretary: Worker assigned worker: %s  client: %s",
+                worker->hostname, client->hostname);*/
         }
 
         pthread_mutex_unlock(&(worker->mutex));
@@ -270,19 +275,20 @@ void process_build_done(worker_t* worker, build_order_done_msg_t* message)
 {
     int status = message->status;
     int reason = message->reason;
-    client_t client = message->build_order.client;
+    client_t *client = worker->client;
 
-    if (!status) {
+    /* TODO(victor): client_t not known */
+    /*if (!status) {
         LOG("Warning: Build failed with reason: %d on hostname: %s, ip: %s, for hostname: %s, ip: %s",
-            reason, worker->hostname, format_ip_addr(&(worker->addr)),
-                client.hostname, format_ip_addr(&(client.addr)));
+            reason, worker->hostname, utils_format_ip_addr(&(worker->addr)),
+                client->hostname, utils_format_ip_addr(&(client->addr)));
     } else {
         LOG("Secretary: Build succeded on hostname: %s, ip: %s, for hostname: %s, ip: %s",
-            worker->hostname, format_ip_addr(&(worker->addr)),
-                client.hostname, format_ip_addr(&(client.addr)));
-    }
+            worker->hostname, utils_format_ip_addr(&(worker->addr)),
+                client->hostname, utils_format_ip_addr(&(client->addr)));
+    }*/
 
-    send_build_res(&client, status, reason);
+    send_build_res(client, status, reason);
     pthread_mutex_lock(&(worker->mutex));
     worker->no_current_builds--;
     //update the heap key
@@ -290,28 +296,11 @@ void process_build_done(worker_t* worker, build_order_done_msg_t* message)
     pthread_mutex_unlock(&(worker->mutex));
 }
 
-static bool send_build_res(client_t* client, bool status, int reason)
-{
-    build_res_msg_t res_msg;
-
-    res_msg.status = status;
-    res_msg.reason = reason;
-
-    if (send_message(client->socket, SECRETARY_BUILD_RES, sizeof(build_res_msg_t), (char*)&res_msg) < 0) {
-        //here we will return, the unconnected client will be logged by the read in assign secretary
-        return false;
-    }
-
-    LOG("Send message: Send message SECRETARY_BUILD_RES to client hostname: %s, ip: %s",
-        client->hostname, format_ip_addr(&(client->addr)));
-    return true;
-}
-
 static bool send_build_order(worker_t* worker, client_t* client, build_req_msg_t* build_message)
 {
     build_order_msg_t build_order;
 
-    build_order.client = *client;
+    build_order.client_addr = client_listener_get_client_addr(client);
     build_order.request = *build_message;
 
     if (send_message(worker->socket, WORKER_BUILD_ORDER, sizeof(build_order_msg_t), (char*)&build_order) < 0) {
@@ -320,6 +309,6 @@ static bool send_build_order(worker_t* worker, client_t* client, build_req_msg_t
     }
 
     LOG("Send message: Send message WORKER_BUILD_ORDER to worker hostname: %s, ip: %s",
-        worker->hostname, format_ip_addr(&(worker->addr)));
+        worker->hostname, utils_format_ip_addr(&(worker->addr)));
     return true;
 }

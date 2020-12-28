@@ -12,7 +12,7 @@
 #include "work.h"
 
 static void* start_build(void* arg);
-static int connect_to_client(client_t *client, int client_port);
+static int connect_to_client(struct sockaddr_in client_addr, int client_port);
 static void send_build_done(build_order_msg_t *req, bool status, int reason);
 
 void wait_for_work()
@@ -52,17 +52,17 @@ void* start_build(void* arg)
 {
     int pid = 0, output_socket = 0;
     build_order_msg_t *message = (build_order_msg_t*)arg;
-    client_t *client = &(message->client);
+    struct sockaddr_in client_addr = message->client_addr;
     build_req_msg_t *request = &(message->request);
 
     // first connect to the client
-    if ((output_socket = connect_to_client(client, request->listen_port)) == -1) {
+    if ((output_socket = connect_to_client(client_addr, request->listen_port)) == -1) {
         // error on connecting to client for sending output
         send_build_done(message, false, 5);
         return NULL;
     }
 
-    LOG("Starting build for client %s", format_ip_addr(&(client->addr)));
+    LOG("Starting build for client %s", format_ip_addr(&client_addr));
 
     // spawn a process to do the work and wait for it
     if ((pid = fork()) == -1) {
@@ -74,7 +74,7 @@ void* start_build(void* arg)
 
         waitpid(pid, &status, 0);
 
-        LOG("Build for client %s it's over with status: %d", format_ip_addr(&(client->addr)), status);
+        LOG("Build for client %s it's over with status: %d", format_ip_addr(&client_addr), status);
 
         send_build_done(message, true, status);
     } else {
@@ -101,10 +101,9 @@ void send_build_done(build_order_msg_t *req, bool status, int reason)
     send_message(loadBalancer->socket, WORKER_BUILD_DONE, sizeof(build_order_done_msg_t), (char*)&res);
 }
 
-int connect_to_client(client_t *client, int client_port)
+int connect_to_client(struct sockaddr_in client_addr, int client_port)
 {
     int client_socket = 0, port = client_port, iSetOption = 1;
-    struct sockaddr_in client_addr = client->addr;
 
     // create the socket
     client_socket = socket(AF_INET, SOCK_STREAM, 0);

@@ -11,7 +11,6 @@
 #include <unistd.h>
 
 #include "utils.h"
-#include "liblist.h"
 #include "messages.h"
 
 static FILE *log_file;

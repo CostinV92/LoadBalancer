@@ -6,14 +6,6 @@
 #include "workerListener.h"
 #include "liblist.h"
 
-typedef struct CLIENT {
-    int                     socket;
-    struct sockaddr_in      addr;
-    list_node_t             list_node;
-
-    char                    hostname[256];
-} client_t;
-
 #define MAX_CLIENTS     10
 #define MAX_WORKERS     10
 
