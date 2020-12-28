@@ -13,10 +13,10 @@
 #include <pthread.h>
 
 #include "utils.h"
-#include "secretary.h"
+#include "connections.h"
 #include "messages.h"
-#include "clientListener.h"
-#include "workerListener.h"
+#include "client_listener.h"
+#include "worker_listener.h"
 
 extern client_listener_t *client_listener;
 extern worker_listener_t *worker_listener;

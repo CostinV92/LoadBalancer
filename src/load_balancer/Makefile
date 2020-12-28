@@ -1,5 +1,5 @@
 NAME := load_balancer
-OBJ := clientListener.o heap.o secretary.o utils.o workerListener.o
+OBJ := connections.o client_listener.o worker_listener.o heap.o utils.o
 
 LOCAL_SOURCE_DIR := $(CURDIR)/src
 LOCAL_INCLUDE_DIR := $(CURDIR)/include

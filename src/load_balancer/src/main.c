@@ -10,9 +10,9 @@
 
 #include "utils.h"
 #include "libutils.h"
-#include "clientListener.h"
-#include "workerListener.h"
-#include "secretary.h"
+#include "client_listener.h"
+#include "worker_listener.h"
+#include "connections.h"
 
 extern client_listener_t *client_listener;
 extern worker_listener_t *worker_listener;

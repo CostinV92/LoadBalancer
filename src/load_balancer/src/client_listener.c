@@ -11,10 +11,10 @@
 #include <pthread.h>
 
 #include "utils.h"
-#include "secretary.h"
+#include "connections.h"
 #include "messages.h"
 
-#include "clientListener.h"
+#include "client_listener.h"
 
 #include "libutils.h"
 

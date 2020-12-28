@@ -7,12 +7,12 @@
 #include <netdb.h>
 #include <netinet/in.h>
 
-#include "secretary.h"
+#include "connections.h"
 #include "messages.h"
 #include "utils.h"
 #include "libutils.h"
-#include "clientListener.h"
-#include "workerListener.h"
+#include "client_listener.h"
+#include "worker_listener.h"
 
 extern heap_t *worker_heap;
 

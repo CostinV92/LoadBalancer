@@ -2,8 +2,8 @@
 #define __SECRETARY_H__
 
 #include "utils.h"
-#include "clientListener.h"
-#include "workerListener.h"
+#include "client_listener.h"
+#include "worker_listener.h"
 #include "liblist.h"
 
 #define MAX_CLIENTS     10
