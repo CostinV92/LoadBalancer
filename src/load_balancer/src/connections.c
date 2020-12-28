@@ -24,12 +24,12 @@ static void* listen_work_done(void*);
 extern client_listener_t *client_listener;
 extern worker_listener_t *worker_listener;
 
-static void listen_connections(connections_t *connections);
+static void listen_connections();
+
+connections_t connections;
 
 void start_listening()
 {
-    connections_t connections = {0};
-
     if (!client_listener) {
         LOG("Error: %s() client_listener not initialized.", __FUNCTION__);
         clean_exit(-1);
@@ -52,42 +52,51 @@ void start_listening()
     listen_connections(&connections);
 }
 
-static void register_client(connections_t *connections,
-                            int client_socket,
+static void register_client(int client_socket,
                             struct sockaddr_in *client_addr)
 {
-    if (!connections || !client_socket || !client_addr) {
+    if (!client_socket || !client_addr) {
         LOG("Error: %s() invalid arguments.", __FUNCTION__);
         return;
     }
 
     client_listener_new_client(client_socket, client_addr);
-    FD_SET(client_socket, &connections->sockets);
+    FD_SET(client_socket, &connections.sockets);
 
-    if (client_socket > connections->max_socket)
-        connections->max_socket = client_socket;
+    if (client_socket > connections.max_socket)
+        connections.max_socket = client_socket;
 
     LOG("Client: %s registered.", utils_format_ip_addr(client_addr));
 }
 
-static void register_worker(connections_t *connections,
-                            int worker_socket,
+void connections_unregister_client(int client_socket)
+{
+    if (!client_socket) {
+        LOG("connections: %s() invalid argument.", __FUNCTION__);
+        return;
+    }
+
+    FD_CLR(client_socket, &connections.sockets);
+    close(client_socket);
+}
+
+static void register_worker(int worker_socket,
                             struct sockaddr_in *worker_addr)
 {
-    if (!connections || !worker_socket || !worker_addr) {
+    if (!worker_socket || !worker_addr) {
         LOG("Error: %s() invalid arguments.", __FUNCTION__);
         return;
     }
 
     worker_listener_new_worker(worker_socket, worker_addr);
-    FD_SET(worker_socket, &connections->sockets);
-    if (worker_socket > connections->max_socket)
-        connections->max_socket = worker_socket;
+    FD_SET(worker_socket, &connections.sockets);
+    if (worker_socket > connections.max_socket)
+        connections.max_socket = worker_socket;
 
     LOG("Worker: %s registered.", utils_format_ip_addr(worker_addr));
 }
 
-static void listen_connections(connections_t *connections)
+static void listen_connections()
 {
     int rc = 0;
     int worker_socket = 0;
@@ -98,14 +107,14 @@ static void listen_connections(connections_t *connections)
 
     while (1) {
         struct timeval tv = {.tv_sec = 1, .tv_usec = 0};
-        read_sockets = connections->sockets;
-        rc = select(connections->max_socket + 1, &read_sockets, NULL, NULL, &tv);
+        read_sockets = connections.sockets;
+        rc = select(connections.max_socket + 1, &read_sockets, NULL, NULL, &tv);
         if (rc == -1) {
             LOG("Error: %s() error on select().", __FUNCTION__);
             clean_exit(-1);
         } else if (rc) {
-            if (FD_ISSET(connections->client_listener->socket, &read_sockets)) {
-                client_socket = accept(connections->client_listener->socket,
+            if (FD_ISSET(connections.client_listener->socket, &read_sockets)) {
+                client_socket = accept(connections.client_listener->socket,
                                        (struct sockaddr*)&addr,
                                        &addr_len);
 
@@ -113,7 +122,7 @@ static void listen_connections(connections_t *connections)
                     LOG("Error: %s() error accepting client socket.", __FUNCTION__);
                     clean_exit(-1);
                 } else {
-                    register_client(connections, client_socket, &addr);
+                    register_client(client_socket, &addr);
                 }
 
                 rc--;
@@ -121,8 +130,8 @@ static void listen_connections(connections_t *connections)
                     continue;
             }
 
-            if (FD_ISSET(connections->worker_listener->socket, &read_sockets)) {
-                worker_socket = accept(connections->worker_listener->socket,
+            if (FD_ISSET(connections.worker_listener->socket, &read_sockets)) {
+                worker_socket = accept(connections.worker_listener->socket,
                                        (struct sockaddr*)&addr,
                                        &addr_len);
 
@@ -130,7 +139,7 @@ static void listen_connections(connections_t *connections)
                     LOG("Error: %s() error accepting worker socket.", __FUNCTION__);
                     clean_exit(-1);
                 } else {
-                    register_worker(connections, worker_socket, &addr);
+                    register_worker(worker_socket, &addr);
                 }
 
                 rc--;

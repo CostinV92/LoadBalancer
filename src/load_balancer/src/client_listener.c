@@ -134,6 +134,8 @@ void client_listener_free_client(client_t *client)
         clean_exit(-1);
     }
 
+    connections_unregister_client(client->socket);
+
     list_node_delete(list, &client->list_node);
     free(client);
 }

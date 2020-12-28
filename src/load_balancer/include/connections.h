@@ -19,5 +19,6 @@ typedef struct connections {
 
 void* assign_secretary(void*);
 void start_listening();
+void connections_unregister_client(int client_socket);
 
 #endif
