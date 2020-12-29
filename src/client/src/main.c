@@ -178,7 +178,7 @@ void send_request()
     build_req_msg_t req;
     req.listen_port = output_listen_port;
 
-    send_message(loadBalancer.socket, SECRETARY_BUILD_REQ, sizeof(build_req_msg_t), (char*)&req);
+    send_message(loadBalancer.socket, BUILD_REQ, sizeof(build_req_msg_t), (char*)&req);
 
     for (;;) {
         int byte_read;

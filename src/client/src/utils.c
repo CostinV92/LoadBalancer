@@ -74,13 +74,13 @@ void process_message(header_t* message)
     message_type_t msg_type = message->type;
 
     switch (msg_type) {
-        case SECRETARY_BUILD_RES:
-            LOG("Procces message: Got SECRETARY_BUILD_RES message");
+        case BUILD_RES:
+            LOG("got BUILD_RES");
             process_build_res((void*)(message->buffer));
             break;
 
         default:
-            LOG("Warnng: %s() unknown message.", __FUNCTION__);
+            LOG("Warning: %s() unknown message.", __FUNCTION__);
             break;
     }
 }

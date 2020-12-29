@@ -4,10 +4,10 @@
 #define MAX_MESSAGE_SIZE 512
 
 typedef enum  MESSAGE_TYPE {
-    SECRETARY_BUILD_REQ,
-    SECRETARY_BUILD_RES,
-    WORKER_BUILD_ORDER,
-    WORKER_BUILD_DONE
+    BUILD_REQ = 1,
+    BUILD_RES,
+    BUILD_ORDER,
+    BUILD_DONE
 } message_type_t;
 
 typedef struct header {

@@ -185,7 +185,7 @@ void client_listener_check_client_sockets(int *num_socks, fd_set *read_sockets)
         if (FD_ISSET(client->socket, read_sockets)) {
             char buffer[MAX_MESSAGE_SIZE] = {0};
 
-            rc = utils_receive_message_from_socket(client->socket, buffer);
+            rc = utils_receive_message_from_socket(client->socket, (header_t *)buffer);
             if (rc == -1) {
                 LOG("client_listener: %s() error on receiving from %s.",
                     __FUNCTION__, utils_format_ip_addr(&client->addr));
@@ -251,27 +251,35 @@ client_t *client_listener_get_client_from_address(list_t *list,
     return NULL;
 }
 
-int send_build_res(client_t* client, int status, int reason)
+int client_listener_send_build_res(client_t* client, int status, int reason)
 {
-    build_res_msg_t res_msg;
+    int rc = 0;
+    build_res_msg_t res_msg = {0};
+
+    if (!client) {
+        LOG("error: %s() invalid parameter.");
+        return -1;
+    }
 
     res_msg.status = status;
     res_msg.reason = reason;
 
-    if (send_message(client->socket,
-                     SECRETARY_BUILD_RES,
-                     sizeof(build_res_msg_t),
-                     (char*)&res_msg) < 0) {
-        //here we will return, the unconnected client will be logged by the read in assign secretary
-        return 0;
+    rc = utils_send_message(client->socket,
+                            BUILD_RES,
+                            sizeof(build_res_msg_t),
+                            (char *)&res_msg);
+    if (rc == -1) {
+        LOG("error: %s() could not send message to %s.",
+            __FUNCTION__,
+            utils_format_ip_addr(&client->addr));
+        return -1;
     }
 
-    LOG("Send message: Send message SECRETARY_BUILD_RES to client ip: %s",
-        utils_format_ip_addr(&(client->addr)));
-    return 1;
+    LOG("client_listener: sent BUILD_RES to %s", utils_format_ip_addr(&(client->addr)));
+
+    return rc;
 }
 
-/* TODO(victor): rewrite this see where it's called" */
 int client_listener_get_client_addr(client_t *client, struct sockaddr_in *client_address)
 {
     if (!client || !client_address) {

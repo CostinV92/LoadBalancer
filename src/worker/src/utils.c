@@ -80,8 +80,8 @@ void process_message(header_t* message)
     message_type_t msg_type = message->type;
 
     switch (msg_type) {
-        case WORKER_BUILD_ORDER:
-            LOG("Procces message: got WORKER_BUILD_ORDER message");
+        case BUILD_ORDER:
+            LOG("got BUILD_ORDER");
             process_build_order((void*)(message->buffer));
             break;
 

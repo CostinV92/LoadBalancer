@@ -7,12 +7,20 @@
 #include <netinet/in.h>
 
 #include "libutils.h"
-#include "messages.h"
 
 #define MAX_LOG_FILE_PATH_SIZE 200
 
 static FILE *log_file;
 static char ip_string[20];
+
+static int utils_send_message_to_socket(int socket, header_t *message);
+static int utils_write_to_socket(int socket,
+                                 char *buffer,
+                                 int bytes_to_write);
+static int utils_read_from_socket(int socket,
+                                  char *buffer,
+                                  int bytes_to_read);
+
 
 int utils_init_log(char *log_file_path, int path_size) 
 {
@@ -73,6 +81,92 @@ char* utils_format_ip_addr(struct sockaddr_in* addr)
     return ip_string;
 }
 
+int utils_send_message(int socket,
+                       message_type_t message_type,
+                       int size,
+                       char* buffer)
+{
+    int rc = 0;
+    header_t* message = NULL;
+
+    if (!socket || !message_type || !size || !buffer)
+        return -1;
+
+    message = calloc(1, sizeof(header_t) + size);
+    if (!message) {
+        LOG("error: %s() cannot allocate memory.", __FUNCTION__);
+        return -1;
+    }
+
+    message->type = message_type;
+    message->size = size;
+    memcpy(message->buffer, buffer, size);
+
+    rc = utils_send_message_to_socket(socket, (header_t *)message);
+    free(message);
+
+    return rc;
+}
+
+static int utils_send_message_to_socket(int socket, header_t *message)
+{
+    int rc = 0;
+    int message_size = 0;
+
+    if (!socket || !message)
+        return -1;
+
+    message_size = sizeof(header_t) + message->size;
+
+    rc = utils_write_to_socket(socket, (char *)message, message_size);
+    return rc;
+}
+
+static int utils_write_to_socket(int socket,
+                                 char *buffer,
+                                 int bytes_to_write)
+{
+    int rc = 0;
+    int bytes_written = 0;
+    int offset = 0;
+
+    if (!socket || !buffer || !bytes_to_write)
+        return -1;
+
+    while ((bytes_written = write(socket,
+                                  buffer + offset,
+                                  bytes_to_write - offset)) + offset < bytes_to_write) {
+        if (bytes_written == -1)
+            return -1;
+        else if (bytes_written == 0)
+            return 1;
+
+        offset += bytes_written;
+    }
+
+    return 0;
+}
+
+int utils_receive_message_from_socket(int socket, header_t *message)
+{
+    int rc = 0;
+    int header_size = 0;
+    int payload_size = 0;
+
+    if (!socket || !message)
+        return -1;
+
+    header_size = sizeof(header_t);
+    rc = utils_read_from_socket(socket, (char *)message, header_size);
+    if (rc != 0)
+        return rc;
+
+    payload_size = message->size;
+    rc = utils_read_from_socket(socket, ((char *)message) + header_size, payload_size);
+    if (rc != 0)
+        return rc;
+}
+
 static int utils_read_from_socket(int socket,
                                   char *buffer,
                                   int bytes_to_read)
@@ -81,55 +175,19 @@ static int utils_read_from_socket(int socket,
     int bytes_read = 0;
     int offset = 0;
 
-    if (!socket || !buffer || !bytes_to_read) {
-        LOG("error: %s() invalid arguments.");
+    if (!socket || !buffer || !bytes_to_read)
         return -1;
-    }
 
     while ((bytes_read = read(socket,
-            buffer + offset,
-            bytes_to_read - offset)) + offset < bytes_to_read) {
-        if (bytes_read == -1) {
-            LOG("error: %s() error reading from socket.");
+                              buffer + offset,
+                              bytes_to_read - offset)) + offset < bytes_to_read) {
+        if (bytes_read == -1)
             return -1;
-        } else if (bytes_read == 0) {
+        else if (bytes_read == 0)
             return 1;
-        }
 
         offset += bytes_read;
     }
 
     return 0;
-}
-
-int utils_receive_message_from_socket(int socket, char *buffer)
-{
-    int rc = 0;
-    int header_size = 0;
-    int payload_size = 0;
-
-    if (!socket || !buffer) {
-        LOG("error: %s() invalid arguments.");
-        return -1;
-    }
-
-    header_size = sizeof(header_t);
-    rc = utils_read_from_socket(socket, buffer, header_size);
-    if (rc == 1) {
-        LOG("utils: %s() peer closed connection.", __FUNCTION__);
-        return rc;
-    } else if (rc == -1) {
-        LOG("utils: %s() error on receiving from socket.", __FUNCTION__);
-        return rc;
-    }
-
-    payload_size = ((header_t*)buffer)->size;
-    rc = utils_read_from_socket(socket, buffer + header_size, payload_size);
-    if (rc == 1) {
-        LOG("utils: %s() peer closed connection.", __FUNCTION__);
-        return rc;
-    } else if (rc == -1) {
-        LOG("utils: %s() error on receiving from socket.", __FUNCTION__);
-        return rc;
-    }
 }

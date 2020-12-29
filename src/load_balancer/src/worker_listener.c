@@ -31,6 +31,9 @@ extern void clean_exit(int status);
 
 static void worker_listener_create();
 static void worker_listener_new_max_socket();
+static int worker_listener_send_build_order(worker_t* worker,
+                                            client_t* client,
+                                            build_req_msg_t* build_req);
 
 void worker_listener_init()
 {
@@ -209,7 +212,7 @@ void worker_listener_check_worker_sockets(int *num_socks, fd_set *read_sockets)
         if (FD_ISSET(worker->socket, read_sockets)) {
             char buffer[MAX_MESSAGE_SIZE] = {0};
 
-            rc = utils_receive_message_from_socket(worker->socket, buffer);
+            rc = utils_receive_message_from_socket(worker->socket, (header_t *)buffer);
             if (rc == -1) {
                 LOG("worker_listener: %s() error on receiving from %s.",
                     __FUNCTION__, utils_format_ip_addr(&worker->addr));
@@ -313,7 +316,9 @@ void process_build_req(client_t* client, build_req_msg_t* message)
             continue;
         }
 
-        if (status && (send_build_order(worker, client, message) == -1)) {
+        if (status && (worker_listener_send_build_order(worker,
+                                                        client,
+                                                        message) == -1)) {
             status = 0;
             reason = 4;
         }
@@ -334,32 +339,42 @@ void process_build_req(client_t* client, build_req_msg_t* message)
     } while (another_one);
 
     if (!status)
-        send_build_res(client, status, reason);
+        client_listener_send_build_res(client, status, reason);
 }
 
-int send_build_order(worker_t* worker, client_t* client, build_req_msg_t* build_message)
+static int worker_listener_send_build_order(worker_t* worker,
+                                            client_t* client,
+                                            build_req_msg_t* build_req)
 {
     int rc = 0;
-    build_order_msg_t build_order = {0};
+    build_order_msg_t order_msg = {0};
 
-    rc = client_listener_get_client_addr(client, &build_order.client_addr);
+    if (!worker || !client || !build_req) {
+        LOG("error: %s() invalid parameters.", __FUNCTION__);
+        return -1;
+    }
+
+    rc = client_listener_get_client_addr(client, &order_msg.client_addr);
     if (rc == -1) {
         LOG("error: %s() couldn't get client address.");
         return -1;
     }
 
-    build_order.request = *build_message;
+    order_msg.request = *build_req;
 
-    rc = send_message(worker->socket,
-                      WORKER_BUILD_ORDER,
-                      sizeof(build_order_msg_t),
-                      (char*)&build_order);
+    rc = utils_send_message(worker->socket,
+                            BUILD_ORDER,
+                            sizeof(build_order_msg_t),
+                            (char *)&order_msg);
     if (rc == -1) {
-        LOG("error: %s() couldn't send message.");
+        LOG("error: %s() could not send message to %s.",
+            __FUNCTION__,
+            utils_format_ip_addr(&worker->addr));
         return -1;
     }
 
-    LOG("worker_listener: sent WORKER_BUILD_ORDER to %s", utils_format_ip_addr(&worker->addr));
+    LOG("worker_listener: sent WORKER_BUILD_ORDER to %s",
+        utils_format_ip_addr(&worker->addr));
     return rc;
 }
 

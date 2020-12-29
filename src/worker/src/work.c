@@ -92,7 +92,7 @@ void send_build_done(build_order_msg_t *req, bool status, int reason)
     res.status = status;
     res.reason = reason;
 
-    send_message(loadBalancer->socket, WORKER_BUILD_DONE, sizeof(build_order_done_msg_t), (char*)&res);
+    send_message(loadBalancer->socket, BUILD_DONE, sizeof(build_order_done_msg_t), (char*)&res);
 }
 
 int connect_to_client(struct sockaddr_in client_addr, int client_port)
