@@ -31,6 +31,7 @@ extern void clean_exit(int status);
 
 static void worker_listener_create();
 static void worker_listener_new_max_socket();
+static void worker_listener_free_worker(worker_t *worker);
 static int worker_listener_send_build_order(worker_t* worker,
                                             client_t* client,
                                             build_req_msg_t* build_req);
@@ -134,7 +135,7 @@ void worker_listener_new_worker(int worker_socket,
     LOG("Worker: new worker %s.", utils_format_ip_addr(worker_addr));
 }
 
-void worker_listener_free_worker(worker_t *worker)
+static void worker_listener_free_worker(worker_t *worker)
 {
     list_t *list = NULL;
 

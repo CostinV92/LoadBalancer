@@ -22,6 +22,7 @@ extern void clean_exit(int status);
 
 static void client_listener_create();
 static void client_listener_new_max_socket();
+static void client_listener_free_client(client_t *client);
 
 void client_listener_init()
 {
@@ -112,7 +113,7 @@ void client_listener_new_client(int client_socket,
     LOG("client_listener: new client %s.", utils_format_ip_addr(client_addr));
 }
 
-void client_listener_free_client(client_t *client)
+static void client_listener_free_client(client_t *client)
 {
     list_t *list = NULL;
 
