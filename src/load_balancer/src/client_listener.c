@@ -272,11 +272,13 @@ int send_build_res(client_t* client, int status, int reason)
 }
 
 /* TODO(victor): rewrite this see where it's called" */
-struct sockaddr_in client_listener_get_client_addr(client_t *client)
+int client_listener_get_client_addr(client_t *client, struct sockaddr_in *client_address)
 {
-    if (!client) {
+    if (!client || !client_address) {
         LOG("client_listener: %s() invalid paramameter.", __FUNCTION__);
+        return -1;
     }
 
-    return client->addr;
+    memcpy(client_address, &client->addr, sizeof(struct sockaddr_in));
+    return 0;
 }

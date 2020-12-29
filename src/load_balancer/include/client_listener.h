@@ -21,10 +21,10 @@ void client_listener_new_client(int client_socket,
 list_t* client_listener_get_client_list();
 void client_listener_message_from_client(client_t *client);
 void client_listener_check_client_sockets(int *num_socks, fd_set *read_sockets);
-struct sockaddr_in client_listener_get_client_addr(client_t *client);
 void client_listener_add_client_to_list(list_t* list, client_t *client);
 client_t *client_listener_get_client_from_address(list_t *list,
                                                   struct sockaddr_in *client_addr);
+int client_listener_get_client_addr(client_t *client, struct sockaddr_in *client_address);
 int client_listener_get_max_socket();
 
 /* TODO(victor): refactor the fuck out if this */

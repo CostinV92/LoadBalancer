@@ -313,7 +313,7 @@ void process_build_req(client_t* client, build_req_msg_t* message)
             continue;
         }
 
-        if (status && !send_build_order(worker, client, message)) {
+        if (status && (send_build_order(worker, client, message) == -1)) {
             status = 0;
             reason = 4;
         }
@@ -339,21 +339,28 @@ void process_build_req(client_t* client, build_req_msg_t* message)
 
 int send_build_order(worker_t* worker, client_t* client, build_req_msg_t* build_message)
 {
-    build_order_msg_t build_order;
+    int rc = 0;
+    build_order_msg_t build_order = {0};
 
-    build_order.client_addr = client_listener_get_client_addr(client);
-    build_order.request = *build_message;
-
-    if (send_message(worker->socket,
-                     WORKER_BUILD_ORDER,
-                     sizeof(build_order_msg_t),
-                     (char*)&build_order) < 0) {
-        // return, the unconnected worker will be handled in process_build_req
-        return 0;
+    rc = client_listener_get_client_addr(client, &build_order.client_addr);
+    if (rc == -1) {
+        LOG("error: %s() couldn't get client address.");
+        return -1;
     }
 
-    LOG("Send message: Send WORKER_BUILD_ORDER to %s", utils_format_ip_addr(&worker->addr));
-    return 1;
+    build_order.request = *build_message;
+
+    rc = send_message(worker->socket,
+                      WORKER_BUILD_ORDER,
+                      sizeof(build_order_msg_t),
+                      (char*)&build_order);
+    if (rc == -1) {
+        LOG("error: %s() couldn't send message.");
+        return -1;
+    }
+
+    LOG("worker_listener: sent WORKER_BUILD_ORDER to %s", utils_format_ip_addr(&worker->addr));
+    return rc;
 }
 
 void worker_listener_decrement_no_of_builds_and_update_node_key(worker_t *worker)
