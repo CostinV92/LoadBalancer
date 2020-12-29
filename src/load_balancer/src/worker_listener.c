@@ -7,7 +7,7 @@
 
 #include "worker_listener.h"
 
-#include "heap.h"
+#include "libheap.h"
 #include "libutils.h"
 #include "connections.h"
 

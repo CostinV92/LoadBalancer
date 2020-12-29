@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-#include "heap.h"
+#include "libheap.h"
 
 #define HEAP_ROOT(heap)                 (((heap_node_t**)heap)[1])
 #define LAST_ELEM(heap)                 (((heap_node_t**)heap)[heap->current_index - 1])

@@ -1,10 +1,10 @@
 NAME := load_balancer
-OBJ := connections.o client_listener.o worker_listener.o heap.o
+OBJ := connections.o client_listener.o worker_listener.o
 
 LOCAL_SOURCE_DIR := $(CURDIR)/src
 LOCAL_INCLUDE_DIR := $(CURDIR)/include
 
-LIBS := -llist -lutils
+LIBS := -llist -lheap -lutils
 
 OBJ := $(addprefix $(OBJ_DIR)/$(NAME)/, $(OBJ))
 

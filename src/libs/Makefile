@@ -1,4 +1,4 @@
-MOD_DIR = liblist libutils
+MOD_DIR = liblist libheap libutils
 MOD_DIR := $(addprefix $(CURDIR)/, $(MOD_DIR))
 
 .PHONY : all $(MOD_DIR)

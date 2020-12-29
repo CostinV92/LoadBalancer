@@ -6,7 +6,7 @@ COMMON_HEADERS = messages.h
 export COMMON_HEADERS := $(addprefix $(COMMON_HEADERS_DIR)/, $(COMMON_HEADERS))
 export COMMON_LIBRARIES := -pthread
 
-LIBS := liblist libutils
+LIBS := liblist libheap libutils
 LIBS_INCLUDE_PATH := $(addprefix $(LIB_DIR)/, $(LIBS))
 LIBS_INCLUDE_PATH := $(addsuffix /include, $(LIBS_INCLUDE_PATH))
 LIBS_LINK_PATH := $(addprefix $(LIB_DIR)/, $(LIBS))
