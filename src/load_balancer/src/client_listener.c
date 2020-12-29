@@ -21,8 +21,9 @@ client_listener_t *client_listener;
 extern void clean_exit(int status);
 
 static void client_listener_create();
-static void client_listener_new_max_socket();
 static void client_listener_free_client(client_t *client);
+static void client_listener_new_max_socket();
+static list_t* client_listener_get_client_list();
 
 void client_listener_init()
 {
@@ -137,16 +138,6 @@ static void client_listener_free_client(client_t *client)
     free(client);
 }
 
-int client_listener_get_max_socket()
-{
-    if (!client_listener) {
-        LOG("error: %s() client_listener not initialized.");
-        clean_exit(-1);
-    }
-
-    return client_listener->max_socket;
-}
-
 static void client_listener_new_max_socket()
 {
     int max_socket = 0;
@@ -209,49 +200,6 @@ void client_listener_check_client_sockets(int *num_socks, fd_set *read_sockets)
     }
 }
 
-list_t* client_listener_get_client_list()
-{
-    if (!client_listener || !(client_listener->client_list)) {
-        LOG("error: %s() client_listener not initialized.", __FUNCTION__);
-        clean_exit(-1);
-    }
-
-    return client_listener->client_list;
-}
-
-void client_listener_add_client_to_list(list_t *list, client_t *client)
-{
-    if (!list || !client) {
-        LOG("error: %s() invalid arguments.", __FUNCTION__);
-        return;
-    }
-
-    list_node_init(&client->list_worker_node);
-    list_add_back(list, &client->list_worker_node);
-}
-
-client_t *client_listener_get_client_from_address(list_t *list,
-                                                  struct sockaddr_in *client_addr)
-{
-    client_t *client = NULL;
-    list_it *it = NULL;
-
-    if (!list || !client_addr) {
-        LOG("error: %s() invalid arguments.");
-        return NULL;
-    }
-
-    list_iterate(list, it) {
-        client = list_info_from_it(it, list_worker_node, client_t);
-        if (memcmp(&client->addr, client_addr, sizeof(struct sockaddr_in)) == 0) {
-            list_node_delete(list, &client->list_worker_node);
-            return client;
-        }
-    }
-
-    return NULL;
-}
-
 int client_listener_send_build_res(client_t* client, int status, int reason)
 {
     int rc = 0;
@@ -281,6 +229,49 @@ int client_listener_send_build_res(client_t* client, int status, int reason)
     return rc;
 }
 
+void client_listener_add_client_to_list(list_t *list, client_t *client)
+{
+    if (!list || !client) {
+        LOG("error: %s() invalid arguments.", __FUNCTION__);
+        return;
+    }
+
+    list_node_init(&client->list_worker_node);
+    list_add_back(list, &client->list_worker_node);
+}
+
+static list_t* client_listener_get_client_list()
+{
+    if (!client_listener || !(client_listener->client_list)) {
+        LOG("error: %s() client_listener not initialized.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    return client_listener->client_list;
+}
+
+client_t *client_listener_get_client_from_address(list_t *list,
+                                                  struct sockaddr_in *client_addr)
+{
+    client_t *client = NULL;
+    list_it *it = NULL;
+
+    if (!list || !client_addr) {
+        LOG("error: %s() invalid arguments.");
+        return NULL;
+    }
+
+    list_iterate(list, it) {
+        client = list_info_from_it(it, list_worker_node, client_t);
+        if (memcmp(&client->addr, client_addr, sizeof(struct sockaddr_in)) == 0) {
+            list_node_delete(list, &client->list_worker_node);
+            return client;
+        }
+    }
+
+    return NULL;
+}
+
 int client_listener_get_client_addr(client_t *client, struct sockaddr_in *client_address)
 {
     if (!client || !client_address) {
@@ -290,4 +281,14 @@ int client_listener_get_client_addr(client_t *client, struct sockaddr_in *client
 
     memcpy(client_address, &client->addr, sizeof(struct sockaddr_in));
     return 0;
+}
+
+int client_listener_get_max_socket()
+{
+    if (!client_listener) {
+        LOG("error: %s() client_listener not initialized.");
+        clean_exit(-1);
+    }
+
+    return client_listener->max_socket;
 }

@@ -30,11 +30,9 @@ heap_t *worker_heap;
 extern void clean_exit(int status);
 
 static void worker_listener_create();
-static void worker_listener_new_max_socket();
 static void worker_listener_free_worker(worker_t *worker);
-static int worker_listener_send_build_order(worker_t* worker,
-                                            client_t* client,
-                                            build_req_msg_t* build_req);
+static void worker_listener_new_max_socket();
+static list_t* worker_listener_get_worker_list();
 
 void worker_listener_init()
 {
@@ -130,7 +128,7 @@ void worker_listener_new_worker(int worker_socket,
 
     worker->client_list = list_new();
 
-    heap_push(worker_heap, &worker->heap_node);
+    worker_listener_add_worker_to_heap(worker);
 
     LOG("Worker: new worker %s.", utils_format_ip_addr(worker_addr));
 }
@@ -162,16 +160,6 @@ static void worker_listener_free_worker(worker_t *worker)
     list_delete(&worker->client_list);
 
     free(worker);
-}
-
-int worker_listener_get_max_socket()
-{
-    if (!worker_listener) {
-        LOG("error: %s() worker_listener not initialized.");
-        clean_exit(-1);
-    }
-
-    return worker_listener->max_socket;
 }
 
 static void worker_listener_new_max_socket()
@@ -236,116 +224,9 @@ void worker_listener_check_worker_sockets(int *num_socks, fd_set *read_sockets)
     }
 }
 
-list_t* worker_listener_get_worker_list()
-{
-    if (!worker_listener || !(worker_listener->worker_list)) {
-        LOG("error: %s() worker_listener not initialized.", __FUNCTION__);
-        clean_exit(-1);
-    }
-
-    return worker_listener->worker_list;
-}
-
-client_t *worker_listener_get_client_from_address(worker_t *worker,
-                                                  struct sockaddr_in *client_addr)
-{
-    client_t *client = NULL;
-
-    if (!worker || !client_addr) {
-        LOG("error: %s() invalid arguments.", __FUNCTION__);
-        return NULL;
-    }
-
-    client = client_listener_get_client_from_address(worker->client_list, client_addr);
-    if (!client) {
-        LOG("error: %s() could not get client.", __FUNCTION__);
-        return NULL;
-    }
-
-    return client;
-}
-
-void process_build_req(client_t* client, build_req_msg_t* message)
-{
-    int another_one;
-    // get a worker from the specific heap
-    heap_t *heap = worker_heap;
-    worker_t *worker;
-    heap_node_t *heap_node;
-
-    // for responding to the client
-    int status = 1;
-    int reason = 0;
-
-    do {
-        another_one = 0;
-
-        status = 1;
-        reason = 0;
-
-
-        heap_node = heap_pop(heap);
-        if (heap_node)
-            worker = INFO(heap_node, worker_t);
-        else
-            worker = 0;
-
-        if (!worker) {
-            LOG("Warning: Don't have any workers available!");
-            status = 0;
-            reason = 1;
-            continue;
-        }
-
-        if (status && worker->no_current_builds >= 2) {
-            LOG("Warning: Best worker already has 2 or more current builds!");
-            status = 0;
-            reason = 2;
-            heap_push(heap, &(worker->heap_node));
-        }
-
-        if (status && !worker->alive) {
-            LOG("worker_listener: %s no longer available.",
-                utils_format_ip_addr(&worker->addr));
-            status = 0;
-            reason = 3;
-
-            free(worker);
-            worker = NULL;
-
-            another_one = 1;
-            continue;
-        }
-
-        if (status && (worker_listener_send_build_order(worker,
-                                                        client,
-                                                        message) == -1)) {
-            status = 0;
-            reason = 4;
-        }
-
-        if (status) {
-            /* Here the worker will have begun the build so update the worker info
-               and re add it to the heap */
-            worker->no_current_builds++;
-            client_listener_add_client_to_list(worker->client_list, client);
-            worker->heap_node.heap_key = worker->no_current_builds;
-            heap_push(heap, &(worker->heap_node));
-        }
-
-        if (!status && reason == 4) {
-            free(worker);
-            worker = NULL;
-        }
-    } while (another_one);
-
-    if (!status)
-        client_listener_send_build_res(client, status, reason);
-}
-
-static int worker_listener_send_build_order(worker_t* worker,
-                                            client_t* client,
-                                            build_req_msg_t* build_req)
+int worker_listener_send_build_order(worker_t* worker,
+                                     client_t* client,
+                                     build_req_msg_t* build_req)
 {
     int rc = 0;
     build_order_msg_t order_msg = {0};
@@ -379,8 +260,113 @@ static int worker_listener_send_build_order(worker_t* worker,
     return rc;
 }
 
-void worker_listener_decrement_no_of_builds_and_update_node_key(worker_t *worker)
+void worker_listener_add_worker_to_heap(worker_t *worker)
 {
+    if (!worker_heap) {
+        LOG("error: %s() worker_heap not initialized.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    heap_push(worker_heap, &worker->heap_node);
+}
+
+worker_t *worker_listener_get_worker_from_heap()
+{
+    worker_t *worker = NULL;
+    heap_node_t *heap_node = NULL;
+
+    if (!worker_heap) {
+        LOG("error: %s() worker_heap not initialized.", __FUNCTION__);
+        return NULL;
+    }
+
+    heap_node = heap_pop(worker_heap);
+    if (heap_node)
+        worker = INFO(heap_node, worker_t);
+
+    if (!worker)
+        LOG("worker_listener: no worker registered.");
+
+    return worker;
+}
+
+void worker_listener_increment_builds_count(worker_t *worker)
+{
+    if (!worker_heap) {
+        LOG("error: %s() worker_heap not initialized.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    if (!worker) {
+        LOG("error: %s() invalid parameter.", __FUNCTION__);
+        return;
+    }
+
+    worker->no_current_builds++;
+    heap_update_node_key(worker_heap, &(worker->heap_node), worker->no_current_builds);
+}
+
+void worker_listener_decrement_builds_count(worker_t *worker)
+{
+    if (!worker_heap) {
+        LOG("error: %s() worker_heap not initialized.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    if (!worker) {
+        LOG("error: %s() invalid parameter.", __FUNCTION__);
+        return;
+    }
+
     worker->no_current_builds--;
     heap_update_node_key(worker_heap, &(worker->heap_node), worker->no_current_builds);
+}
+
+static list_t* worker_listener_get_worker_list()
+{
+    if (!worker_listener || !(worker_listener->worker_list)) {
+        LOG("error: %s() worker_listener not initialized.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    return worker_listener->worker_list;
+}
+
+void worker_listener_add_client_to_list(worker_t *worker, client_t *client)
+{
+    if (!worker || !client) {
+        LOG("error: %s() invalid parameters.", __FUNCTION__);
+        return;
+    }
+
+    client_listener_add_client_to_list(worker->client_list, client);
+}
+
+client_t *worker_listener_get_client_from_address(worker_t *worker,
+                                                  struct sockaddr_in *client_addr)
+{
+    client_t *client = NULL;
+
+    if (!worker || !client_addr) {
+        LOG("error: %s() invalid arguments.", __FUNCTION__);
+        return NULL;
+    }
+
+    client = client_listener_get_client_from_address(worker->client_list, client_addr);
+    if (!client) {
+        LOG("error: %s() could not get client.", __FUNCTION__);
+        return NULL;
+    }
+
+    return client;
+}
+
+int worker_listener_get_max_socket()
+{
+    if (!worker_listener) {
+        LOG("error: %s() worker_listener not initialized.");
+        clean_exit(-1);
+    }
+
+    return worker_listener->max_socket;
 }

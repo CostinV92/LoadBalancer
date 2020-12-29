@@ -25,8 +25,13 @@ extern worker_listener_t *worker_listener;
 extern void clean_exit(int status);
 
 static void connections_listen();
-static void connections_register_client(int client_socket, struct sockaddr_in *client_addr);
-static void connections_register_worker(int worker_socket, struct sockaddr_in *worker_addr);
+static void connections_register_client(int client_socket,
+                                        struct sockaddr_in *client_addr);
+static void connections_register_worker(int worker_socket,
+                                        struct sockaddr_in *worker_addr);
+static void connections_process_build_req(client_t* client, build_req_msg_t* message);
+static void connections_process_build_done(worker_t* worker,
+                                           build_order_done_msg_t* message);
 
 connections_t connections;
 
@@ -129,7 +134,7 @@ static void connections_register_client(int client_socket, struct sockaddr_in *c
     if (client_socket > connections.max_socket)
         connections.max_socket = client_socket;
 
-    LOG("Client: %s registered.", utils_format_ip_addr(client_addr));
+    LOG("connections: client %s registered.", utils_format_ip_addr(client_addr));
 }
 
 static void connections_register_worker(int worker_socket, struct sockaddr_in *worker_addr)
@@ -144,7 +149,7 @@ static void connections_register_worker(int worker_socket, struct sockaddr_in *w
     if (worker_socket > connections.max_socket)
         connections.max_socket = worker_socket;
 
-    LOG("Worker: %s registered.", utils_format_ip_addr(worker_addr));
+    LOG("connections: worker %s registered.", utils_format_ip_addr(worker_addr));
 }
 
 void connections_unregister_socket(int socket)
@@ -171,20 +176,6 @@ void connections_unregister_socket(int socket)
     close(socket);
 }
 
-static void process_build_done(worker_t* worker, build_order_done_msg_t* message)
-{
-    int status = message->status;
-    int reason = message->reason;
-    client_t *client =
-            worker_listener_get_client_from_address(worker,
-                                                    &message->build_order.client_addr);
-
-    client_listener_send_build_res(client, status, reason);
-
-    /* TODO(victor): rewrite this abomination */
-    worker_listener_decrement_no_of_builds_and_update_node_key(worker);
-}
-
 void connections_process_message(void* peer, header_t* message, char* ip_addr)
 {
     message_type_t msg_type = message->type;
@@ -192,16 +183,77 @@ void connections_process_message(void* peer, header_t* message, char* ip_addr)
     switch (msg_type) {
         case BUILD_REQ:
             LOG("client_listener: from %s got BUILD_REQ", ip_addr);
-            process_build_req(peer, (void*)(message->buffer));
+            connections_process_build_req(peer, (build_req_msg_t *)(message->buffer));
             break;
 
         case BUILD_DONE:
             LOG("worker_listener: from %s got BUILD_DONE", ip_addr);
-            process_build_done(peer, (void*)(message->buffer));
+            connections_process_build_done(peer,
+                                           (build_order_done_msg_t *)(message->buffer));
             break;
 
         default:
             LOG("WARNING Procces message: Unknown message from  ip: %s", ip_addr);
             break;
     }
+}
+
+static void connections_process_build_req(client_t* client, build_req_msg_t* message)
+{
+    int rc = 0;
+    int res = 0;
+    worker_t *worker = NULL;
+
+    if (!client || !message) {
+        LOG("error: %s() invalid parameters.", __FUNCTION__);
+        goto exit_error;
+    }
+
+    worker = worker_listener_get_worker_from_heap();
+    if (!worker) {
+        LOG("connections: couldn't get any worker.");
+        goto exit_error;
+    }
+
+    rc = worker_listener_send_build_order(worker, client, message);
+    if (rc == -1) {
+        LOG("connections: couldn't send build order");
+        goto exit_error;
+    }
+
+    worker_listener_increment_builds_count(worker);
+    worker_listener_add_client_to_list(worker, client);
+    worker_listener_add_worker_to_heap(worker);
+
+    return;
+
+exit_error:
+    client_listener_send_build_res(client, -1, 0);
+}
+
+static void connections_process_build_done(worker_t* worker,
+                                           build_order_done_msg_t* message)
+{
+    int status = 0;
+    int reason = 0;
+
+    if (!worker || !message) {
+        LOG("error: %s() invalid parameters.", __FUNCTION__);
+        return;
+    }
+
+    status = message->status;
+    reason = message->reason;
+
+    client_t *client =
+            worker_listener_get_client_from_address(worker,
+                                                    &message->build_order.client_addr);
+
+    if (!client) {
+        LOG("connections: couldn't find client");
+        return;
+    }
+
+    client_listener_send_build_res(client, status, reason);
+    worker_listener_decrement_builds_count(worker);
 }
