@@ -303,7 +303,7 @@ void worker_listener_increment_builds_count(worker_t *worker)
     }
 
     worker->no_current_builds++;
-    heap_update_node_key(worker_heap, &(worker->heap_node), worker->no_current_builds);
+    worker->heap_node.heap_key = worker->no_current_builds;
 }
 
 void worker_listener_decrement_builds_count(worker_t *worker)
