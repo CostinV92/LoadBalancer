@@ -13,8 +13,6 @@ typedef struct worker_listener {
     int                     socket;
     struct sockaddr_in      server;
     list_t                  *worker_list;
-
-    pthread_t               thread_id;
 } worker_listener_t;
 
 void worker_listener_init();
