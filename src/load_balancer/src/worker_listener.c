@@ -30,6 +30,7 @@ heap_t *worker_heap;
 extern void clean_exit(int status);
 
 static void worker_listener_create();
+static void worker_listener_new_max_socket();
 
 void worker_listener_init()
 {
@@ -117,6 +118,9 @@ void worker_listener_new_worker(int worker_socket,
     worker->addr = *worker_addr;
     worker->alive = 1;
 
+    if (worker_socket > worker_listener->max_socket)
+        worker_listener->max_socket = worker_socket;
+
     list_node_init(&worker->list_node);
     list_add_back(worker_listener->worker_list, &worker->list_node);
 
@@ -142,6 +146,9 @@ void worker_listener_free_worker(worker_t *worker)
         clean_exit(-1);
     }
 
+    if (worker->socket == worker_listener->max_socket)
+        worker_listener_new_max_socket();
+
     connections_unregister_socket(worker->socket);
 
     heap_update_node_key(worker_heap, &worker->heap_node, -1);
@@ -151,6 +158,36 @@ void worker_listener_free_worker(worker_t *worker)
     list_delete(&worker->client_list);
 
     free(worker);
+}
+
+int worker_listener_get_max_socket()
+{
+    if (!worker_listener) {
+        LOG("error: %s() worker_listener not initialized.");
+        clean_exit(-1);
+    }
+
+    return worker_listener->max_socket;
+}
+
+static void worker_listener_new_max_socket()
+{
+    int max_socket = 0;
+    list_it *it = NULL;
+    worker_t *worker = NULL;
+
+    if (!worker_listener || !worker_listener->worker_list) {
+        LOG("error: %s() worker_listener not initialized.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    list_iterate(worker_listener->worker_list, it) {
+        worker = info_from_it(it, list_node, worker_t);
+        if (worker->socket > max_socket)
+            max_socket = worker->socket;
+    }
+
+    worker_listener->max_socket = max_socket;
 }
 
 void worker_listener_check_worker_sockets(int *num_socks, fd_set *read_sockets)

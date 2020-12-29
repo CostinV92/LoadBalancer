@@ -21,6 +21,7 @@ client_listener_t *client_listener;
 extern void clean_exit(int status);
 
 static void client_listener_create();
+static void client_listener_new_max_socket();
 
 void client_listener_init()
 {
@@ -102,6 +103,9 @@ void client_listener_new_client(int client_socket,
     client->socket = client_socket;
     client->addr = *client_addr;
 
+    if (client_socket > client_listener->max_socket)
+        client_listener->max_socket = client_socket;
+
     list_node_init(&client->list_node);
     list_add_back(client_listener->client_list, &client->list_node);
 
@@ -123,10 +127,43 @@ void client_listener_free_client(client_t *client)
         clean_exit(-1);
     }
 
+    if (client->socket == client_listener->max_socket)
+        client_listener_new_max_socket();
+
     connections_unregister_socket(client->socket);
 
     list_node_delete(list, &client->list_node);
     free(client);
+}
+
+int client_listener_get_max_socket()
+{
+    if (!client_listener) {
+        LOG("error: %s() client_listener not initialized.");
+        clean_exit(-1);
+    }
+
+    return client_listener->max_socket;
+}
+
+static void client_listener_new_max_socket()
+{
+    int max_socket = 0;
+    list_it *it = NULL;
+    client_t *client = NULL;
+
+    if (!client_listener || !client_listener->client_list) {
+        LOG("error: %s() client_listener not initialized.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    list_iterate(client_listener->client_list, it) {
+        client = info_from_it(it, list_node, client_t);
+        if (client->socket > max_socket)
+            max_socket = client->socket;
+    }
+
+    client_listener->max_socket = max_socket;
 }
 
 void client_listener_check_client_sockets(int *num_socks, fd_set *read_sockets)

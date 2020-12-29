@@ -149,9 +149,22 @@ static void connections_register_worker(int worker_socket, struct sockaddr_in *w
 
 void connections_unregister_socket(int socket)
 {
+    int client_max_socket = 0;
+    int worker_max_socket = 0;
+
     if (!socket) {
         LOG("connections: %s() invalid parameter.", __FUNCTION__);
         return;
+    }
+
+    if (socket == connections.max_socket) {
+        client_max_socket = client_listener_get_max_socket();
+        worker_max_socket = worker_listener_get_max_socket();
+
+        if (client_max_socket > worker_max_socket)
+            connections.max_socket = client_max_socket;
+        else
+            connections.max_socket = worker_max_socket;
     }
 
     FD_CLR(socket, &connections.sockets);
