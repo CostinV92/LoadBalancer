@@ -16,9 +16,30 @@ struct client {
     list_node_t             list_worker_node;
 };
 
+client_listener_t *client_listener;
+
 extern void clean_exit(int status);
 
-client_listener_t *client_listener;
+static void client_listener_create();
+
+void client_listener_init()
+{
+    int socket = 0;
+
+    client_listener = calloc(1, sizeof(client_listener_t));
+    if (!client_listener) {
+        LOG("Error: %s() cannot allocate memory.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    client_listener->client_list = list_new();
+    if (!client_listener->client_list) {
+        LOG("Error: %s() cannot allocate client list.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    client_listener_create();
+}
 
 static void client_listener_create()
 {
@@ -62,25 +83,6 @@ static void client_listener_create()
     // save listener info
     client_listener->socket = server_socket;
     client_listener->server = server;
-}
-
-void client_listener_init()
-{
-    int socket = 0;
-
-    client_listener = calloc(1, sizeof(client_listener_t));
-    if (!client_listener) {
-        LOG("Error: %s() cannot allocate memory.", __FUNCTION__);
-        clean_exit(-1);
-    }
-
-    client_listener->client_list = list_new();
-    if (!client_listener->client_list) {
-        LOG("Error: %s() cannot allocate client list.", __FUNCTION__);
-        clean_exit(-1);
-    }
-
-    client_listener_create();
 }
 
 void client_listener_new_client(int client_socket,
@@ -169,6 +171,16 @@ void client_listener_check_client_sockets(int *num_socks, fd_set *read_sockets)
     }
 }
 
+list_t* client_listener_get_client_list()
+{
+    if (!client_listener || !(client_listener->client_list)) {
+        LOG("error: %s() client_listener not initialized.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    return client_listener->client_list;
+}
+
 void client_listener_add_client_to_list(list_t *list, client_t *client)
 {
     if (!list || !client) {
@@ -200,16 +212,6 @@ client_t *client_listener_get_client_from_address(list_t *list,
     }
 
     return NULL;
-}
-
-list_t* client_listener_get_client_list()
-{
-    if (!client_listener || !(client_listener->client_list)) {
-        LOG("error: %s() client_listener not initialized.", __FUNCTION__);
-        clean_exit(-1);
-    }
-
-    return client_listener->client_list;
 }
 
 int send_build_res(client_t* client, int status, int reason)

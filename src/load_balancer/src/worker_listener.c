@@ -11,8 +11,6 @@
 #include "libutils.h"
 #include "connections.h"
 
-extern void clean_exit(int status);
-
 typedef struct worker {
     heap_node_t             heap_node;
 
@@ -26,11 +24,12 @@ typedef struct worker {
     list_t                  *client_list;
 } worker_t;
 
-static void worker_listener_create();
-
-
 worker_listener_t *worker_listener;
 heap_t *worker_heap;
+
+extern void clean_exit(int status);
+
+static void worker_listener_create();
 
 void worker_listener_init()
 {
@@ -55,16 +54,6 @@ void worker_listener_init()
     }
 
     worker_listener_create();
-}
-
-list_t* worker_listener_get_worker_list()
-{
-    if (!worker_listener || !(worker_listener->worker_list)) {
-        LOG("error: %s() worker_listener not initialized.", __FUNCTION__);
-        clean_exit(-1);
-    }
-
-    return worker_listener->worker_list;
 }
 
 static void worker_listener_create()
@@ -204,6 +193,16 @@ void worker_listener_check_worker_sockets(int *num_socks, fd_set *read_sockets)
                 return;
         }
     }
+}
+
+list_t* worker_listener_get_worker_list()
+{
+    if (!worker_listener || !(worker_listener->worker_list)) {
+        LOG("error: %s() worker_listener not initialized.", __FUNCTION__);
+        clean_exit(-1);
+    }
+
+    return worker_listener->worker_list;
 }
 
 client_t *worker_listener_get_client_from_address(worker_t *worker,

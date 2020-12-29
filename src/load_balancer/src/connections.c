@@ -19,57 +19,39 @@ typedef struct connections {
     worker_listener_t   *worker_listener;
 } connections_t;
 
-int send_build_res(client_t*, int, int);
-
 extern client_listener_t *client_listener;
 extern worker_listener_t *worker_listener;
 
 extern void clean_exit(int status);
 
+static void connections_listen();
+static void register_client(int client_socket, struct sockaddr_in *client_addr);
+static void register_worker(int worker_socket, struct sockaddr_in *worker_addr);
+
 connections_t connections;
 
-static void register_client(int client_socket,
-                            struct sockaddr_in *client_addr)
+void connections_start_listening()
 {
-    if (!client_socket || !client_addr) {
-        LOG("Error: %s() invalid arguments.", __FUNCTION__);
-        return;
+    if (!client_listener) {
+        LOG("Error: %s() client_listener not initialized.", __FUNCTION__);
+        clean_exit(-1);
     }
 
-    client_listener_new_client(client_socket, client_addr);
-    FD_SET(client_socket, &connections.sockets);
-
-    if (client_socket > connections.max_socket)
-        connections.max_socket = client_socket;
-
-    LOG("Client: %s registered.", utils_format_ip_addr(client_addr));
-}
-
-static void register_worker(int worker_socket,
-                            struct sockaddr_in *worker_addr)
-{
-    if (!worker_socket || !worker_addr) {
-        LOG("Error: %s() invalid arguments.", __FUNCTION__);
-        return;
+    if (!worker_listener) {
+        LOG("Error: %s() worker_listener not initialized.", __FUNCTION__);
     }
 
-    worker_listener_new_worker(worker_socket, worker_addr);
-    FD_SET(worker_socket, &connections.sockets);
-    if (worker_socket > connections.max_socket)
-        connections.max_socket = worker_socket;
+    connections.max_socket = client_listener->socket > worker_listener->socket ?
+                                    client_listener->socket : worker_listener->socket;
+    FD_ZERO(&connections.sockets);
+    FD_SET(client_listener->socket, &connections.sockets);
+    FD_SET(worker_listener->socket, &connections.sockets);
 
-    LOG("Worker: %s registered.", utils_format_ip_addr(worker_addr));
-}
+    connections.client_listener = client_listener;
+    connections.worker_listener = worker_listener;
 
-void connections_unregister_socket(int socket)
-{
-    if (!socket) {
-        LOG("connections: %s() invalid parameter.", __FUNCTION__);
-        return;
-    }
-
-    FD_CLR(socket, &connections.sockets);
-    close(socket);
+    LOG("Starting listening...");
+    connections_listen(&connections);
 }
 
 static void connections_listen()
@@ -134,28 +116,46 @@ static void connections_listen()
     }
 }
 
-void connections_start_listening()
+static void register_client(int client_socket, struct sockaddr_in *client_addr)
 {
-    if (!client_listener) {
-        LOG("Error: %s() client_listener not initialized.", __FUNCTION__);
-        clean_exit(-1);
+    if (!client_socket || !client_addr) {
+        LOG("Error: %s() invalid arguments.", __FUNCTION__);
+        return;
     }
 
-    if (!worker_listener) {
-        LOG("Error: %s() worker_listener not initialized.", __FUNCTION__);
+    client_listener_new_client(client_socket, client_addr);
+    FD_SET(client_socket, &connections.sockets);
+
+    if (client_socket > connections.max_socket)
+        connections.max_socket = client_socket;
+
+    LOG("Client: %s registered.", utils_format_ip_addr(client_addr));
+}
+
+static void register_worker(int worker_socket, struct sockaddr_in *worker_addr)
+{
+    if (!worker_socket || !worker_addr) {
+        LOG("Error: %s() invalid arguments.", __FUNCTION__);
+        return;
     }
 
-    connections.max_socket = client_listener->socket > worker_listener->socket ?
-                                    client_listener->socket : worker_listener->socket;
-    FD_ZERO(&connections.sockets);
-    FD_SET(client_listener->socket, &connections.sockets);
-    FD_SET(worker_listener->socket, &connections.sockets);
+    worker_listener_new_worker(worker_socket, worker_addr);
+    FD_SET(worker_socket, &connections.sockets);
+    if (worker_socket > connections.max_socket)
+        connections.max_socket = worker_socket;
 
-    connections.client_listener = client_listener;
-    connections.worker_listener = worker_listener;
+    LOG("Worker: %s registered.", utils_format_ip_addr(worker_addr));
+}
 
-    LOG("Starting listening...");
-    connections_listen(&connections);
+void connections_unregister_socket(int socket)
+{
+    if (!socket) {
+        LOG("connections: %s() invalid parameter.", __FUNCTION__);
+        return;
+    }
+
+    FD_CLR(socket, &connections.sockets);
+    close(socket);
 }
 
 static void process_build_done(worker_t* worker, build_order_done_msg_t* message)
