@@ -33,7 +33,9 @@ list_node_t *list_node_from_it(list_it *it);
         !list_end(it);              \
         list_next(&it))             \
 
-#define info_from_node(node, node_name, type)   ((type *)((char *)node - (char *)(&(((type *)0)->node_name))))
-#define info_from_it(it, node_name, type)       (info_from_node(list_node_from_it(it), node_name, type))
+#define list_info_from_node(node, node_name, type)  ((type *)((char *)node - \
+                                                     (char *)(&(((type *)0)->node_name))))
+#define list_info_from_it(it, node_name, type)      (list_info_from_node(list_node_from_it(it), \
+                                                                         node_name, type))
 
 #endif

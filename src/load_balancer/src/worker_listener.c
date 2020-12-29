@@ -182,7 +182,7 @@ static void worker_listener_new_max_socket()
     }
 
     list_iterate(worker_listener->worker_list, it) {
-        worker = info_from_it(it, list_node, worker_t);
+        worker = list_info_from_it(it, list_node, worker_t);
         if (worker->socket > max_socket)
             max_socket = worker->socket;
     }
@@ -204,7 +204,7 @@ void worker_listener_check_worker_sockets(int *num_socks, fd_set *read_sockets)
 
     worker_list = worker_listener_get_worker_list();
     list_iterate(worker_list, list_it) {
-        worker = info_from_it(list_it, list_node, worker_t);
+        worker = list_info_from_it(list_it, list_node, worker_t);
 
         if (FD_ISSET(worker->socket, read_sockets)) {
             char buffer[MAX_MESSAGE_SIZE] = {0};

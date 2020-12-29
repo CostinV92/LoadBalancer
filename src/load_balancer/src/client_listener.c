@@ -158,7 +158,7 @@ static void client_listener_new_max_socket()
     }
 
     list_iterate(client_listener->client_list, it) {
-        client = info_from_it(it, list_node, client_t);
+        client = list_info_from_it(it, list_node, client_t);
         if (client->socket > max_socket)
             max_socket = client->socket;
     }
@@ -180,19 +180,19 @@ void client_listener_check_client_sockets(int *num_socks, fd_set *read_sockets)
 
     client_list = client_listener_get_client_list();
     list_iterate(client_list, list_it) {
-        client = info_from_it(list_it, list_node, client_t);
+        client = list_info_from_it(list_it, list_node, client_t);
 
         if (FD_ISSET(client->socket, read_sockets)) {
             char buffer[MAX_MESSAGE_SIZE] = {0};
 
             rc = utils_receive_message_from_socket(client->socket, buffer);
             if (rc == -1) {
-                LOG("worker_listener: %s() error on receiving from %s.",
+                LOG("client_listener: %s() error on receiving from %s.",
                     __FUNCTION__, utils_format_ip_addr(&client->addr));
                 client_listener_free_client(client);
                 return;
             } else if (rc == 1) {
-                LOG("worker_listener: %s closed connection.",
+                LOG("client_listener: %s closed connection.",
                     utils_format_ip_addr(&client->addr));
                 client_listener_free_client(client);
                 return;
@@ -241,7 +241,7 @@ client_t *client_listener_get_client_from_address(list_t *list,
     }
 
     list_iterate(list, it) {
-        client = info_from_it(it, list_worker_node, client_t);
+        client = list_info_from_it(it, list_worker_node, client_t);
         if (memcmp(&client->addr, client_addr, sizeof(struct sockaddr_in)) == 0) {
             list_node_delete(list, &client->list_worker_node);
             return client;
