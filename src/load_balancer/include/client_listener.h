@@ -16,7 +16,7 @@ typedef struct client_listener {
     pthread_t               thread_id;
 } client_listener_t;
 
-void init_client_listener();
+void client_listener_init();
 void client_listener_new_client(int client_socket,
                                 struct sockaddr_in *client_addr);
 list_t* client_listener_get_client_list();

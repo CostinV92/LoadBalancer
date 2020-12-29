@@ -26,13 +26,13 @@ typedef struct worker {
     list_t                  *client_list;
 } worker_t;
 
-void create_worker_listener();
+static void worker_listener_create();
 
 
 worker_listener_t *worker_listener;
 heap_t *worker_heap;
 
-void init_worker_listener()
+void worker_listener_init()
 {
     int socket = 0;
 
@@ -54,7 +54,7 @@ void init_worker_listener()
         clean_exit(-1);
     }
 
-    create_worker_listener();
+    worker_listener_create();
 }
 
 list_t* worker_listener_get_worker_list()
@@ -67,7 +67,7 @@ list_t* worker_listener_get_worker_list()
     return worker_listener->worker_list;
 }
 
-void create_worker_listener()
+static void worker_listener_create()
 {
     int server_socket, port, iSetOption = 1;
     struct sockaddr_in server_addr;

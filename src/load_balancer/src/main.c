@@ -45,9 +45,9 @@ int main()
         printf("WARNING: the log file could not be opened!\n");
     }
 
-    init_client_listener();
-    init_worker_listener();
-    start_listening();
+    client_listener_init();
+    worker_listener_init();
+    connections_start_listening();
 
     return 0;
 }

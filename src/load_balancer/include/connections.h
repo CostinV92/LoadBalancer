@@ -3,7 +3,7 @@
 
 #include "messages.h"
 
-void start_listening();
+void connections_start_listening();
 void connections_unregister_socket(int client_socket);
 void connections_process_message(void* peer, header_t* message, char* ip_addr);
 

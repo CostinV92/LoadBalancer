@@ -20,7 +20,7 @@ extern void clean_exit(int status);
 
 client_listener_t *client_listener;
 
-static void create_client_listener()
+static void client_listener_create()
 {
     int server_socket, port, iSetOption = 1;
     struct sockaddr_in server;
@@ -64,7 +64,7 @@ static void create_client_listener()
     client_listener->server = server;
 }
 
-void init_client_listener()
+void client_listener_init()
 {
     int socket = 0;
 
@@ -80,7 +80,7 @@ void init_client_listener()
         clean_exit(-1);
     }
 
-    create_client_listener();
+    client_listener_create();
 }
 
 void client_listener_new_client(int client_socket,
@@ -232,7 +232,12 @@ int send_build_res(client_t* client, int status, int reason)
     return 1;
 }
 
+/* TODO(victor): rewrite this see where it's called" */
 struct sockaddr_in client_listener_get_client_addr(client_t *client)
 {
+    if (!client) {
+        LOG("client_listener: %s() invalid paramameter.", __FUNCTION__);
+    }
+
     return client->addr;
 }

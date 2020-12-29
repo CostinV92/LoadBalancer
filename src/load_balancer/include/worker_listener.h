@@ -17,7 +17,7 @@ typedef struct worker_listener {
     pthread_t               thread_id;
 } worker_listener_t;
 
-void init_worker_listener();
+void worker_listener_init();
 void worker_listener_new_worker(int worker_socket,
                                 struct sockaddr_in *worker_addr);
 list_t* worker_listener_get_worker_list();

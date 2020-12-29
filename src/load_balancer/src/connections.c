@@ -72,7 +72,7 @@ void connections_unregister_socket(int socket)
     close(socket);
 }
 
-static void listen_connections()
+static void connections_listen()
 {
     int rc = 0;
     int worker_socket = 0;
@@ -134,7 +134,7 @@ static void listen_connections()
     }
 }
 
-void start_listening()
+void connections_start_listening()
 {
     if (!client_listener) {
         LOG("Error: %s() client_listener not initialized.", __FUNCTION__);
@@ -155,7 +155,7 @@ void start_listening()
     connections.worker_listener = worker_listener;
 
     LOG("Starting listening...");
-    listen_connections(&connections);
+    connections_listen(&connections);
 }
 
 static void process_build_done(worker_t* worker, build_order_done_msg_t* message)

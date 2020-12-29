@@ -33,4 +33,7 @@ $(MOD_DIR):
 
 clean:
 	rm -rf $(OBJ_DIR)
+	@echo
 	rm -rf $(BIN_DIR)
+	@echo
+	rm -rf $(LIB_DIR)
