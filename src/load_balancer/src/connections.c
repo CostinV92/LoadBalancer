@@ -25,8 +25,8 @@ extern worker_listener_t *worker_listener;
 extern void clean_exit(int status);
 
 static void connections_listen();
-static void register_client(int client_socket, struct sockaddr_in *client_addr);
-static void register_worker(int worker_socket, struct sockaddr_in *worker_addr);
+static void connections_register_client(int client_socket, struct sockaddr_in *client_addr);
+static void connections_register_worker(int worker_socket, struct sockaddr_in *worker_addr);
 
 connections_t connections;
 
@@ -80,7 +80,7 @@ static void connections_listen()
                     LOG("Error: %s() error accepting client socket.", __FUNCTION__);
                     clean_exit(-1);
                 } else {
-                    register_client(client_socket, &addr);
+                    connections_register_client(client_socket, &addr);
                 }
 
                 rc--;
@@ -97,7 +97,7 @@ static void connections_listen()
                     LOG("Error: %s() error accepting worker socket.", __FUNCTION__);
                     clean_exit(-1);
                 } else {
-                    register_worker(worker_socket, &addr);
+                    connections_register_worker(worker_socket, &addr);
                 }
 
                 rc--;
@@ -116,7 +116,7 @@ static void connections_listen()
     }
 }
 
-static void register_client(int client_socket, struct sockaddr_in *client_addr)
+static void connections_register_client(int client_socket, struct sockaddr_in *client_addr)
 {
     if (!client_socket || !client_addr) {
         LOG("Error: %s() invalid arguments.", __FUNCTION__);
@@ -132,7 +132,7 @@ static void register_client(int client_socket, struct sockaddr_in *client_addr)
     LOG("Client: %s registered.", utils_format_ip_addr(client_addr));
 }
 
-static void register_worker(int worker_socket, struct sockaddr_in *worker_addr)
+static void connections_register_worker(int worker_socket, struct sockaddr_in *worker_addr)
 {
     if (!worker_socket || !worker_addr) {
         LOG("Error: %s() invalid arguments.", __FUNCTION__);
