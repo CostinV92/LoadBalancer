@@ -132,33 +132,37 @@ static void connections_listen()
 
 static void connections_register_client(int client_socket, struct sockaddr_in *client_addr)
 {
+    client_t *client = NULL;
+
     if (!client_socket || !client_addr) {
         LOG("Error: %s() invalid arguments.", __FUNCTION__);
         return;
     }
 
-    client_listener_new_client(client_socket, client_addr);
+    client = client_listener_new_client(client_socket, client_addr);
     FD_SET(client_socket, &connections.sockets);
 
     if (client_socket > connections.max_socket)
         connections.max_socket = client_socket;
 
-    LOG("connections: client %s registered.", utils_format_ip_addr(client_addr));
+    LOG("connections: client %s registered.", client_listener_get_ip_addr(client));
 }
 
 static void connections_register_worker(int worker_socket, struct sockaddr_in *worker_addr)
 {
+    worker_t *worker = NULL;
+
     if (!worker_socket || !worker_addr) {
         LOG("Error: %s() invalid arguments.", __FUNCTION__);
         return;
     }
 
-    worker_listener_new_worker(worker_socket, worker_addr);
+    worker = worker_listener_new_worker(worker_socket, worker_addr);
     FD_SET(worker_socket, &connections.sockets);
     if (worker_socket > connections.max_socket)
         connections.max_socket = worker_socket;
 
-    LOG("connections: worker %s registered.", utils_format_ip_addr(worker_addr));
+    LOG("connections: worker %s registered.", worker_listener_get_ip_addr(worker));
 }
 
 void connections_unregister_socket(int socket)

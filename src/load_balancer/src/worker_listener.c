@@ -15,10 +15,10 @@ typedef struct worker {
 
     int                     socket;
     struct sockaddr_in      addr;
+    char                    ip_addr[MAX_IP_ADDR_SIZE];
     list_node_t             list_node;
 
     int                     no_current_builds;
-    int                     alive;
 
     list_t                  *client_list;
 } worker_t;
@@ -124,12 +124,12 @@ static void worker_listener_create()
     worker_listener->server = server_addr;
 }
 
-void worker_listener_new_worker(int worker_socket,
-                                struct sockaddr_in *worker_addr)
+worker_t *worker_listener_new_worker(int worker_socket,
+                                     struct sockaddr_in *worker_addr)
 {
     if (!worker_listener) {
         LOG("Error: %s() worker_listener not initialized.");
-        return;
+        return NULL;
     }
 
     worker_t* worker = calloc(1, sizeof(worker_t));
@@ -140,7 +140,7 @@ void worker_listener_new_worker(int worker_socket,
 
     worker->socket = worker_socket;
     worker->addr = *worker_addr;
-    worker->alive = 1;
+    utils_format_ip_addr(worker_addr, worker->ip_addr);
 
     if (worker_socket > worker_listener->max_socket)
         worker_listener->max_socket = worker_socket;
@@ -152,7 +152,9 @@ void worker_listener_new_worker(int worker_socket,
 
     worker_listener_add_worker_to_heap(worker);
 
-    LOG("Worker: new worker %s.", utils_format_ip_addr(worker_addr));
+    LOG("Worker: new worker %s.", worker->ip_addr);
+
+    return worker;
 }
 
 static void worker_listener_free_worker(worker_t *worker)
@@ -226,19 +228,19 @@ void worker_listener_check_worker_sockets(int *num_socks, fd_set *read_sockets)
             rc = utils_receive_message_from_socket(worker->socket, (header_t *)buffer);
             if (rc == -1) {
                 LOG("worker_listener: %s() error on receiving from %s.",
-                    __FUNCTION__, utils_format_ip_addr(&worker->addr));
+                    __FUNCTION__, worker->ip_addr);
                 worker_listener_free_worker(worker);
                 return;
             } else if (rc == 1) {
                 LOG("worker_listener: %s closed connection.",
-                    utils_format_ip_addr(&worker->addr));
+                    worker->ip_addr);
                 worker_listener_free_worker(worker);
                 return;
             }
 
             connections_process_message(worker,
                                         (header_t *)buffer,
-                                        utils_format_ip_addr(&worker->addr));
+                                        worker->ip_addr);
             (*num_socks)--;
             if (*num_socks == 0)
                 return;
@@ -273,12 +275,12 @@ int worker_listener_send_build_order(worker_t* worker,
     if (rc == -1) {
         LOG("error: %s() could not send message to %s.",
             __FUNCTION__,
-            utils_format_ip_addr(&worker->addr));
+            worker->ip_addr);
         return -1;
     }
 
     LOG("worker_listener: sent WORKER_BUILD_ORDER to %s",
-        utils_format_ip_addr(&worker->addr));
+        worker->ip_addr);
     return rc;
 }
 
@@ -362,6 +364,16 @@ void worker_listener_add_client_to_list(worker_t *worker, client_t *client)
     }
 
     client_listener_add_client_to_list(worker->client_list, client);
+}
+
+const char *worker_listener_get_ip_addr(worker_t *worker)
+{
+    if (!worker) {
+        LOG("error: %s() invalid parameter.");
+        return NULL;
+    }
+
+    return worker->ip_addr;
 }
 
 client_t *worker_listener_get_client_from_address(worker_t *worker,

@@ -13,6 +13,7 @@
 struct client {
     int                     socket;
     struct sockaddr_in      addr;
+    char                    ip_addr[MAX_IP_ADDR_SIZE];
     list_node_t             list_node;
     list_node_t             list_worker_node;
 };
@@ -110,12 +111,12 @@ static void client_listener_create()
     client_listener->server = server;
 }
 
-void client_listener_new_client(int client_socket,
-                                struct sockaddr_in *client_addr)
+client_t *client_listener_new_client(int client_socket,
+                                     struct sockaddr_in *client_addr)
 {
     if (!client_listener) {
         LOG("Error: %s() client_listener not initialized.");
-        return;
+        return NULL;
     }
 
     client_t* client = calloc(1, sizeof(client_t));
@@ -126,6 +127,7 @@ void client_listener_new_client(int client_socket,
 
     client->socket = client_socket;
     client->addr = *client_addr;
+    utils_format_ip_addr(client_addr, client->ip_addr);
 
     if (client_socket > client_listener->max_socket)
         client_listener->max_socket = client_socket;
@@ -133,7 +135,9 @@ void client_listener_new_client(int client_socket,
     list_node_init(&client->list_node);
     list_add_back(client_listener->client_list, &client->list_node);
 
-    LOG("client_listener: new client %s.", utils_format_ip_addr(client_addr));
+    LOG("client_listener: new client %s.", client->ip_addr);
+
+    return client;
 }
 
 static void client_listener_free_client(client_t *client)
@@ -202,19 +206,19 @@ void client_listener_check_client_sockets(int *num_socks, fd_set *read_sockets)
             rc = utils_receive_message_from_socket(client->socket, (header_t *)buffer);
             if (rc == -1) {
                 LOG("client_listener: %s() error on receiving from %s.",
-                    __FUNCTION__, utils_format_ip_addr(&client->addr));
+                    __FUNCTION__, client->ip_addr);
                 client_listener_free_client(client);
                 return;
             } else if (rc == 1) {
                 LOG("client_listener: %s closed connection.",
-                    utils_format_ip_addr(&client->addr));
+                    client->ip_addr);
                 client_listener_free_client(client);
                 return;
             }
 
             connections_process_message(client,
                                         (header_t *)buffer,
-                                        utils_format_ip_addr(&client->addr));
+                                        client->ip_addr);
             (*num_socks)--;
             if (*num_socks == 0)
                 return;
@@ -242,11 +246,11 @@ int client_listener_send_build_res(client_t* client, int status, int reason)
     if (rc == -1) {
         LOG("error: %s() could not send message to %s.",
             __FUNCTION__,
-            utils_format_ip_addr(&client->addr));
+            client->ip_addr);
         return -1;
     }
 
-    LOG("client_listener: sent BUILD_RES to %s", utils_format_ip_addr(&(client->addr)));
+    LOG("client_listener: sent BUILD_RES to %s", client->ip_addr);
 
     return rc;
 }
@@ -260,6 +264,16 @@ void client_listener_add_client_to_list(list_t *list, client_t *client)
 
     list_node_init(&client->list_worker_node);
     list_add_back(list, &client->list_worker_node);
+}
+
+const char *client_listener_get_ip_addr(client_t *client)
+{
+    if (!client) {
+        LOG("error: %s() invalid parameter.");
+        return NULL;
+    }
+
+    return client->ip_addr;
 }
 
 static list_t* client_listener_get_client_list()

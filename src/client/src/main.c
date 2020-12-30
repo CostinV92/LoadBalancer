@@ -119,16 +119,18 @@ void* start_server(void* arg)
     int iSetOption = 1;
     int output_socket, client_len = sizeof(struct sockaddr_in), *socket = (int*)arg;
     struct sockaddr_in worker_addr;
+    char worker_ip_addr[MAX_IP_ADDR_SIZE];
 
     output_socket = accept(output_listener.socket,
                            (struct sockaddr*)&worker_addr,
                            &client_len);
+    utils_format_ip_addr(&worker_addr, worker_ip_addr);
+
     if (output_socket < 0) {
         LOG("Error: %s() error on accepting output.", __FUNCTION__);
         clean_exit(-1);
     } else {
-        LOG("Worker connected to output socket, ip: %s",
-            utils_format_ip_addr(&worker_addr));
+        LOG("Worker connected to output socket, ip: %s", worker_ip_addr);
 
         for (;;) {
             int byte_read;

@@ -11,7 +11,6 @@
 #define MAX_LOG_FILE_PATH_SIZE 200
 
 static FILE *log_file;
-static char ip_string[20];
 
 static int utils_send_message_to_socket(int socket, header_t *message);
 static int utils_write_to_socket(int socket,
@@ -73,7 +72,7 @@ void LOG(char* format, ...)
     }
 }
 
-char* utils_format_ip_addr(struct sockaddr_in* addr)
+void utils_format_ip_addr(struct sockaddr_in* addr, char* output)
 {
     unsigned long ip = addr->sin_addr.s_addr;
     unsigned short b1, b2, b3, b4;
@@ -83,9 +82,7 @@ char* utils_format_ip_addr(struct sockaddr_in* addr)
     b3 = ip >> 8 & 0xff;
     b4 = ip & 0xff;
 
-    snprintf(ip_string, 20, "%d.%d.%d.%d", b1, b2, b3, b4);
-
-    return ip_string;
+    snprintf(output, MAX_IP_ADDR_SIZE, "%d.%d.%d.%d", b1, b2, b3, b4);
 }
 
 int utils_send_message(int socket,

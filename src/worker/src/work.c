@@ -58,6 +58,7 @@ void* start_build(void* arg)
     build_order_msg_t *message = (build_order_msg_t*)arg;
     struct sockaddr_in client_addr = message->client_addr;
     build_req_msg_t *request = &(message->request);
+    char client_ip_addr[MAX_IP_ADDR_SIZE];
 
     // first connect to the client
     if ((output_socket = connect_to_client(client_addr, request->listen_port)) == -1) {
@@ -66,7 +67,9 @@ void* start_build(void* arg)
         return NULL;
     }
 
-    LOG("Starting build for client %s", utils_format_ip_addr(&client_addr));
+    utils_format_ip_addr(&client_addr, client_ip_addr);
+
+    LOG("Starting build for client %s", client_ip_addr);
 
     // spawn a process to do the work and wait for it
     if ((pid = fork()) == -1) {
@@ -79,7 +82,7 @@ void* start_build(void* arg)
         waitpid(pid, &status, 0);
 
         LOG("Build for client %s it's over with status: %d",
-            utils_format_ip_addr(&client_addr), status);
+            client_ip_addr, status);
 
         send_build_done(message, 1, status);
     } else {

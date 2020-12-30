@@ -18,8 +18,8 @@ typedef struct worker_listener {
 
 void worker_listener_init();
 void worker_listener_destroy();
-void worker_listener_new_worker(int worker_socket,
-                                struct sockaddr_in *worker_addr);
+worker_t *worker_listener_new_worker(int worker_socket,
+                                     struct sockaddr_in *worker_addr);
 
 void worker_listener_check_worker_sockets(int *num_socks, fd_set *read_sockets);
 int worker_listener_send_build_order(worker_t* worker,
@@ -32,6 +32,7 @@ void worker_listener_increment_builds_count(worker_t *worker);
 void worker_listener_decrement_builds_count(worker_t *worker);
 
 void worker_listener_add_client_to_list(worker_t *worker, client_t *client);
+const char *worker_listener_get_ip_addr(worker_t *worker);
 client_t *worker_listener_get_client_from_address(worker_t *worker,
                                                   struct sockaddr_in *client_addr);
 int worker_listener_get_max_socket();
