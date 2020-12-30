@@ -20,20 +20,18 @@ extern void clean_exit();
 
 void wait_for_work()
 {
-    int bytes_read;
-    char buffer[2 * 256] = {0};
+    int rc = 0;
+    char buffer[MAX_MESSAGE_SIZE] = {0};
     for (;;) {
         // wait for messages
-        bytes_read = read(loadBalancer->socket, buffer, sizeof(buffer));
-        if (bytes_read > 0) {
-            LOG("Read %d bytes from LoadBalancer (needed %d)",
-                bytes_read,sizeof(build_order_msg_t));
-            process_message((header_t*)buffer);
-        } else {
-            LOG("Error: %s() error on reading from socket.", __FUNCTION__);
+        rc = utils_receive_message_from_socket(loadBalancer->socket, (header_t *)buffer);
+        if (rc != 0) {
+            LOG("error: %s() error on reading from socket.", __FUNCTION__);
             close(loadBalancer->socket);
             break;
         }
+
+        process_message((header_t*)buffer);
     }
 }
 

@@ -133,15 +133,16 @@ void* start_server(void* arg)
         LOG("Worker connected to output socket, ip: %s", worker_ip_addr);
 
         for (;;) {
-            int byte_read;
-            char buffer[2 * 256] = {0};
-            byte_read = read(output_socket, buffer, sizeof(buffer));
-            if (byte_read > 0) {
-                printf("%s", buffer);
-            } else {
+            int rc = 0;
+            char buffer[MAX_MESSAGE_SIZE] = {0};
+
+            rc = utils_receive_message_from_socket(output_socket, (header_t *)buffer);
+            if (rc != 0) {
                 close(output_socket);
                 break;
             }
+
+            printf("%s", buffer);
         }
 
         LOG("Worker disconnected from output socket");
@@ -202,16 +203,16 @@ void send_request()
                        (char*)&req);
 
     for (;;) {
-        int byte_read;
-        char buffer[2 * 256] = {0};
-        byte_read = read(loadBalancer.socket, buffer, sizeof(buffer));
-        if (byte_read > 0) {
-            process_message((header_t *)buffer);
-        } else {
-            LOG("Warning: lost connection with load balancer");
+        int rc = 0;
+        char buffer[MAX_MESSAGE_SIZE] = {0};
+        rc = utils_receive_message_from_socket(loadBalancer.socket, (header_t *)buffer);
+        if (rc != 0) {
+            LOG("error: lost connection with load balancer");
             close(loadBalancer.socket);
             break;
         }
+
+        process_message((header_t *)buffer);
     }
 }
 
