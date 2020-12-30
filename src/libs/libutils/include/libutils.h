@@ -6,7 +6,7 @@
 #include "messages.h"
 
 #define MAX_MESSAGE_SIZE 512
-#define MAX_IP_ADDR_SIZE  15
+#define MAX_IP_ADDR_SIZE  16
 
 int utils_init_log(char *log_file_path, int path_size);
 void utils_close_log();
