@@ -8,12 +8,15 @@
 #include <pthread.h>
 
 #include "registration.h"
-#include "utils.h"
+#include "libutils.h"
 #include "work.h"
 
 static void* start_build(void* arg);
 static int connect_to_client(struct sockaddr_in client_addr, int client_port);
-static void send_build_done(build_order_msg_t *req, bool status, int reason);
+static void send_build_done(build_order_msg_t *req, int status, int reason);
+static void process_message(header_t* message);
+
+extern void clean_exit();
 
 void wait_for_work()
 {
@@ -23,7 +26,8 @@ void wait_for_work()
         // wait for messages
         bytes_read = read(loadBalancer->socket, buffer, sizeof(buffer));
         if (bytes_read > 0) {
-            LOG("Read %d bytes from LoadBalancer (needed %d)", bytes_read, sizeof(build_order_msg_t));
+            LOG("Read %d bytes from LoadBalancer (needed %d)",
+                bytes_read,sizeof(build_order_msg_t));
             process_message((header_t*)buffer);
         } else {
             LOG("Error: %s() error on reading from socket.", __FUNCTION__);
@@ -58,25 +62,26 @@ void* start_build(void* arg)
     // first connect to the client
     if ((output_socket = connect_to_client(client_addr, request->listen_port)) == -1) {
         // error on connecting to client for sending output
-        send_build_done(message, false, 5);
+        send_build_done(message, 0, 5);
         return NULL;
     }
 
-    LOG("Starting build for client %s", format_ip_addr(&client_addr));
+    LOG("Starting build for client %s", utils_format_ip_addr(&client_addr));
 
     // spawn a process to do the work and wait for it
     if ((pid = fork()) == -1) {
         LOG("Error:%s forking failed.", __FUNCTION__);
-        send_build_done(message, false, 6);
+        send_build_done(message, 0, 6);
     } else if (pid) {
         int status = 0;
         close(output_socket);
 
         waitpid(pid, &status, 0);
 
-        LOG("Build for client %s it's over with status: %d", format_ip_addr(&client_addr), status);
+        LOG("Build for client %s it's over with status: %d",
+            utils_format_ip_addr(&client_addr), status);
 
-        send_build_done(message, true, status);
+        send_build_done(message, 1, status);
     } else {
         dup2(output_socket, 1);
         close(output_socket);
@@ -85,14 +90,17 @@ void* start_build(void* arg)
     }
 }
 
-void send_build_done(build_order_msg_t *req, bool status, int reason)
+void send_build_done(build_order_msg_t *req, int status, int reason)
 {
     build_order_done_msg_t res;
     res.build_order = *req;
     res.status = status;
     res.reason = reason;
 
-    send_message(loadBalancer->socket, BUILD_DONE, sizeof(build_order_done_msg_t), (char*)&res);
+    utils_send_message(loadBalancer->socket,
+                       BUILD_DONE,
+                       sizeof(build_order_done_msg_t),
+                       (char*)&res);
 }
 
 int connect_to_client(struct sockaddr_in client_addr, int client_port)
@@ -105,13 +113,35 @@ int connect_to_client(struct sockaddr_in client_addr, int client_port)
         LOG("Error: %s() cannot open client output socket.", __FUNCTION__);
         return -1;
     }
-    setsockopt(client_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
+    setsockopt(client_socket,
+               SOL_SOCKET,
+               SO_REUSEADDR,
+               (char*)&iSetOption,
+               sizeof(iSetOption));
 
     client_addr.sin_port = htons(port);
-    if (connect(client_socket, (struct sockaddr *)&client_addr, sizeof(struct sockaddr_in)) == -1) {
+    if (connect(client_socket,
+                (struct sockaddr *)&client_addr,
+                sizeof(struct sockaddr_in)) == -1) {
         LOG("Error: %s() cannot connect to client.", __FUNCTION__);
         return -1;
     }
 
     return client_socket;
+}
+
+static void process_message(header_t* message)
+{
+    message_type_t msg_type = message->type;
+
+    switch (msg_type) {
+        case BUILD_ORDER:
+            LOG("got BUILD_ORDER");
+            process_build_order((void*)(message->buffer));
+            break;
+
+        default:
+            LOG("Error: %s() unknown message", __FUNCTION__);
+            break;
+    }
 }

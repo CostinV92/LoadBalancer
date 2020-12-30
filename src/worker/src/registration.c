@@ -8,10 +8,12 @@
 #include <arpa/inet.h>
 
 #include "registration.h"
-#include "utils.h"
+#include "libutils.h"
 
 static void connect_to_server();
 static void get_lb_address();
+
+extern void clean_exit();
 
 char lb_address[20];
 
