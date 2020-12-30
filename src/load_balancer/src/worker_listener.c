@@ -306,7 +306,7 @@ worker_t *worker_listener_get_worker_from_heap()
 
     heap_node = heap_pop(worker_heap);
     if (heap_node)
-        worker = INFO(heap_node, worker_t);
+        worker = heap_info_from_node(heap_node, heap_node, worker_t);
 
     if (!worker)
         LOG("worker_listener: no worker registered.");
