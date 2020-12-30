@@ -135,7 +135,7 @@ client_t *client_listener_new_client(int client_socket,
     list_node_init(&client->list_node);
     list_add_back(client_listener->client_list, &client->list_node);
 
-    LOG("client_listener: new client %s.", client->ip_addr);
+    LOG("client_listener: new client %s", client->ip_addr);
 
     return client;
 }

@@ -152,7 +152,7 @@ worker_t *worker_listener_new_worker(int worker_socket,
 
     worker_listener_add_worker_to_heap(worker);
 
-    LOG("Worker: new worker %s.", worker->ip_addr);
+    LOG("Worker: new worker %s", worker->ip_addr);
 
     return worker;
 }
