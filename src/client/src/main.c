@@ -9,8 +9,9 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "utils.h"
-#include "messages.h"
+#include "libutils.h"
+
+#define LOG_PATH "/tmp/client.log"
 
 typedef struct LOAD_BALANCER {
     int                     socket;
@@ -28,6 +29,9 @@ output_listener_t       output_listener;
 build_res_msg_t         build_res;
 char lb_address[20];
 int output_listen_port;
+
+static void clean_exit(int status);
+static void process_message(header_t* message);
 
 void create_server();
 void* start_server(void* arg);
@@ -76,7 +80,11 @@ void create_server()
         LOG("Error: %s() error on opening output listener socket.", __FUNCTION__);
         clean_exit(-1);
     }
-    setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
+    setsockopt(server_socket,
+               SOL_SOCKET,
+               SO_REUSEADDR,
+               (char*)&iSetOption,
+               sizeof(iSetOption));
 
     // init address structure
     memset(&server, 0, sizeof(struct sockaddr_in));
@@ -90,13 +98,14 @@ void create_server()
 
     // bind the socket with the address
     if (bind(server_socket, (struct sockaddr*)&server, sizeof(struct sockaddr_in)) < 0 ) {
-        LOG("Error: %s() error on binding output listener socket.", __FUNCTION__);
+        LOG("Error: %s() error on binding output listener socket.",__FUNCTION__);
         clean_exit(-1);
     }
 
     // mark socket as pasive socket
     if (listen(server_socket, 20) < 0) {
-        LOG("Error: %s() error on marking output listener socket as passive.", __FUNCTION__);
+        LOG("Error: %s() error on marking output listener socket as passive.",
+            __FUNCTION__);
         clean_exit(-1);
     }
 
@@ -111,12 +120,15 @@ void* start_server(void* arg)
     int output_socket, client_len = sizeof(struct sockaddr_in), *socket = (int*)arg;
     struct sockaddr_in worker_addr;
 
-    output_socket = accept(output_listener.socket, (struct sockaddr*)&worker_addr, &client_len);
+    output_socket = accept(output_listener.socket,
+                           (struct sockaddr*)&worker_addr,
+                           &client_len);
     if (output_socket < 0) {
         LOG("Error: %s() error on accepting output.", __FUNCTION__);
         clean_exit(-1);
     } else {
-        LOG("Worker connected to output socket, ip: %s", format_ip_addr(&worker_addr));
+        LOG("Worker connected to output socket, ip: %s",
+            utils_format_ip_addr(&worker_addr));
 
         for (;;) {
             int byte_read;
@@ -142,7 +154,11 @@ void connect_to_lb()
     // create the socket
     lb_socket = socket(AF_INET, SOCK_STREAM, 0);
 
-    setsockopt(lb_socket, SOL_SOCKET, SO_REUSEADDR, (char*)&iSetOption, sizeof(iSetOption));
+    setsockopt(lb_socket,
+               SOL_SOCKET,
+               SO_REUSEADDR,
+               (char*)&iSetOption,
+               sizeof(iSetOption));
 
     if (lb_socket < 0) {
         LOG("Error: %s() error opening load balancer socket.", __FUNCTION__);
@@ -178,14 +194,17 @@ void send_request()
     build_req_msg_t req;
     req.listen_port = output_listen_port;
 
-    send_message(loadBalancer.socket, BUILD_REQ, sizeof(build_req_msg_t), (char*)&req);
+    utils_send_message(loadBalancer.socket,
+                       BUILD_REQ,
+                       sizeof(build_req_msg_t),
+                       (char*)&req);
 
     for (;;) {
         int byte_read;
         char buffer[2 * 256] = {0};
         byte_read = read(loadBalancer.socket, buffer, sizeof(buffer));
         if (byte_read > 0) {
-            process_message(buffer);
+            process_message((header_t *)buffer);
         } else {
             LOG("Warning: lost connection with load balancer");
             close(loadBalancer.socket);
@@ -227,6 +246,28 @@ void get_lb_address()
     }
 }
 
+void process_message(header_t* message)
+{
+    message_type_t msg_type = message->type;
+
+    switch (msg_type) {
+        case BUILD_RES:
+            LOG("got BUILD_RES");
+            process_build_res((void*)(message->buffer));
+            break;
+
+        default:
+            LOG("Warning: %s() unknown message.", __FUNCTION__);
+            break;
+    }
+}
+
+static void clean_exit(int status)
+{
+    /* TODO(victor) */
+    exit(status);
+}
+
 void sigint_handler()
 {
     pthread_cancel(output_listener.thread_id);
@@ -242,7 +283,7 @@ int main()
 {
     void *res;
     signal(SIGINT, sigint_handler);
-    if (init_log() != 0) {
+    if (utils_init_log(LOG_PATH, strlen(LOG_PATH)) != 0) {
         LOG("Error: the log file could not be opened!\n");
         clean_exit(-1);
     }
