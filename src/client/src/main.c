@@ -136,13 +136,14 @@ void* start_server(void* arg)
             int rc = 0;
             char buffer[MAX_MESSAGE_SIZE] = {0};
 
-            rc = utils_receive_message_from_socket(output_socket, (header_t *)buffer);
-            if (rc != 0) {
+            rc = read(output_socket, buffer, MAX_MESSAGE_SIZE);
+            if (rc > 0) {
+                printf("%s", buffer);
+            } else {
                 close(output_socket);
                 break;
             }
 
-            printf("%s", buffer);
         }
 
         LOG("Worker disconnected from output socket");
