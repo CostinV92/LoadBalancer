@@ -16,6 +16,7 @@ typedef struct client_listener {
 } client_listener_t;
 
 void client_listener_init();
+void client_listener_destroy();
 void client_listener_new_client(int client_socket,
                                 struct sockaddr_in *client_addr);
 

@@ -59,6 +59,15 @@ void connections_start_listening()
     connections_listen(&connections);
 }
 
+void connections_stop_listening()
+{
+    if (connections.worker_listener)
+        worker_listener_destroy();
+
+    if (connections.client_listener)
+        client_listener_destroy();
+}
+
 static void connections_listen()
 {
     int rc = 0;

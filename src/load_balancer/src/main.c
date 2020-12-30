@@ -16,9 +16,8 @@ extern worker_listener_t *worker_listener;
 
 void clean_exit(int status)
 {
-    close(client_listener->socket);
-    close(worker_listener->socket);
-
+    connections_stop_listening();
+    utils_close_log();
     exit(status);
 }
 
@@ -31,9 +30,6 @@ void signal_handler(int signum)
         default:
             break;
     }
-
-    write(1, "\n", 1);
-    exit(signum);
 }
 
 int main()

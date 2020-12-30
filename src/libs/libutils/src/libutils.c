@@ -39,6 +39,13 @@ int utils_init_log(char *log_file_path, int path_size)
     return 0;
 }
 
+void utils_close_log()
+{
+    if (log_file)
+        fclose(log_file);
+    log_file = NULL;
+}
+
 void LOG(char* format, ...)
 {
     if (log_file) {

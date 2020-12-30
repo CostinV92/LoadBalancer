@@ -17,6 +17,7 @@ typedef struct worker_listener {
 } worker_listener_t;
 
 void worker_listener_init();
+void worker_listener_destroy();
 void worker_listener_new_worker(int worker_socket,
                                 struct sockaddr_in *worker_addr);
 

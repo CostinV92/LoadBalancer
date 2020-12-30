@@ -18,6 +18,7 @@ typedef struct heap {
 } heap_t;
 
 heap_t* heap_init();
+void heap_destroy(heap_t **heap_p);
 
 void heap_push(heap_t*, heap_node_t*);
 heap_node_t* heap_pop(heap_t*);

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <netinet/in.h>
 
 #include "client_listener.h"
@@ -42,6 +43,27 @@ void client_listener_init()
     }
 
     client_listener_create();
+}
+
+void client_listener_destroy()
+{
+    client_t *client = NULL;
+    list_it *it = NULL;
+
+    if (!client_listener || !client_listener->client_list)
+        return;
+
+    list_iterate(client_listener->client_list, it) {
+        client = list_info_from_it(it, list_node, client_t);
+
+        list_node_delete(client_listener->client_list, &client->list_node);
+
+        client_listener_free_client(client);
+    }
+
+    list_delete(&client_listener->client_list);
+    close(client_listener->socket);
+    free(client_listener);
 }
 
 static void client_listener_create()

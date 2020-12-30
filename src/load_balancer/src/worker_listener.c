@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-
 #include <netinet/in.h>
 
 #include "worker_listener.h"
@@ -57,6 +56,29 @@ void worker_listener_init()
     }
 
     worker_listener_create();
+}
+
+void worker_listener_destroy()
+{
+    worker_t *worker = NULL;
+    list_it *it = NULL;
+
+    if (!worker_listener || !worker_listener->worker_list)
+        return;
+
+    list_iterate(worker_listener->worker_list, it) {
+        worker = list_info_from_it(it, list_node, worker_t);
+
+        list_node_delete(worker_listener->worker_list, &worker->list_node);
+        list_delete(&worker->client_list);
+
+        worker_listener_free_worker(worker);
+    }
+
+    list_delete(&worker_listener->worker_list);
+    heap_destroy(&worker_heap);
+    close(worker_listener->socket);
+    free(worker_listener);
 }
 
 static void worker_listener_create()
