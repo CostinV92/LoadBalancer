@@ -2,6 +2,13 @@
 
 #include "libheap.h"
 
+typedef struct heap {
+    heap_node_t*        heap[MAX_NODES];
+    pthread_mutex_t     mutex;
+    int                 max_size;
+    int                 current_index;
+} heap_t;
+
 #define HEAP_ROOT(heap)                 (((heap_node_t**)heap)[1])
 #define LAST_ELEM(heap)                 (((heap_node_t**)heap)[heap->current_index - 1])
 #define HAS_PARENT(node)                (node->heap_index != 1)

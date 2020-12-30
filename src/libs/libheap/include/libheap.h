@@ -5,17 +5,12 @@
 
 #define MAX_NODES           101
 
+typedef struct heap heap_t;
+
 typedef struct heap_node {
     int heap_key;
     int heap_index;
 } heap_node_t;
-
-typedef struct heap {
-    heap_node_t*        heap[MAX_NODES];
-    pthread_mutex_t     mutex;
-    int                 max_size;
-    int                 current_index;
-} heap_t;
 
 heap_t* heap_init();
 void heap_destroy(heap_t **heap_p);
