@@ -8,7 +8,11 @@
       src: files/worker
       dest: /usr/bin/worker_lb
       mode: 755
-       
+
+  - name: Stop worker
+    shell: kill $(pidof worker_lb)
+    ignore_errors: yes
+
   - name: Start worker
     shell: /usr/bin/worker_lb &
     environment:

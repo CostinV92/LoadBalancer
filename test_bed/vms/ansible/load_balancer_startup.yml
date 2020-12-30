@@ -9,5 +9,9 @@
       dest: /usr/bin/load_balancer
       mode: 755
 
+  - name: Stop load_balancer
+    shell: kill $(pidof load_balancer)
+    ignore_errors: yes
+
   - name: Start load_balancer
     shell: /usr/bin/load_balancer &
