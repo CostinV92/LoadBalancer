@@ -116,12 +116,12 @@ void list_node_delete(list_t *list, list_node_t *node)
 
     if (next_node)
         next_node->prev = prev_node;
-    else
+    else if (node == list->tail)
         list->tail = prev_node;
 
     if (prev_node)
         prev_node->next = next_node;
-    else
+    else if (node == list->head)
         list->head = next_node;
 
     if (list->it.next && list->it.next == node)
