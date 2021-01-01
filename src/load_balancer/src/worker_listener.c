@@ -181,7 +181,7 @@ static void worker_listener_free_worker(worker_t *worker)
 
     list_node_delete(list, &worker->list_node);
 
-    client_listener_free_list_of_clients(worker->client_list);
+    client_listener_announce_clients(worker->client_list);
     list_delete(&worker->client_list);
 
     free(worker);

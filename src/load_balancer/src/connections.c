@@ -263,11 +263,9 @@ static void connections_process_build_done(worker_t* worker,
             worker_listener_get_client_from_address(worker,
                                                     &message->build_order.client_addr);
 
-    if (!client) {
-        LOG("connections: couldn't find client");
-        return;
-    }
+    /* A build done message will come even if the client disconnected */
+    if (client)
+        client_listener_send_build_res(client, status, reason);
 
-    client_listener_send_build_res(client, status, reason);
     worker_listener_decrement_builds_count(worker);
 }

@@ -164,7 +164,8 @@ static void client_listener_free_client(client_t *client)
 
     list_node_delete(list, &client->list_node);
 
-    worker_listener_delete_client_from_list(client->worker, client);
+    if (client->worker)
+        worker_listener_delete_client_from_list(client->worker, client);
 
     free(client);
 }
@@ -291,7 +292,7 @@ void client_listener_add_worker_to_client(client_t *client, void *worker)
     client->worker = (worker_t *)worker;
 }
 
-void client_listener_free_list_of_clients(list_t *list)
+void client_listener_announce_clients(list_t *list)
 {
     client_t *client = NULL;
     list_it *it = NULL;
@@ -303,8 +304,9 @@ void client_listener_free_list_of_clients(list_t *list)
 
     list_iterate(list, it) {
         client = list_info_from_it(it, list_worker_node, client_t);
-        list_node_delete(list, &client->list_worker_node);
-        client_listener_free_client(client);
+
+        client->worker = NULL;
+        client_listener_send_build_res(client, 1, 1);
     }
 }
 
@@ -341,10 +343,8 @@ client_t *client_listener_get_client_from_address(list_t *list,
 
     list_iterate(list, it) {
         client = list_info_from_it(it, list_worker_node, client_t);
-        if (memcmp(&client->addr, client_addr, sizeof(struct sockaddr_in)) == 0) {
-            list_node_delete(list, &client->list_worker_node);
+        if (memcmp(&client->addr, client_addr, sizeof(struct sockaddr_in)) == 0)
             return client;
-        }
     }
 
     return NULL;
