@@ -237,6 +237,7 @@ static void connections_process_build_req(client_t* client, build_req_msg_t* mes
     worker_listener_increment_builds_count(worker);
     worker_listener_add_client_to_list(worker, client);
     worker_listener_add_worker_to_heap(worker);
+    client_listener_add_worker_to_client(client, worker);
 
     return;
 

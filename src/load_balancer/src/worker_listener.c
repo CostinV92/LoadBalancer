@@ -70,8 +70,6 @@ void worker_listener_destroy()
         worker = list_info_from_it(it, list_node, worker_t);
 
         list_node_delete(worker_listener->worker_list, &worker->list_node);
-        list_delete(&worker->client_list);
-
         worker_listener_free_worker(worker);
     }
 
@@ -79,6 +77,7 @@ void worker_listener_destroy()
     heap_destroy(&worker_heap);
     close(worker_listener->socket);
     free(worker_listener);
+    worker_listener = NULL;
 }
 
 static void worker_listener_create()
@@ -181,6 +180,8 @@ static void worker_listener_free_worker(worker_t *worker)
     heap_pop(worker_heap);
 
     list_node_delete(list, &worker->list_node);
+
+    client_listener_free_list_of_clients(worker->client_list);
     list_delete(&worker->client_list);
 
     free(worker);
@@ -366,6 +367,16 @@ void worker_listener_add_client_to_list(worker_t *worker, client_t *client)
     client_listener_add_client_to_list(worker->client_list, client);
 }
 
+void worker_listener_delete_client_from_list(worker_t *worker, client_t *client)
+{
+    if (!worker || !client) {
+        LOG("error: %s() invalid parameters.", __FUNCTION__);
+        return;
+    }
+
+    client_listener_delete_client_from_list(worker->client_list, client);
+}
+
 const char *worker_listener_get_ip_addr(worker_t *worker)
 {
     if (!worker) {
@@ -398,7 +409,7 @@ client_t *worker_listener_get_client_from_address(worker_t *worker,
 int worker_listener_get_max_socket()
 {
     if (!worker_listener) {
-        LOG("error: %s() worker_listener not initialized.");
+        LOG("error: %s() worker_listener not initialized.", __FUNCTION__);
         clean_exit(-1);
     }
 

@@ -32,6 +32,7 @@ void worker_listener_increment_builds_count(worker_t *worker);
 void worker_listener_decrement_builds_count(worker_t *worker);
 
 void worker_listener_add_client_to_list(worker_t *worker, client_t *client);
+void worker_listener_delete_client_from_list(worker_t *worker, client_t *client);
 const char *worker_listener_get_ip_addr(worker_t *worker);
 client_t *worker_listener_get_client_from_address(worker_t *worker,
                                                   struct sockaddr_in *client_addr);

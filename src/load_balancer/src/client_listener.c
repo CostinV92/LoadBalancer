@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 
 #include "client_listener.h"
+#include "worker_listener.h"
 
 #include "messages.h"
 #include "libutils.h"
@@ -15,6 +16,8 @@ struct client {
     struct sockaddr_in      addr;
     char                    ip_addr[MAX_IP_ADDR_SIZE];
     list_node_t             list_node;
+
+    worker_t                *worker;
     list_node_t             list_worker_node;
 };
 
@@ -65,6 +68,7 @@ void client_listener_destroy()
     list_delete(&client_listener->client_list);
     close(client_listener->socket);
     free(client_listener);
+    client_listener = NULL;
 }
 
 static void client_listener_create()
@@ -161,6 +165,9 @@ static void client_listener_free_client(client_t *client)
     connections_unregister_socket(client->socket);
 
     list_node_delete(list, &client->list_node);
+
+    worker_listener_delete_client_from_list(client->worker, client);
+
     free(client);
 }
 
@@ -264,6 +271,43 @@ void client_listener_add_client_to_list(list_t *list, client_t *client)
 
     list_node_init(&client->list_worker_node);
     list_add_back(list, &client->list_worker_node);
+}
+
+void client_listener_delete_client_from_list(list_t *list, client_t *client)
+{
+    if (!list || !client) {
+        LOG("error: %s() invalid arguments.", __FUNCTION__);
+        return;
+    }
+
+    list_node_delete(list, &client->list_worker_node);
+}
+
+void client_listener_add_worker_to_client(client_t *client, void *worker)
+{
+    if (!client || !worker) {
+        LOG("error: %s() invalid parameters.", __FUNCTION__);
+        return;
+    }
+
+    client->worker = (worker_t *)worker;
+}
+
+void client_listener_free_list_of_clients(list_t *list)
+{
+    client_t *client = NULL;
+    list_it *it = NULL;
+
+    if (!list) {
+        LOG("error: %s() invalid parameter.", __FUNCTION__);
+        return;
+    }
+
+    list_iterate(list, it) {
+        client = list_info_from_it(it, list_worker_node, client_t);
+        list_node_delete(list, &client->list_worker_node);
+        client_listener_free_client(client);
+    }
 }
 
 const char *client_listener_get_ip_addr(client_t *client)
