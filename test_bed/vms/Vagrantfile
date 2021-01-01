@@ -34,7 +34,7 @@ Vagrant.configure("2") do |config|
     app_path = ENV["BIN_DIR"] + "/" + app_name
     provision_script = settings["workers"]["provision_script"]
 
-    if settings["debug"]["lb_address"]
+    if settings.key?("debug") and settings["debug"].key?("lb_address")
       lb_address = settings["debug"]["lb_address"]
     else
       lb_address = settings["load_balancer"]["ip_addr"]
@@ -71,7 +71,7 @@ Vagrant.configure("2") do |config|
     app_path = ENV["BIN_DIR"] + "/" + app_name
     provision_script = settings["clients"]["provision_script"]
 
-    if settings["debug"]["lb_address"]
+    if settings.key?("debug") and settings["debug"].key?("lb_address")
       lb_address = settings["debug"]["lb_address"]
     else
       lb_address = settings["load_balancer"]["ip_addr"]

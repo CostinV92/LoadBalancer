@@ -4,6 +4,7 @@ lib/*
 test_bed/settings.yml
 test_bed/vms/lb_address
 test_bed/vms/output_listen_port
+intense_work.sh
 **/.vagrant/*
 **/ansible/files/*
 cscope.out
