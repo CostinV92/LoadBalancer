@@ -59,16 +59,14 @@ void client_listener_destroy()
 
     list_iterate(client_listener->client_list, it) {
         client = list_info_from_it(it, list_node, client_t);
-
         list_node_delete(client_listener->client_list, &client->list_node);
-
-        client_listener_free_client(client);
+        close(client->socket);
+        free(client);
     }
 
     list_delete(&client_listener->client_list);
     close(client_listener->socket);
     free(client_listener);
-    client_listener = NULL;
 }
 
 static void client_listener_create()

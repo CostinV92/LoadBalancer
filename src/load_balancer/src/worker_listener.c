@@ -68,16 +68,16 @@ void worker_listener_destroy()
 
     list_iterate(worker_listener->worker_list, it) {
         worker = list_info_from_it(it, list_node, worker_t);
-
+        list_delete(&worker->client_list);
         list_node_delete(worker_listener->worker_list, &worker->list_node);
-        worker_listener_free_worker(worker);
+        close(worker->socket);
+        free(worker);
     }
 
     list_delete(&worker_listener->worker_list);
     heap_destroy(&worker_heap);
     close(worker_listener->socket);
     free(worker_listener);
-    worker_listener = NULL;
 }
 
 static void worker_listener_create()
