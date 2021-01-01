@@ -34,6 +34,12 @@ Vagrant.configure("2") do |config|
     app_path = ENV["BIN_DIR"] + "/" + app_name
     provision_script = settings["workers"]["provision_script"]
 
+    if settings["debug"]["lb_address"]
+      lb_address = settings["debug"]["lb_address"]
+    else
+      lb_address = settings["load_balancer"]["ip_addr"]
+    end
+
     config.vm.define "worker_#{i}" do |worker|
       worker.vm.box = "ubuntu/trusty64"
       worker.vm.hostname = base_hostname + "-#{i}"
@@ -52,7 +58,7 @@ Vagrant.configure("2") do |config|
         ansible.provisioning_path = "/vagrant/ansible"
         ansible.playbook = provision_script
         ansible.extra_vars = {
-          lb_address: settings["load_balancer"]["ip_addr"]
+          lb_address: lb_address
         }
       end
     end
@@ -64,6 +70,12 @@ Vagrant.configure("2") do |config|
     app_name = settings["clients"]["app_name"]
     app_path = ENV["BIN_DIR"] + "/" + app_name
     provision_script = settings["clients"]["provision_script"]
+
+    if settings["debug"]["lb_address"]
+      lb_address = settings["debug"]["lb_address"]
+    else
+      lb_address = settings["load_balancer"]["ip_addr"]
+    end
 
     config.vm.define "client_#{i}" do |client|
       client.vm.box = "ubuntu/trusty64"
@@ -83,7 +95,7 @@ Vagrant.configure("2") do |config|
         ansible.provisioning_path = "/vagrant/ansible"
         ansible.playbook = provision_script
         ansible.extra_vars = {
-          lb_address: settings["load_balancer"]["ip_addr"],
+          lb_address: lb_address,
           output_listen_port: settings["clients"]["output_listen_port"]
         }
       end

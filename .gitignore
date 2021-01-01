@@ -2,6 +2,8 @@ bin/*
 obj/*
 lib/*
 test_bed/settings.yml
+test_bed/vms/lb_address
+test_bed/vms/output_listen_port
 **/.vagrant/*
 **/ansible/files/*
 cscope.out

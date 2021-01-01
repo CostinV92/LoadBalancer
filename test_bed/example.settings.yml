@@ -16,3 +16,8 @@ clients:
   app_name: "client"
   provision_script: "client_startup.yml"
   output_listen_port: 7893
+
+# if you want to run the load_balancer locally
+#
+# debug:
+#  lb_address: "192.168.111.1"
