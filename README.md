@@ -15,7 +15,7 @@ Run the following commands in the **project** directory:
     `make`
 
 #### TEST BED:
-The **Test Bed** is a vagrant environment which copies and runs the apps in different virtual machines. It is controlled by **settings.yml**. 
+The **Test Bed** is a vagrant environment which copies and runs the apps in different virtual machines. It is controlled by **settings.yml**. Vagrant, VirtualBox and Ansible needed.
 
 #### RUN TEST BED:
 1. Build the project
