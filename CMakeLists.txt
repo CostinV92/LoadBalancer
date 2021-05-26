@@ -1,0 +1,9 @@
+# top level CMakeLists.txt
+CMAKE_MINIMUM_REQUIRED(VERSION 2.8.12)
+
+PROJECT(load_balancer)
+
+ADD_SUBDIRECTORY(src)
+ADD_SUBDIRECTORY(libs)
+
+file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)

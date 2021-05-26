@@ -1,5 +1,5 @@
 bin/*
-obj/*
+build/*
 lib/*
 test_bed/settings.yml
 test_bed/vms/lb_address

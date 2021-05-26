@@ -1,17 +1,23 @@
 A load balancer which sends requests from clients to workers taking into consideration the workload of the workers
 
 #### CONFIG FILES:
-1. build_config - bash script for exporting build environment variables
-2. local_debug_settings - bash script for exporting variables needed for local testing (not using the test_bed); not recommended
+1. local_debug_settings - bash script for exporting variables needed for local testing (not using the test_bed); not recommended
 
 #### DIRs:
 1. src - source code
-2. test_bed - vagrant environment for testing
+2. libs - libraries source code
+3. test_bed - vagrant environment for testing
 
 #### BUILD:
-Run the following commands in the **project** directory:
+1. Create a build directory
+2. In the build dir, run the `cmake` command giving the project's main `CMakeLists.txt` as argument
+3. In the build dir, run `make`
 
-    `source build_config`
+Example commands to build the project (commands executed in the **project** directory):
+
+    `mkdir build`
+    `cd build`
+    `cmake ..`
     `make`
 
 #### TEST BED:
