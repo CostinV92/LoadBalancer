@@ -17,6 +17,8 @@ extern void clean_exit();
 
 char lb_address[20];
 
+load_balancer_server_t *loadBalancer;
+
 void register_worker()
 {
     // connect to the load balancer and anounce yourself

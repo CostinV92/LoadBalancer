@@ -18,6 +18,8 @@ static void process_message(header_t* message);
 
 extern void clean_exit();
 
+extern load_balancer_server_t *loadBalancer;
+
 void wait_for_work()
 {
     int rc = 0;

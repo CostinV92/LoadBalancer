@@ -10,6 +10,8 @@
 
 #define LOG_PATH "/tmp/worker.log"
 
+extern load_balancer_server_t *loadBalancer;
+
 /* TODO(victor): check for sockets to client too */
 void clean_exit(int status)
 {
