@@ -15,10 +15,10 @@ A load balancer which sends requests from clients to workers taking into conside
 
 Example commands to build the project (commands executed in the **project** directory):
 
-    `mkdir build`
-    `cd build`
-    `cmake ..`
-    `make`
+    mkdir build
+    cd build
+    cmake ..
+    make
 
 #### TEST BED:
 The **Test Bed** is a vagrant environment which copies and runs the apps in different virtual machines. It is controlled by **settings.yml**. Vagrant, VirtualBox and Ansible needed.
