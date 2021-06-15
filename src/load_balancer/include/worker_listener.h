@@ -37,5 +37,6 @@ const char *worker_listener_get_ip_addr(worker_t *worker);
 client_t *worker_listener_get_client_from_address(worker_t *worker,
                                                   struct sockaddr_in *client_addr);
 int worker_listener_get_max_socket();
+void worker_listener_close_monitor();
 
 #endif

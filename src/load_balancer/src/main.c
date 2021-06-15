@@ -12,12 +12,13 @@
 extern client_listener_t *client_listener;
 extern worker_listener_t *worker_listener;
 
-#define LOG_PATH "/tmp/loadBalancer.log"
+#define LOG_PATH    "/tmp/load_balancer.log"
 
 void clean_exit(int status)
 {
     connections_stop_listening();
     utils_close_log();
+    worker_listener_close_monitor();
     exit(status);
 }
 
