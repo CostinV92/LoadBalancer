@@ -1,9 +1,9 @@
-bin/*
 build/*
-test_bed/settings.yml
-test_bed/vms/lb_address
-test_bed/vms/output_listen_port
-intense_work.sh
-**/.vagrant/*
-**/ansible/files/*
+test_bed/.vagrant/
+test_bed/client/client
+test_bed/client/lb_address
+test_bed/client/output_listen_port
+test_bed/load_balancer/load_balancer
+test_bed/worker/worker
+test_bed/worker/lb_address
 cscope.out

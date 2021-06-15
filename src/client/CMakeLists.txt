@@ -12,5 +12,5 @@ TARGET_LINK_LIBRARIES(client
   )
 
 add_custom_command(TARGET client POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:client> ${CMAKE_SOURCE_DIR}/bin/
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:client> ${CMAKE_SOURCE_DIR}/test_bed/client
 )

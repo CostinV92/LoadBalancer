@@ -52,18 +52,14 @@ void listen_for_output()
 void get_listen_port()
 {
     char *env, port[10];
-    env = getenv("LOAD_BALANCER_CLIENT_LISTEN_PORT");
-    if (!env) {
-        FILE *f = fopen("/vagrant/output_listen_port", "r");
-        if (f) {
-            fgets(port, sizeof(port), f);
-            fclose(f);
-        } else {
-            LOG("Don't know listen for output port");
-            exit(1);
-        }
+
+    FILE *f = fopen("/vagrant/client/output_listen_port", "r");
+    if (f) {
+        fgets(port, sizeof(port), f);
+        fclose(f);
     } else {
-        strcpy(port, env);
+        LOG("Don't know listen for output port");
+        exit(1);
     }
 
     output_listen_port = atoi(port);
@@ -234,19 +230,13 @@ void process_build_res(build_res_msg_t* message)
 
 void get_lb_address()
 {
-    char *env;
-    env = getenv("LOAD_BALANCER_ADDRESS");
-    if (!env) {
-        FILE *f = fopen("/vagrant/lb_address", "r");
-        if (f) {
-            fgets(lb_address, sizeof(lb_address), f);
-            fclose(f);
-        } else {
-            LOG("Don't know server address");
-            exit(1);
-        }
+    FILE *f = fopen("/vagrant/client/lb_address", "r");
+    if (f) {
+        fgets(lb_address, sizeof(lb_address), f);
+        fclose(f);
     } else {
-        strcpy(lb_address, env);
+        LOG("Don't know server address");
+        exit(1);
     }
 }
 
