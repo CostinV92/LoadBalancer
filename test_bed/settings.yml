@@ -5,19 +5,17 @@ load_balancer:
   provision_script: "load_balancer_startup.yml"
 
 workers:
-  no_of_workers: 2
+  no_of_workers: 3
   base_hostname: "worker"
   app_name: "worker"
   provision_script: "worker_startup.yml"
 
 clients:
-  no_of_clients: 3
+  no_of_clients: 15
   base_hostname: "client"
   app_name: "client"
   provision_script: "client_startup.yml"
   output_listen_port: 7893
 
-# if you want to run the load_balancer locally
-#
 # debug:
-#  lb_address: "192.168.111.1"
+#   lb_address: "192.168.111.1"

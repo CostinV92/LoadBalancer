@@ -21,5 +21,5 @@ TARGET_LINK_LIBRARIES(load_balancer
   )
 
 add_custom_command(TARGET load_balancer POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:load_balancer> ${CMAKE_SOURCE_DIR}/bin/
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:load_balancer> ${CMAKE_SOURCE_DIR}/test_bed/load_balancer/
 )

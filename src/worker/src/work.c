@@ -89,7 +89,7 @@ void* start_build(void* arg)
         dup2(output_socket, 1);
         close(output_socket);
 
-        execl("/vagrant/work.sh", "work_lb", (char*)NULL);
+        execl("/vagrant/worker/work.sh", "work_lb", (char*)NULL);
     }
 }
 

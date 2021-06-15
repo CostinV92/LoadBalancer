@@ -34,13 +34,13 @@ void register_worker()
 
 void get_lb_address()
 {
-    char *env;
-    env = getenv("LOAD_BALANCER_ADDRESS");
-    if (!env) {
-        LOG("Error: %s() LOAD_BALANCER_ADDRESS env variable doesn't exist", __FUNCTION__);
-        clean_exit();
+    FILE *f = fopen("/vagrant/worker/lb_address", "r");
+    if (f) {
+        fgets(lb_address, sizeof(lb_address), f);
+        fclose(f);
     } else {
-        strcpy(lb_address, env);
+        LOG("Don't know server address");
+        exit(1);
     }
 }
 

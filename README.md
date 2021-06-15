@@ -21,11 +21,12 @@ Example commands to build the project (commands executed in the **project** dire
     make
 
 #### TEST BED:
-The **Test Bed** is a vagrant environment which copies and runs the apps in different virtual machines. It is controlled by **settings.yml**. Vagrant, VirtualBox and Ansible needed.
+The **Test Bed** is a vagrant environment which copies and runs the apps in different Docker containers. It is controlled by **settings.yml**. Vagrant and Docker needed.
 
 #### RUN TEST BED:
 1. Build the project
-2. Rename **test_bed/example.settings.yml** to **settings.yml** 
-3. In **test_bed/vms** directory run the following command:
+2. In **test_bed/** directory run the following command:
 
-    `vagrant up`
+    `vagrant up `
+
+After startup, each client will send a request every minute.

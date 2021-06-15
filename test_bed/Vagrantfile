@@ -1,0 +1,78 @@
+require 'yaml'
+
+settings = YAML::load_file "./settings.yml"
+
+Vagrant.configure("2") do |config|
+
+  if settings.key?("debug") and settings["debug"].key?("lb_address")
+    lb_address = settings["debug"]["lb_address"]
+  else
+    lb_address = settings["load_balancer"]["ip_addr"]
+  end
+
+  last_point = lb_address.rindex(".")
+  base_ip = lb_address[0, last_point + 1]
+
+  # create client and worker config files
+  out_file = File.new("client/lb_address", "w")
+  out_file.puts(lb_address)
+  out_file.close
+
+  out_file = File.new("worker/lb_address", "w")
+  out_file.puts(lb_address)
+  out_file.close
+
+  out_file = File.new("client/output_listen_port", "w")
+  out_file.puts(settings["clients"]["output_listen_port"])
+  out_file.close
+
+  # load_balancer
+  config.vm.define "load-balancer" do |load_balancer|
+    load_balancer.vm.hostname = settings["load_balancer"]["hostname"]
+
+    load_balancer.vm.network "private_network", ip: lb_address
+
+    load_balancer.vm.provider "docker" do |docker|
+      docker.build_dir = "./load_balancer"
+      docker.name = "load-balancer"
+      docker.remains_running = true
+    end
+  end
+
+  # workers
+  (1..settings["workers"]["no_of_workers"]).each do |i|
+    base_hostname = settings["workers"]["base_hostname"]
+
+    config.vm.define "worker-#{i}" do |worker|
+      worker.vm.hostname = base_hostname + "-#{i}"
+
+      #network
+      worker.vm.network "private_network", ip: base_ip + "#{10 + i}"
+
+      worker.vm.provider "docker" do |docker|
+        docker.build_dir = "./worker"
+        docker.name = base_hostname + "-#{i}"
+        docker.remains_running = true
+      end
+    end
+  end
+
+  # clients
+  (1..settings["clients"]["no_of_clients"]).each do |i|
+    base_hostname = settings["clients"]["base_hostname"]
+
+    config.vm.define "client-#{i}" do |client|
+      client.vm.hostname = base_hostname + "-#{i}"
+
+      # network
+      client.vm.network "private_network", ip: base_ip + "#{100 + i}"
+
+      client.vm.provider "docker" do |docker|
+        docker.build_dir = "./client"
+        docker.name = base_hostname + "-#{i}"
+        docker.remains_running = true
+      end
+    end
+
+  end
+end

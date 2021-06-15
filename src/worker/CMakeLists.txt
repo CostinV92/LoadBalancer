@@ -16,5 +16,5 @@ TARGET_LINK_LIBRARIES(worker
   )
 
 add_custom_command(TARGET worker POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:worker> ${CMAKE_SOURCE_DIR}/bin/
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:worker> ${CMAKE_SOURCE_DIR}/test_bed/worker/
 )
