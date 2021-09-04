@@ -23,9 +23,6 @@ static int utils_read_from_socket(int socket,
 
 int utils_init_log(char *log_file_path, int path_size) 
 {
-#ifdef DEBUG_DISABLE_LOG
-    return 0;
-#endif /* DEBUG_DISABLE_LOG */
     char buffer[MAX_LOG_FILE_PATH_SIZE] = {0};
     if (!log_file_path || !path_size || path_size > MAX_LOG_FILE_PATH_SIZE) {
         return -1;
@@ -73,6 +70,22 @@ void LOG(char* format, ...)
         fflush(log_file);
         fsync(fileno(log_file));
     }
+}
+
+int utils_init_log_dummy(char *log_file_path, int path_size)
+{
+    return 0;
+}
+
+void utils_close_log_dummy()
+{
+    return;
+}
+
+
+void LOG_dummy(char* format, ...)
+{
+    return;
 }
 
 void utils_format_ip_addr(struct sockaddr_in* addr, char* output)

@@ -8,6 +8,12 @@
 #define MAX_MESSAGE_SIZE 512
 #define MAX_IP_ADDR_SIZE  16
 
+#ifdef DEBUG_DISABLE_LOG
+#define LOG(...)                LOG_dummy(__VA_ARGS__)
+#define utils_init_log(...)     utils_init_log_dummy(__VA_ARGS__)
+#define utils_close_log(...)    utils_close_log_dummy(__VA_ARGS__)
+#endif /* DEBUG_DISABLE_LOG */
+
 int utils_init_log(char *log_file_path, int path_size);
 void utils_close_log();
 void LOG(char* format, ...);
