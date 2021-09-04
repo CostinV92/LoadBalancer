@@ -22,6 +22,10 @@ void clean_exit(int status)
 #ifdef DEBUG_WORKER_LOAD
     worker_listener_close_monitor();
 #endif /* DEBUG_WORKER_LOAD */
+
+#ifdef DEBUG_CLIENT_WAIT_TIME
+    client_listener_close_time_file();
+#endif /* DEBUG_CLIENT_WAIT_TIME */
     exit(status);
 }
 

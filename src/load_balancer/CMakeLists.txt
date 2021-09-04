@@ -1,10 +1,3 @@
-option(DEBUG_WORKER_LOAD "Debug worker load" OFF)
-
-if(DEBUG_WORKER_LOAD)
-  message(STATUS "DEBUG_WORKER_LOAD")
-  add_definitions(-DDEBUG_WORKER_LOAD)
-endif()
-
 INCLUDE_DIRECTORIES(
   include
   ${CMAKE_SOURCE_DIR}/src/common_headers

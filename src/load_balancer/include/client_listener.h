@@ -33,4 +33,8 @@ client_t *client_listener_get_client_from_address(list_t *list,
 int client_listener_get_client_addr(client_t *client, struct sockaddr_in *client_address);
 int client_listener_get_max_socket();
 
+#ifdef DEBUG_CLIENT_WAIT_TIME
+void client_listener_close_time_file();
+#endif /* DEBUG_CLIENT_WAIT_TIME */
+
 #endif 

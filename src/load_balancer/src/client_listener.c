@@ -11,6 +11,10 @@
 #include "libutils.h"
 #include "connections.h"
 
+#ifdef DEBUG_CLIENT_WAIT_TIME
+#include <time.h>
+#endif
+
 struct client {
     int                     socket;
     struct sockaddr_in      addr;
@@ -19,20 +23,40 @@ struct client {
 
     worker_t                *worker;
     list_node_t             list_worker_node;
+
+#ifdef DEBUG_CLIENT_WAIT_TIME
+    struct timespec         start_time;
+    struct timespec         end_time;
+#endif /* DEBUG_CLIENT_WAIT_TIME */
 };
 
 client_listener_t *client_listener;
 
 extern void clean_exit(int status);
 
+#ifdef DEBUG_CLIENT_WAIT_TIME
+#define CLIENT_WAIT_TIME_PATH   "/tmp/client_wait_time"
+static FILE                     *client_time_file;
+#endif /* DEBUG_CLIENT_WAIT_TIME */
+
 static void client_listener_create();
 static void client_listener_free_client(client_t *client);
 static void client_listener_new_max_socket();
 static list_t* client_listener_get_client_list();
 
+#ifdef DEBUG_CLIENT_WAIT_TIME
+static int client_listener_init_time_file(char *client_time_file_path);
+static void client_listener_write_data_to_time_file(client_t *client);
+#endif /* DEBUG_CLIENT_WAIT_TIME */
+
 void client_listener_init()
 {
     int socket = 0;
+
+#ifdef DEBUG_CLIENT_WAIT_TIME
+    if (client_listener_init_time_file(CLIENT_WAIT_TIME_PATH) == -1)
+        LOG("WARNING: client time file could not be opened");
+#endif /* DEBUG_CLIENT_WAIT_TIME */
 
     client_listener = calloc(1, sizeof(client_listener_t));
     if (!client_listener) {
@@ -136,6 +160,14 @@ client_t *client_listener_new_client(int client_socket,
 
     list_node_init(&client->list_node);
     list_add_back(client_listener->client_list, &client->list_node);
+
+#ifdef DEBUG_CLIENT_WAIT_TIME
+    struct timespec start_time;
+    if (clock_gettime(CLOCK_MONOTONIC, &start_time) == 0) {
+        client->start_time.tv_sec = start_time.tv_sec;
+        client->start_time.tv_nsec = start_time.tv_nsec;
+    }
+#endif /* DEBUG_CLIENT_WAIT_TIME */
 
     LOG("client_listener: new client %s", client->ip_addr);
 
@@ -290,6 +322,19 @@ void client_listener_add_worker_to_client(client_t *client, void *worker)
     }
 
     client->worker = (worker_t *)worker;
+
+#ifdef DEBUG_CLIENT_WAIT_TIME
+    struct timespec time;
+
+    if (clock_gettime(CLOCK_MONOTONIC, &time) == 0) {
+        client->end_time.tv_sec = time.tv_sec;
+        client->end_time.tv_nsec = time.tv_nsec;
+    } else {
+        LOG("client_listener: couldn't get time");
+    }
+
+    client_listener_write_data_to_time_file(client);
+#endif /* DEBUG_CLIENT_WAIT_TIME */
 }
 
 void client_listener_announce_clients(list_t *list)
@@ -370,3 +415,49 @@ int client_listener_get_max_socket()
 
     return client_listener->max_socket;
 }
+
+#ifdef DEBUG_CLIENT_WAIT_TIME
+
+static int client_listener_init_time_file(char *client_time_file_path)
+{
+    client_time_file = fopen(client_time_file_path, "w");
+
+    if (!client_time_file) {
+        return -1;
+    }
+
+    return 0;
+}
+
+static void client_listener_write_data_to_time_file(client_t *client)
+{
+    long int s = 0, ms = 0, ns = 0;
+
+    if (!client_time_file)
+        return;
+
+    s = client->end_time.tv_sec - client->start_time.tv_sec;
+    ns = (s * 1000000000 + client->end_time.tv_nsec) - client->start_time.tv_nsec;
+
+    while (ns > 999999) {
+        ms++;
+        ns -= 1000000;
+    }
+
+    while (ms > 999) {
+        s++;
+        ms -= 1000;
+    }
+
+    fprintf(client_time_file, "%ld.%03ld.%06ld\n", s, ms, ns);
+
+    fflush(client_time_file);
+    fsync(fileno(client_time_file));
+}
+
+void client_listener_close_time_file()
+{
+    fclose(client_time_file);
+}
+
+#endif /* DEBUG_CLIENT_WAIT_TIME */

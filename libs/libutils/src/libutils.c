@@ -23,6 +23,9 @@ static int utils_read_from_socket(int socket,
 
 int utils_init_log(char *log_file_path, int path_size) 
 {
+#ifdef DEBUG_DISABLE_LOG
+    return 0;
+#endif /* DEBUG_DISABLE_LOG */
     char buffer[MAX_LOG_FILE_PATH_SIZE] = {0};
     if (!log_file_path || !path_size || path_size > MAX_LOG_FILE_PATH_SIZE) {
         return -1;
