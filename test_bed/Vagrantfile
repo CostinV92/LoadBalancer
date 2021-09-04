@@ -26,6 +26,10 @@ Vagrant.configure("2") do |config|
   out_file.puts(settings["clients"]["output_listen_port"])
   out_file.close
 
+  out_file = File.new("client_fast/output_listen_port", "w")
+  out_file.puts(settings["clients_fast"]["output_listen_port"])
+  out_file.close
+
   # load_balancer
   config.vm.define "load-balancer" do |load_balancer|
     load_balancer.vm.hostname = settings["load_balancer"]["hostname"]
@@ -73,6 +77,23 @@ Vagrant.configure("2") do |config|
         docker.remains_running = true
       end
     end
+  end
 
+  # fast clients
+  (1..settings["clients_fast"]["no_of_clients"]).each do |i|
+    base_hostname = settings["clients_fast"]["base_hostname"]
+
+    config.vm.define "client-fast-#{i}" do |client|
+      client.vm.hostname = base_hostname + "-#{i}"
+
+      # network
+      client.vm.network "private_network", ip: base_ip + "#{200 + i}"
+
+      client.vm.provider "docker" do |docker|
+        docker.build_dir = "./client_fast"
+        docker.name = base_hostname + "-#{i}"
+        docker.remains_running = true
+      end
+    end
   end
 end

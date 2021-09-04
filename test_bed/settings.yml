@@ -11,5 +11,10 @@ clients:
   base_hostname: "client"
   output_listen_port: 7893
 
+clients_fast:
+  no_of_clients: 5
+  base_hostname: "client-fast"
+  output_listen_port: 7893
+
 # debug:
 #   lb_address: "192.168.111.1"
