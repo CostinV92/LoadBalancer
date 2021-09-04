@@ -37,10 +37,10 @@ static void worker_listener_create();
 static void worker_listener_free_worker(worker_t *worker);
 static void worker_listener_new_max_socket();
 static list_t* worker_listener_get_worker_list();
-static void worker_listener_monitor_workers();
 
 #ifdef DEBUG_WORKER_LOAD
 static int worker_listener_init_monitor_file(char *monitor_file_path);
+static void worker_listener_monitor_workers();
 #endif /* DEBUG_WORKER_LOAD */
 
 void worker_listener_init()
@@ -441,6 +441,7 @@ int worker_listener_get_max_socket()
 }
 
 #ifdef DEBUG_WORKER_LOAD
+
 static int worker_listener_init_monitor_file(char *monitor_file_path)
 {
     monitor_file = fopen(monitor_file_path, "w");
@@ -477,4 +478,5 @@ void worker_listener_close_monitor()
 {
     fclose(monitor_file);
 }
+
 #endif /* DEBUG_WORKER_LOAD */
