@@ -3,6 +3,9 @@ test_bed/.vagrant/
 test_bed/client/client
 test_bed/client/lb_address
 test_bed/client/output_listen_port
+test_bed/client_fast/client
+test_bed/client_fast/lb_address
+test_bed/client_fast/output_listen_port
 test_bed/load_balancer/load_balancer
 test_bed/worker/worker
 test_bed/worker/lb_address
