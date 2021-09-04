@@ -18,7 +18,10 @@ void clean_exit(int status)
 {
     connections_stop_listening();
     utils_close_log();
+
+#ifdef DEBUG_WORKER_LOAD
     worker_listener_close_monitor();
+#endif /* DEBUG_WORKER_LOAD */
     exit(status);
 }
 

@@ -28,23 +28,30 @@ heap_t *worker_heap;
 
 extern void clean_exit(int status);
 
+#ifdef DEBUG_WORKER_LOAD
 #define MONITOR_PATH    "/tmp/worker.monitor"
 static FILE             *monitor_file;
+#endif /* DEBUG_WORKER_LOAD */
 
 static void worker_listener_create();
 static void worker_listener_free_worker(worker_t *worker);
 static void worker_listener_new_max_socket();
 static list_t* worker_listener_get_worker_list();
 static void worker_listener_monitor_workers();
+
+#ifdef DEBUG_WORKER_LOAD
 static int worker_listener_init_monitor_file(char *monitor_file_path);
+#endif /* DEBUG_WORKER_LOAD */
 
 void worker_listener_init()
 {
     int socket = 0;
 
+#ifdef DEBUG_WORKER_LOAD
     if (worker_listener_init_monitor_file(MONITOR_PATH) != 0) {
         printf("WARNING: the monitor file could not be opened!\n");
     }
+#endif
 
     worker_listener = calloc(1, sizeof(worker_listener_t));
     if (!worker_listener) {
@@ -339,7 +346,9 @@ void worker_listener_increment_builds_count(worker_t *worker)
     worker->no_current_builds++;
     worker->heap_node.heap_key = worker->no_current_builds;
 
+#ifdef DEBUG_WORKER_LOAD
     worker_listener_monitor_workers();
+#endif /* DEBUG_WORKER_LOAD */
 }
 
 void worker_listener_decrement_builds_count(worker_t *worker)
@@ -357,7 +366,9 @@ void worker_listener_decrement_builds_count(worker_t *worker)
     worker->no_current_builds--;
     heap_update_node_key(worker_heap, &(worker->heap_node), worker->no_current_builds);
 
+#ifdef DEBUG_WORKER_LOAD
     worker_listener_monitor_workers();
+#endif /* DEBUG_WORKER_LOAD */
 }
 
 static list_t* worker_listener_get_worker_list()
@@ -429,6 +440,7 @@ int worker_listener_get_max_socket()
     return worker_listener->max_socket;
 }
 
+#ifdef DEBUG_WORKER_LOAD
 static int worker_listener_init_monitor_file(char *monitor_file_path)
 {
     monitor_file = fopen(monitor_file_path, "w");
@@ -465,3 +477,4 @@ void worker_listener_close_monitor()
 {
     fclose(monitor_file);
 }
+#endif /* DEBUG_WORKER_LOAD */
