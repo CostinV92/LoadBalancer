@@ -50,20 +50,23 @@ void process_build_order(build_order_msg_t* message)
 
     memcpy(thread_message, message, sizeof(build_order_msg_t));
     pthread_create(&build_thread_id, NULL, &start_build, thread_message);
+    pthread_detach(build_thread_id);
 }
 
 void* start_build(void* arg)
 {
     int pid = 0, output_socket = 0;
-    build_order_msg_t *message = (build_order_msg_t*)arg;
-    struct sockaddr_in client_addr = message->client_addr;
-    build_req_msg_t *request = &(message->request);
+    build_order_msg_t message = *(build_order_msg_t*)arg;
+    struct sockaddr_in client_addr = message.client_addr;
+    build_req_msg_t *request = &(message.request);
     char client_ip_addr[MAX_IP_ADDR_SIZE];
+
+    free(arg);
 
     // first connect to the client
     if ((output_socket = connect_to_client(client_addr, request->listen_port)) == -1) {
         // error on connecting to client for sending output
-        send_build_done(message, 0, 5);
+        send_build_done(&message, 0, 5);
         return NULL;
     }
 
@@ -74,7 +77,7 @@ void* start_build(void* arg)
     // spawn a process to do the work and wait for it
     if ((pid = fork()) == -1) {
         LOG("Error:%s forking failed.", __FUNCTION__);
-        send_build_done(message, 0, 6);
+        send_build_done(&message, 0, 6);
     } else if (pid) {
         int status = 0;
         close(output_socket);
@@ -84,7 +87,7 @@ void* start_build(void* arg)
         LOG("Build for client %s it's over with status: %d",
             client_ip_addr, status);
 
-        send_build_done(message, 1, status);
+        send_build_done(&message, 1, status);
     } else {
         dup2(output_socket, 1);
         close(output_socket);
