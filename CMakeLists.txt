@@ -5,5 +5,3 @@ PROJECT(load_balancer)
 
 ADD_SUBDIRECTORY(src)
 ADD_SUBDIRECTORY(libs)
-
-file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
